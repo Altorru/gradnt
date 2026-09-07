@@ -16,9 +16,17 @@ export function GradntIconButton({ children, ...props }: GradntIconButtonProps) 
       borderWidth={1}
       borderColor="$border"
       backgroundColor="$backgroundElevated"
+      color="$color"
+      hoverStyle={{
+        backgroundColor: '$backgroundSubtle',
+        borderColor: '$borderStrong',
+      }}
       pressStyle={{
         scale: 0.94,
-        opacity: 0.88,
+        backgroundColor: '$backgroundPress',
+      }}
+      focusStyle={{
+        borderColor: '$accent',
       }}
       {...props}
     >

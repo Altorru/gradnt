@@ -1,13 +1,13 @@
 import { colors } from '../tokens'
 
 export const darkTheme = {
-  background: colors.graphite950,
-  backgroundHover: colors.graphite900,
-  backgroundPress: colors.graphite850,
-  backgroundFocus: colors.graphite900,
+  background: '#0B0E0A',
+  backgroundHover: '#141912',
+  backgroundPress: '#1A2017',
+  backgroundFocus: '#141912',
 
-  backgroundElevated: colors.graphite900,
-  backgroundSubtle: colors.graphite850,
+  backgroundElevated: '#121610',
+  backgroundSubtle: '#1A2017',
 
   color: colors.bone100,
   colorHover: colors.white,
@@ -18,13 +18,13 @@ export const darkTheme = {
   textSecondary: colors.stone400,
   textDisabled: colors.stone600,
 
-  borderColor: colors.graphite700,
-  borderColorHover: '#3B4135',
-  borderColorPress: '#454C3E',
+  borderColor: '#293025',
+  borderColorHover: '#3A4433',
+  borderColorPress: '#46513D',
   borderColorFocus: colors.lime,
 
-  border: colors.graphite700,
-  borderStrong: '#3B4135',
+  border: '#293025',
+  borderStrong: '#3A4433',
 
   placeholderColor: colors.stone500,
 
