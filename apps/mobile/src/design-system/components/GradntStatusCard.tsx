@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
-import { YStack } from 'tamagui'
 
-import { GradntText } from './primitives'
+import { GradntCard, GradntText } from './primitives'
 
 type GradntStatusCardProps = {
   label: string
@@ -19,13 +18,11 @@ export function GradntStatusCard({
   visual,
 }: GradntStatusCardProps) {
   return (
-    <YStack
+    <GradntCard
+      premium
+      accent={accent}
       flex={1}
-      minHeight={128}
-      borderRadius="$4"
-      borderWidth={1}
-      borderColor="$border"
-      backgroundColor="$backgroundElevated"
+      minHeight={152}
       padding="$4"
       justifyContent="space-between"
     >
@@ -33,17 +30,15 @@ export function GradntStatusCard({
         {label}
       </GradntText>
 
-      <YStack gap="$1">
-        <GradntText weight="bold" fontSize={30} lineHeight={32}>
-          {value}
-        </GradntText>
+      <GradntText weight="bold" fontSize={30} lineHeight={32}>
+        {value}
+      </GradntText>
 
-        <GradntText color={accent ? '$accent' : '$textSecondary'} weight="semibold" fontSize={13}>
-          {detail}
-        </GradntText>
-      </YStack>
+      <GradntText color={accent ? '$accent' : '$textSecondary'} weight="semibold" fontSize={13}>
+        {detail}
+      </GradntText>
 
       {visual}
-    </YStack>
+    </GradntCard>
   )
 }

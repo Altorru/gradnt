@@ -2,9 +2,9 @@ import { Theme } from 'tamagui'
 
 import { GradntHomePreview } from '@/design-system/previews/GradntHomePreview'
 
-export default function DesignSystemScreen() {
+export default function DesignSystemLightScreen() {
   return (
-    <Theme name="dark">
+    <Theme name="light">
       <GradntHomePreview />
     </Theme>
   )

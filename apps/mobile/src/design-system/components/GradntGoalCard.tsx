@@ -2,21 +2,18 @@ import { ArrowUpRight } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
 import { colors } from '../tokens'
-import { GradntBadge, GradntHeading, GradntProgressBar, GradntText } from './primitives'
+import {
+  GradntArtworkSlot,
+  GradntBadge,
+  GradntCard,
+  GradntHeading,
+  GradntProgressBar,
+  GradntText,
+} from './primitives'
 
 export function GradntGoalCard() {
   return (
-    <YStack
-      minHeight={250}
-      borderRadius="$5"
-      borderWidth={1}
-      borderColor="$border"
-      overflow="hidden"
-      backgroundColor="$backgroundElevated"
-      padding="$5"
-      justifyContent="space-between"
-      gap="$5"
-    >
+    <GradntCard premium accent minHeight={312} justifyContent="space-between" gap="$5">
       <XStack justifyContent="space-between" alignItems="flex-start">
         <YStack gap="$2">
           <GradntText muted weight="semibold" fontSize={12} letterSpacing={0.7}>
@@ -25,7 +22,7 @@ export function GradntGoalCard() {
 
           <GradntHeading level={3}>FTP</GradntHeading>
 
-          <XStack alignItems="flex-end" gap="$2">
+          <XStack alignItems="flex-end" gap="$2" flexWrap="wrap">
             <GradntText weight="bold" fontSize={38} lineHeight={39} letterSpacing={-1.6}>
               258
             </GradntText>
@@ -39,10 +36,12 @@ export function GradntGoalCard() {
         <GradntBadge tone="positive">EN BONNE VOIE</GradntBadge>
       </XStack>
 
+      <GradntArtworkSlot height={108} />
+
       <YStack gap="$3">
         <XStack gap="$3" alignItems="center">
           <YStack flex={1}>
-            <GradntProgressBar value={72} />
+            <GradntProgressBar value={72} height={10} />
           </YStack>
 
           <GradntText weight="bold">72 %</GradntText>
@@ -56,6 +55,6 @@ export function GradntGoalCard() {
           <ArrowUpRight size={15} color={colors.lime} />
         </XStack>
       </YStack>
-    </YStack>
+    </GradntCard>
   )
 }
