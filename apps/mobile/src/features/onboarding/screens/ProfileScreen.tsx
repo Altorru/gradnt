@@ -76,6 +76,7 @@ const volumes = [
 
 export function ProfileScreen() {
   const router = useRouter()
+  const storedProfile = useOnboardingStore((state) => state.profile)
   const setProfile = useOnboardingStore((state) => state.setProfile)
 
   const {
@@ -85,7 +86,7 @@ export function ProfileScreen() {
   } = useForm<CyclistProfileForm>({
     resolver: zodResolver(cyclistProfileSchema),
     mode: 'onChange',
-    defaultValues: {
+    defaultValues: storedProfile ?? {
       discipline: 'road',
       experience: 'regular',
       weeklyVolume: '3to6',
