@@ -1,0 +1,14 @@
+node_modules
+.pnpm-store
+
+.expo
+dist
+build
+coverage
+
+apps/mobile/ios
+apps/mobile/android
+
+pnpm-lock.yaml
+
+*.generated.*

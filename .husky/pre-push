@@ -1,0 +1,3 @@
+echo "🚦 Running final quality checks..."
+pnpm check
+echo "✅ Push checks passed"

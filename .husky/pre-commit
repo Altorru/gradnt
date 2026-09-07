@@ -1,0 +1,10 @@
+echo "🧹 Formatting staged files..."
+pnpm exec lint-staged
+
+echo "🔍 Running ESLint..."
+pnpm lint
+
+echo "🔷 Running TypeScript checks..."
+pnpm typecheck
+
+echo "✅ Pre-commit checks passed"

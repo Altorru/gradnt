@@ -6,7 +6,19 @@
     "ios": "pnpm --filter @gradnt/mobile ios",
     "android": "pnpm --filter @gradnt/mobile android",
     "web": "pnpm --filter @gradnt/mobile web",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "lint": "pnpm --filter @gradnt/mobile exec eslint . --max-warnings=0",
+    "typecheck": "pnpm --filter @gradnt/mobile exec tsc --noEmit",
+    "prepare": "husky",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm lint && pnpm typecheck",
+    "commitlint": "commitlint --verbose"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.0",
+    "prettier": "^3.9.6"
   }
 }
