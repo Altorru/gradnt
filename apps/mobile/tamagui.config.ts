@@ -25,25 +25,31 @@ const tokens = createTokens({
   zIndex: defaultConfig.tokens.zIndex,
 })
 
-const config = createTamagui({
+const tamaguiConfig = createTamagui({
   ...defaultConfig,
+
+  settings: {
+    ...defaultConfig.settings,
+    onlyAllowShorthands: false,
+  },
 
   tokens,
 
+  // Important:
+  // GRADNT owns its complete theme contract.
+  // Do NOT merge defaultConfig.themes here.
   themes: {
-    ...defaultConfig.themes,
-
     gradntDark: darkTheme,
     gradntLight: lightTheme,
   },
 })
 
-export type AppConfig = typeof config
+export type AppConfig = typeof tamaguiConfig
 
 declare module 'tamagui' {
-  interface TamaguiCustomConfig extends AppConfig {
-    readonly __gradntConfigBrand?: unique symbol
-  }
+  // Required by Tamagui for strongly typed custom tokens/themes.
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface TamaguiCustomConfig extends AppConfig {}
 }
 
-export default config
+export default tamaguiConfig
