@@ -16,6 +16,7 @@ import {
 import { colors } from '@/design-system/tokens'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
+import { useOnboardingStore } from '../store/onboarding.store'
 import { cyclistProfileSchema, type CyclistProfileForm } from '../domain/profile.schema'
 
 const disciplines = [
@@ -75,6 +76,7 @@ const volumes = [
 
 export function ProfileScreen() {
   const router = useRouter()
+  const setProfile = useOnboardingStore((state) => state.setProfile)
 
   const {
     control,
@@ -90,7 +92,8 @@ export function ProfileScreen() {
     },
   })
 
-  const submit = handleSubmit(() => {
+  const submit = handleSubmit((values) => {
+    setProfile(values)
     router.push('/onboarding/goal')
   })
 
