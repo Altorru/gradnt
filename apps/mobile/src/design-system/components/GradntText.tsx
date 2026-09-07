@@ -3,11 +3,21 @@ import { Text } from 'tamagui'
 
 type GradntTextProps = ComponentProps<typeof Text> & {
   muted?: boolean
+  weight?: 'regular' | 'medium' | 'semibold' | 'bold'
 }
 
-export function GradntText({ muted = false, ...props }: GradntTextProps) {
+const weights = {
+  regular: '400',
+  medium: '500',
+  semibold: '600',
+  bold: '700',
+} as const
+
+export function GradntText({ muted = false, weight = 'regular', ...props }: GradntTextProps) {
   return (
     <Text
+      fontFamily="$body"
+      fontWeight={weights[weight]}
       color={muted ? '$textSecondary' : '$textPrimary'}
       fontSize={16}
       lineHeight={23}

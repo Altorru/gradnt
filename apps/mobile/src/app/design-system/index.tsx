@@ -2,65 +2,66 @@ import { ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
+  GradntBadge,
   GradntButton,
   GradntCard,
+  GradntChip,
   GradntHeading,
   GradntMetric,
+  GradntProgressBar,
   GradntScreen,
+  GradntSurface,
   GradntText,
 } from '@/design-system'
 
 export default function DesignSystemScreen() {
   return (
     <GradntScreen padded={false}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
         <YStack gap="$8">
           <YStack gap="$3">
-            <GradntText muted fontSize={13} fontWeight="600">
-              GRADNT DESIGN SYSTEM
-            </GradntText>
+            <GradntBadge tone="positive">GRADNT SYSTEM</GradntBadge>
 
             <GradntHeading>Ride what&apos;s next.</GradntHeading>
 
             <GradntText muted>
-              Visual preview of the core GRADNT mobile design primitives.
+              Une interface centrée sur ta progression, ton objectif et la prochaine étape.
             </GradntText>
           </YStack>
 
-          <GradntCard>
-            <GradntText muted fontSize={13} fontWeight="600">
-              OBJECTIF PRINCIPAL
-            </GradntText>
+          <GradntSurface padding="$5" gap="$4">
+            <XStack justifyContent="space-between" alignItems="center">
+              <GradntText muted weight="semibold" fontSize={13}>
+                OBJECTIF PRINCIPAL
+              </GradntText>
 
-            <GradntHeading level={2}>FTP 280 W</GradntHeading>
+              <GradntBadge tone="positive">EN BONNE VOIE</GradntBadge>
+            </XStack>
 
-            <GradntText muted>Tu progresses régulièrement vers ton objectif.</GradntText>
-          </GradntCard>
+            <YStack gap="$2">
+              <GradntHeading level={2}>FTP 280 W</GradntHeading>
+              <GradntText muted>258 W actuellement</GradntText>
+            </YStack>
+
+            <GradntProgressBar value={72} />
+
+            <XStack justifyContent="space-between">
+              <GradntText muted fontSize={13}>
+                Départ 245 W
+              </GradntText>
+
+              <GradntText weight="semibold" fontSize={13}>
+                72 %
+              </GradntText>
+            </XStack>
+          </GradntSurface>
 
           <YStack gap="$4">
-            <GradntHeading level={3}>Buttons</GradntHeading>
-
-            <GradntButton>Continuer</GradntButton>
-
-            <GradntButton tone="secondary">Voir les détails</GradntButton>
-
-            <GradntButton tone="ghost">Plus tard</GradntButton>
-
-            <GradntButton tone="danger">Supprimer</GradntButton>
-          </YStack>
-
-          <YStack gap="$4">
-            <GradntHeading level={3}>Metrics</GradntHeading>
+            <GradntHeading level={3}>Ton état</GradntHeading>
 
             <XStack gap="$4">
               <GradntCard flex={1}>
-                <GradntMetric
-                  label="FTP"
-                  value="258"
-                  unit="W"
-                  trend="+6 W ce mois-ci"
-                  trendDirection="up"
-                />
+                <GradntMetric label="FTP" value="258" unit="W" trend="+6 W" trendDirection="up" />
               </GradntCard>
 
               <GradntCard flex={1}>
@@ -69,15 +70,38 @@ export default function DesignSystemScreen() {
             </XStack>
           </YStack>
 
-          <GradntCard>
-            <GradntText muted fontSize={13} fontWeight="600">
-              PROCHAINE ÉTAPE
-            </GradntText>
+          <GradntSurface padding="$5" gap="$4">
+            <GradntBadge tone="recovery">PROCHAINE ÉTAPE</GradntBadge>
 
-            <GradntHeading level={2}>Sweet Spot</GradntHeading>
+            <YStack gap="$1">
+              <GradntHeading level={2}>Sweet Spot</GradntHeading>
+              <GradntText muted>Vendredi · 1 h 15</GradntText>
+            </YStack>
 
-            <GradntText>1 h 15 · 3 × 12 min @ 88–94 % FTP</GradntText>
-          </GradntCard>
+            <GradntText>3 × 12 min à 88–94 % FTP avec 5 min de récupération.</GradntText>
+
+            <GradntButton>Voir la séance</GradntButton>
+          </GradntSurface>
+
+          <YStack gap="$4">
+            <GradntHeading level={3}>Intensités</GradntHeading>
+
+            <XStack flexWrap="wrap" gap="$3">
+              <GradntChip label="Endurance" selected />
+              <GradntChip label="Tempo" />
+              <GradntChip label="Seuil" />
+              <GradntChip label="VO₂ Max" />
+              <GradntChip label="Récupération" />
+            </XStack>
+          </YStack>
+
+          <YStack gap="$3">
+            <GradntHeading level={3}>Actions</GradntHeading>
+
+            <GradntButton>Continuer</GradntButton>
+            <GradntButton tone="secondary">Voir les détails</GradntButton>
+            <GradntButton tone="ghost">Plus tard</GradntButton>
+          </YStack>
         </YStack>
       </ScrollView>
     </GradntScreen>
