@@ -17,16 +17,16 @@ export function GradntHeroArtwork({ source }: GradntHeroArtworkProps) {
         source={source}
         contentFit="cover"
         contentPosition={{
-          left: '76%',
+          left: '70%',
           top: '50%',
         }}
         transition={150}
         style={{
           position: 'absolute',
-          top: 116,
-          left: -36,
-          right: -58,
-          bottom: 66,
+          top: 110,
+          left: 0,
+          right: 0,
+          bottom: 50,
         }}
       />
 
