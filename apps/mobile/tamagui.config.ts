@@ -103,8 +103,8 @@ const tamaguiConfig = createTamagui({
   },
 
   themes: {
-    gradntDark: darkTheme,
-    gradntLight: lightTheme,
+    dark: darkTheme,
+    light: lightTheme,
   },
 })
 

@@ -13,12 +13,17 @@ const weights = {
   bold: '700',
 } as const
 
-export function GradntText({ muted = false, weight = 'regular', ...props }: GradntTextProps) {
+export function GradntText({
+  muted = false,
+  weight = 'regular',
+  color,
+  ...props
+}: GradntTextProps) {
   return (
     <Text
       fontFamily="$body"
       fontWeight={weights[weight]}
-      color={muted ? '$textSecondary' : '$textPrimary'}
+      color={color ?? (muted ? '$textSecondary' : '$color')}
       fontSize={16}
       lineHeight={23}
       {...props}

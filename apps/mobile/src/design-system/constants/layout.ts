@@ -1,0 +1,2 @@
+export const MOBILE_CANVAS_WIDTH = 430
+export const MOBILE_CONTENT_WIDTH = 390

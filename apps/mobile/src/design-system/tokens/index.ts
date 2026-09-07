@@ -1,4 +1,5 @@
 export * from './colors'
+export * from './effects'
 export * from './radius'
 export * from './sizes'
 export * from './spacing'

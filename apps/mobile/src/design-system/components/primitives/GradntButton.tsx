@@ -27,18 +27,18 @@ export function GradntButton({
       : tone === 'secondary'
         ? {
             backgroundColor: '$backgroundElevated',
-            color: '$textPrimary',
+            color: '$color',
             borderColor: '$border',
           }
         : tone === 'ghost'
           ? {
               backgroundColor: 'transparent',
-              color: '$textPrimary',
-              borderColor: 'transparent',
+              color: '$color',
+              borderColor: '$border',
             }
           : {
               backgroundColor: '$danger',
-              color: '$background',
+              color: '$color',
               borderColor: '$danger',
             }
 

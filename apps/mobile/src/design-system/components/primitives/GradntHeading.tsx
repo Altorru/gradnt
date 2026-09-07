@@ -23,12 +23,12 @@ const levels = {
   },
 } as const
 
-export function GradntHeading({ level = 1, ...props }: GradntHeadingProps) {
+export function GradntHeading({ level = 1, color, ...props }: GradntHeadingProps) {
   return (
     <Text
       fontFamily="$heading"
       fontWeight="700"
-      color="$textPrimary"
+      color={color ?? '$color'}
       {...levels[level]}
       {...props}
     />

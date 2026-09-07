@@ -29,7 +29,7 @@ export function GradntMetric({
       </GradntText>
 
       <XStack alignItems="flex-end" gap="$2">
-        <GradntText fontSize={30} lineHeight={34} fontWeight="700" letterSpacing={-1}>
+        <GradntText weight="bold" fontSize={30} lineHeight={34} letterSpacing={-1}>
           {value}
         </GradntText>
 
@@ -41,7 +41,7 @@ export function GradntMetric({
       </XStack>
 
       {trend ? (
-        <GradntText color={trendColor} fontSize={13} fontWeight="600">
+        <GradntText color={trendColor} fontSize={13} weight="semibold">
           {trend}
         </GradntText>
       ) : null}
