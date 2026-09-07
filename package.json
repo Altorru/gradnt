@@ -1,0 +1,12 @@
+{
+  "name": "gradnt",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @gradnt/mobile start",
+    "ios": "pnpm --filter @gradnt/mobile ios",
+    "android": "pnpm --filter @gradnt/mobile android",
+    "web": "pnpm --filter @gradnt/mobile web",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
