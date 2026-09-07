@@ -8,9 +8,11 @@ import {
   GradntGoalCard,
   GradntHeading,
   GradntIconButton,
+  GradntMiniBars,
   GradntMobileShell,
   GradntProgressRing,
   GradntSectionHeader,
+  GradntSparkline,
   GradntStatusCard,
   GradntText,
   GradntWorkoutCard,
@@ -64,25 +66,20 @@ export function GradntHomePreview() {
               <GradntSectionHeader title="Ton état" action="Voir plus" />
 
               <XStack gap="$3">
-                <GradntStatusCard label="Forme" value="78 ↗" detail="Bonne" accent />
+                <GradntStatusCard
+                  label="Forme"
+                  value="78 ↗"
+                  detail="Bonne"
+                  accent
+                  visual={<GradntSparkline data={[46, 54, 67, 59, 72, 78, 73, 86]} />}
+                />
 
                 <GradntStatusCard
                   label="Charge"
                   value="Modérée"
+                  valueSize={21}
                   detail="Stable"
-                  visual={
-                    <XStack alignItems="flex-end" gap={4} marginTop="$3">
-                      {[20, 35, 58, 32, 46].map((height, index) => (
-                        <YStack
-                          key={index}
-                          width={7}
-                          height={height}
-                          borderRadius={3}
-                          backgroundColor={index < 3 ? '$accent' : '$backgroundSubtle'}
-                        />
-                      ))}
-                    </XStack>
-                  }
+                  visual={<GradntMiniBars data={[18, 32, 52, 38, 29]} activeIndices={[0, 1, 2]} />}
                 />
               </XStack>
             </YStack>

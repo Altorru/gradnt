@@ -1,3 +1,4 @@
+export * from './charts'
 export * from './primitives'
 
 export * from './GradntBottomNav'

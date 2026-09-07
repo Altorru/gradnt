@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { XStack, YStack } from 'tamagui'
 
 import { GradntCard, GradntText } from './primitives'
 
@@ -8,6 +9,7 @@ type GradntStatusCardProps = {
   detail: string
   accent?: boolean
   visual?: ReactNode
+  valueSize?: number
 }
 
 export function GradntStatusCard({
@@ -16,29 +18,43 @@ export function GradntStatusCard({
   detail,
   accent = false,
   visual,
+  valueSize = 29,
 }: GradntStatusCardProps) {
   return (
-    <GradntCard
-      premium
-      accent={accent}
-      flex={1}
-      minHeight={152}
-      padding="$4"
-      justifyContent="space-between"
-    >
-      <GradntText muted fontSize={13}>
-        {label}
-      </GradntText>
+    <GradntCard premium flex={1} minHeight={126} padding="$4" borderRadius={18}>
+      <XStack flex={1} alignItems="flex-end" justifyContent="space-between" gap="$3">
+        <YStack flex={1} alignSelf="stretch" justifyContent="space-between">
+          <GradntText muted fontSize={12} lineHeight={15}>
+            {label}
+          </GradntText>
 
-      <GradntText weight="bold" fontSize={30} lineHeight={32}>
-        {value}
-      </GradntText>
+          <YStack gap="$1">
+            <GradntText
+              weight="bold"
+              fontSize={valueSize}
+              lineHeight={valueSize + 3}
+              letterSpacing={-0.8}
+            >
+              {value}
+            </GradntText>
 
-      <GradntText color={accent ? '$accent' : '$textSecondary'} weight="semibold" fontSize={13}>
-        {detail}
-      </GradntText>
+            <GradntText
+              color={accent ? '$accent' : '$textSecondary'}
+              weight="semibold"
+              fontSize={12}
+              lineHeight={15}
+            >
+              {detail}
+            </GradntText>
+          </YStack>
+        </YStack>
 
-      {visual}
+        {visual ? (
+          <YStack width={96} height={58} justifyContent="flex-end" alignItems="flex-end">
+            {visual}
+          </YStack>
+        ) : null}
+      </XStack>
     </GradntCard>
   )
 }
