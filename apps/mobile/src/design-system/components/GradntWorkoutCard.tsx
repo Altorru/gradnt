@@ -1,3 +1,5 @@
+import type { PlannedWorkout } from '@/lib/domain'
+
 import { BarChart3, ChevronRight, Clock3 } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
@@ -6,6 +8,7 @@ import { GradntButton, GradntCard, GradntText } from './primitives'
 import { colors } from '../tokens'
 
 type GradntWorkoutCardProps = {
+  workout?: PlannedWorkout
   day?: string
   title?: string
   duration?: string
@@ -13,22 +16,31 @@ type GradntWorkoutCardProps = {
 }
 
 export function GradntWorkoutCard({
+  workout,
   day = 'VENDREDI 12 AVR.',
   title = 'Sweet Spot',
   duration = '1 h 15',
   description = '3 × 12 min · 88–94 % FTP',
 }: GradntWorkoutCardProps) {
+  const workoutDay = workout
+    ? new Date(workout.date).toLocaleDateString('fr-FR', { weekday: 'long' })
+    : day
+  const workoutDuration = workout
+    ? `${Math.floor(workout.durationMinutes / 60)} h ${workout.durationMinutes % 60 || ''}`.trim()
+    : duration
+  const workoutDescription = workout ? workout.intensityTarget : description
+
   return (
     <GradntCard premium padding="$4" gap="$4" borderRadius={20} borderColor="$borderStrong">
       <XStack alignItems="flex-end" justifyContent="space-between" gap="$3">
         <YStack flex={1} gap="$3">
           <YStack gap="$1">
             <GradntText muted weight="medium" fontSize={11} lineHeight={14} letterSpacing={0.65}>
-              {day}
+              {workoutDay}
             </GradntText>
 
             <GradntText weight="bold" fontSize={21} lineHeight={25} letterSpacing={-0.5}>
-              {title}
+              {workout?.title ?? title}
             </GradntText>
           </YStack>
 
@@ -37,7 +49,7 @@ export function GradntWorkoutCard({
               <Clock3 size={14} color={colors.stone400} />
 
               <GradntText muted fontSize={12}>
-                {duration}
+                {workoutDuration}
               </GradntText>
             </XStack>
 
@@ -45,7 +57,7 @@ export function GradntWorkoutCard({
               <BarChart3 size={14} color={colors.stone400} />
 
               <GradntText muted fontSize={12}>
-                {description}
+                {workoutDescription}
               </GradntText>
             </XStack>
           </XStack>

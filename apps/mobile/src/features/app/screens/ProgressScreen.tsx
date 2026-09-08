@@ -8,11 +8,26 @@ import {
   GradntSparkline,
   GradntText,
 } from '@/design-system'
+import { useActivitiesQuery, useGoalQuery, useTrainingMetricsQuery } from '@/hooks/use-gradnt-data'
+import {
+  getGoalProgressPercentage,
+  getRecentTrainingVolumeHours,
+  getWeeklyRideCount,
+} from '@/lib/domain'
 
 import { AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
 export function ProgressScreen() {
+  const goalQuery = useGoalQuery()
+  const metricsQuery = useTrainingMetricsQuery()
+  const activitiesQuery = useActivitiesQuery()
+
+  const goalProgress = goalQuery.data ? getGoalProgressPercentage(goalQuery.data, 258) : 0
+  const volumeHours = metricsQuery.data ? getRecentTrainingVolumeHours(metricsQuery.data) : 0
+  const rideCount = getWeeklyRideCount(activitiesQuery.data ?? [])
+  const hasError = goalQuery.isError || metricsQuery.isError || activitiesQuery.isError
+
   return (
     <AppShell>
       <AppScrollView>
@@ -22,9 +37,15 @@ export function ProgressScreen() {
             description="Les tendances utiles pour comprendre où tu en es, sans bruit inutile."
           />
 
+          {hasError ? (
+            <GradntText color="$danger" fontSize={13}>
+              Certaines données de progression sont momentanément indisponibles.
+            </GradntText>
+          ) : null}
+
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$4">
-              <GradntProgressRing value={78} size={92} />
+              <GradntProgressRing value={goalProgress || 78} size={92} />
               <YStack flex={1} gap="$2">
                 <GradntText muted fontSize={12}>
                   Objectif FTP
@@ -46,10 +67,12 @@ export function ProgressScreen() {
             <GradntCard padding="$4" gap="$4">
               <XStack alignItems="center" gap="$3">
                 <Activity size={19} color="$accent" />
-                <GradntText weight="semibold">Volume hebdomadaire</GradntText>
+                <GradntText weight="semibold">Volume récent</GradntText>
               </XStack>
               <GradntText muted fontSize={13}>
-                4 h 32 cette semaine · stable sur 4 semaines
+                {metricsQuery.isPending
+                  ? 'Chargement…'
+                  : `${volumeHours} h sur les 30 derniers jours`}
               </GradntText>
               <GradntMiniBars data={[30, 42, 36, 56, 48, 62, 58]} width={250} height={62} gap={7} />
             </GradntCard>
@@ -60,7 +83,9 @@ export function ProgressScreen() {
                 <GradntText weight="semibold">Régularité</GradntText>
               </XStack>
               <GradntText muted fontSize={13}>
-                8 sorties sur les 30 derniers jours
+                {activitiesQuery.isPending
+                  ? 'Chargement…'
+                  : `${rideCount} sortie${rideCount > 1 ? 's' : ''} récente${rideCount > 1 ? 's' : ''}`}
               </GradntText>
               <GradntSparkline data={[30, 38, 33, 52, 58, 50, 68, 76]} width={250} height={62} />
             </GradntCard>

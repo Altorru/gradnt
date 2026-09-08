@@ -2,22 +2,34 @@ import { CalendarDays, ChevronRight, Plus } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
 import { GradntBadge, GradntButton, GradntCard, GradntText } from '@/design-system'
+import { useUpcomingWorkoutsQuery } from '@/hooks/use-gradnt-data'
 
 import { AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
-const workouts = [
-  {
-    day: 'Mardi',
-    title: 'Endurance fondamentale',
-    detail: '1 h · Facile',
-    tone: 'recovery' as const,
-  },
-  { day: 'Jeudi', title: 'Sweet Spot', detail: '1 h 15 · Structuré', tone: 'positive' as const },
-  { day: 'Samedi', title: 'Sortie longue', detail: '2 h · Endurance', tone: 'neutral' as const },
-]
+function formatWorkoutDuration(durationMinutes: number) {
+  const hours = Math.floor(durationMinutes / 60)
+  const minutes = durationMinutes % 60
+
+  if (hours === 0) {
+    return `${minutes} min`
+  }
+
+  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes}`
+}
+
+const statusTone = {
+  planned: 'neutral',
+  completed: 'positive',
+  skipped: 'danger',
+  moved: 'warning',
+} as const
 
 export function PlanScreen() {
+  const workoutsQuery = useUpcomingWorkoutsQuery()
+  const workouts = workoutsQuery.data ?? []
+  const plannedWorkouts = workouts.filter((workout) => workout.status === 'planned')
+
   return (
     <AppShell>
       <AppScrollView>
@@ -27,13 +39,21 @@ export function PlanScreen() {
             description="Les séances qui te rapprochent de ton objectif, avec de la marge pour la vraie vie."
           />
 
+          {workoutsQuery.isError ? (
+            <GradntText color="$danger" fontSize={13}>
+              Le plan est momentanément indisponible.
+            </GradntText>
+          ) : null}
+
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$3">
               <CalendarDays size={20} color="$accent" />
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">Cette semaine</GradntText>
                 <GradntText muted fontSize={13}>
-                  3 séances · 4 h 15 prévues
+                  {workoutsQuery.isPending
+                    ? 'Chargement…'
+                    : `${plannedWorkouts.length} séances · ${plannedWorkouts.reduce((total, workout) => total + workout.durationMinutes, 0) / 60} h prévues`}
                 </GradntText>
               </YStack>
               <GradntBadge tone="positive">En cours</GradntBadge>
@@ -42,18 +62,20 @@ export function PlanScreen() {
 
           <YStack gap="$3">
             {workouts.map((workout) => (
-              <GradntCard key={workout.day} padding="$4" gap="$3">
+              <GradntCard key={workout.id} padding="$4" gap="$3">
                 <XStack alignItems="center" gap="$3">
                   <YStack flex={1} gap="$1">
                     <GradntText muted fontSize={11} weight="semibold" letterSpacing={0.7}>
-                      {workout.day}
+                      {new Date(workout.date).toLocaleDateString('fr-FR', { weekday: 'long' })}
                     </GradntText>
                     <GradntText weight="semibold">{workout.title}</GradntText>
                     <GradntText muted fontSize={13}>
-                      {workout.detail}
+                      {formatWorkoutDuration(workout.durationMinutes)} · {workout.intensityTarget}
                     </GradntText>
                   </YStack>
-                  <GradntBadge tone={workout.tone}>À venir</GradntBadge>
+                  <GradntBadge tone={statusTone[workout.status]}>
+                    {workout.status === 'planned' ? 'À venir' : workout.status}
+                  </GradntBadge>
                   <ChevronRight size={18} color="$textSecondary" />
                 </XStack>
               </GradntCard>

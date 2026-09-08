@@ -10,12 +10,29 @@ import {
   GradntText,
   GradntWorkoutCard,
 } from '@/design-system'
+import {
+  useCurrentGoalValueQuery,
+  useGoalQuery,
+  useUpcomingWorkoutsQuery,
+} from '@/hooks/use-gradnt-data'
+import { getGoalProgressPercentage, getNextWorkout } from '@/lib/domain'
 import { XStack, YStack } from 'tamagui'
 
 import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
 export function HomeScreen() {
+  const goalQuery = useGoalQuery()
+  const currentValueQuery = useCurrentGoalValueQuery()
+  const workoutsQuery = useUpcomingWorkoutsQuery()
+
+  const goal = goalQuery.data
+  const currentValue = currentValueQuery.data ?? null
+  const nextWorkout = getNextWorkout(workoutsQuery.data ?? [])
+  const progressPercentage = goal ? getGoalProgressPercentage(goal, currentValue) : 0
+  const hasError = goalQuery.isError || currentValueQuery.isError || workoutsQuery.isError
+  const isLoading = goalQuery.isPending || currentValueQuery.isPending || workoutsQuery.isPending
+
   return (
     <AppShell header={<AppBrandHeader />}>
       <AppScrollView>
@@ -27,7 +44,17 @@ export function HomeScreen() {
             </GradntText>
           </YStack>
 
-          <GradntGoalCard />
+          {hasError ? (
+            <GradntText color="$danger" fontSize={13}>
+              Les données de progression sont momentanément indisponibles.
+            </GradntText>
+          ) : null}
+
+          <GradntGoalCard
+            goal={goal}
+            currentValue={currentValue ?? undefined}
+            progressPercentage={progressPercentage || undefined}
+          />
 
           <YStack gap="$4">
             <GradntSectionHeader title="Ton état" action="Voir plus" />
@@ -35,16 +62,16 @@ export function HomeScreen() {
             <XStack gap="$3">
               <GradntStatusCard
                 label="Forme"
-                value="78 ↗"
-                detail="Bonne"
+                value={isLoading ? '—' : '78 ↗'}
+                detail={isLoading ? 'Chargement' : 'Bonne'}
                 accent
                 visual={<GradntSparkline data={[46, 54, 67, 59, 72, 78, 73, 86]} />}
               />
               <GradntStatusCard
                 label="Charge"
-                value="Modérée"
+                value={isLoading ? '—' : 'Modérée'}
                 valueSize={21}
-                detail="Stable"
+                detail={isLoading ? 'Chargement' : 'Stable'}
                 visual={<GradntMiniBars data={[18, 32, 52, 38, 29]} activeIndices={[0, 1, 2]} />}
               />
             </XStack>
@@ -52,7 +79,7 @@ export function HomeScreen() {
 
           <YStack gap="$4">
             <GradntSectionHeader title="Prochaine étape" action="Voir" />
-            <GradntWorkoutCard />
+            <GradntWorkoutCard workout={nextWorkout ?? undefined} />
           </YStack>
 
           <YStack gap="$4">
@@ -68,7 +95,7 @@ export function HomeScreen() {
           <YStack gap="$4">
             <GradntSectionHeader title="Progression" />
             <XStack alignItems="center" justifyContent="space-around">
-              <GradntProgressRing value={78} />
+              <GradntProgressRing value={progressPercentage || 78} />
               <YStack gap="$2">
                 <GradntText muted fontSize={12}>
                   Derniers 30 jours

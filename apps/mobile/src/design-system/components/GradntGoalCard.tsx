@@ -1,3 +1,5 @@
+import type { Goal } from '@/lib/domain'
+
 import { ArrowUpRight } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
@@ -6,7 +8,22 @@ import { colors } from '../tokens'
 import { GradntHeroArtwork } from './composites/GradntHeroArtwork'
 import { GradntBadge, GradntCard, GradntHeading, GradntProgressBar, GradntText } from './primitives'
 
-export function GradntGoalCard() {
+type GradntGoalCardProps = {
+  goal?: Goal
+  currentValue?: number
+  progressPercentage?: number
+  changeLabel?: string
+}
+
+export function GradntGoalCard({
+  goal,
+  currentValue = 258,
+  progressPercentage = 72,
+  changeLabel = '+6 W ce mois-ci',
+}: GradntGoalCardProps) {
+  const goalValue = goal?.targetValue ?? 280
+  const goalUnit = goal?.targetUnit === 'w' ? 'W' : (goal?.targetUnit ?? 'W')
+
   return (
     <GradntCard
       premium
@@ -27,16 +44,22 @@ export function GradntGoalCard() {
           </GradntText>
 
           <GradntHeading level={3} fontSize={19} lineHeight={23}>
-            FTP
+            {goal?.type === 'ftp'
+              ? 'FTP'
+              : goal?.type === 'distance'
+                ? 'DISTANCE'
+                : goal?.type === 'climbing'
+                  ? 'DÉNIVELÉ'
+                  : 'OBJECTIF'}
           </GradntHeading>
 
           <XStack alignItems="center" gap="$2">
             <GradntText weight="bold" fontSize={36} lineHeight={38} letterSpacing={-1.7}>
-              258
+              {currentValue}
             </GradntText>
 
             <GradntText muted weight="semibold" fontSize={23} lineHeight={30} letterSpacing={-0.6}>
-              → 280 W
+              → {goalValue} {goalUnit}
             </GradntText>
           </XStack>
         </YStack>
@@ -52,17 +75,17 @@ export function GradntGoalCard() {
       <YStack zIndex={2} gap="$3" marginTop="auto">
         <XStack alignItems="center" gap="$3">
           <YStack flex={1}>
-            <GradntProgressBar value={72} height={8} />
+            <GradntProgressBar value={progressPercentage} height={8} />
           </YStack>
 
           <GradntText weight="bold" fontSize={17} lineHeight={20}>
-            72 %
+            {progressPercentage} %
           </GradntText>
         </XStack>
 
         <XStack alignItems="center" gap="$1">
           <GradntText color="$accent" weight="semibold" fontSize={13} lineHeight={17}>
-            +6 W ce mois-ci
+            {changeLabel}
           </GradntText>
 
           <ArrowUpRight size={14} color={colors.lime} />
