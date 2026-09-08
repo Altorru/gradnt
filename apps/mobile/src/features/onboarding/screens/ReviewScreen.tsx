@@ -195,7 +195,7 @@ export function ReviewScreen() {
               iconAfter={<ChevronRight size={18} color={colors.graphite950} />}
               onPress={() => {
                 complete()
-                router.replace('/')
+                router.replace('../home')
               }}
             >
               Entrer dans GRADNT

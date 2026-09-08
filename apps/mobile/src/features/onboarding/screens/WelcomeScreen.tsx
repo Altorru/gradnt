@@ -40,7 +40,7 @@ export function WelcomeScreen() {
     }
 
     if (completed) {
-      router.replace('/')
+      router.replace('../home')
       return
     }
 

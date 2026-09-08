@@ -10,7 +10,7 @@ import { GradntText } from './primitives'
 const items = [
   {
     label: 'Accueil',
-    href: '/' as Href,
+    href: '/home' as Href,
     icon: House,
   },
   {
