@@ -16,7 +16,11 @@ import {
 import { colors } from '@/design-system/tokens'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
-import { defaultStravaConnection, type StravaConnection } from '../domain/strava.schema'
+import {
+  defaultStravaConnection,
+  deferredStravaConnection,
+  type StravaConnection,
+} from '../domain/strava.schema'
 import { useOnboardingStore } from '../store/onboarding.store'
 import { stravaService, type StravaServiceError } from '../services/strava.service'
 
@@ -60,6 +64,11 @@ export function StravaScreen() {
   }
 
   const connected = connection.status === 'connected'
+  const deferConnection = () => {
+    setConnection(deferredStravaConnection)
+    setStrava(deferredStravaConnection)
+    router.push('./review')
+  }
 
   return (
     <GradntMobileShell>
@@ -133,8 +142,9 @@ export function StravaScreen() {
             </XStack>
 
             <GradntText muted fontSize={12} lineHeight={18}>
-              La connexion réelle sera disponible lorsque l’application Strava de GRADNT et son
-              adresse de retour seront configurées.
+              Connecter Strava est vivement recommandé : ton historique permet de mieux estimer ton
+              point de départ et d’éviter un plan générique. Tu peux toutefois commencer sans
+              connexion et la faire plus tard.
             </GradntText>
           </YStack>
 
@@ -177,7 +187,11 @@ export function StravaScreen() {
               >
                 Continuer
               </GradntButton>
-            ) : null}
+            ) : (
+              <GradntButton tone="ghost" onPress={deferConnection}>
+                Continuer sans connecter
+              </GradntButton>
+            )}
           </YStack>
         </YStack>
       </ScrollView>

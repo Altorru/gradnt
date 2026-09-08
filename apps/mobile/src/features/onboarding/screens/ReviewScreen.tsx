@@ -169,7 +169,11 @@ export function ReviewScreen() {
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">Historique Strava</GradntText>
                 <GradntText muted fontSize={12}>
-                  {strava?.status === 'connected' ? 'Connecté' : 'Pas encore connecté'}
+                  {strava?.status === 'connected'
+                    ? 'Connecté'
+                    : strava?.status === 'deferred'
+                      ? 'À connecter plus tard'
+                      : 'Pas encore connecté'}
                 </GradntText>
               </YStack>
               <ChevronRight size={17} color={colors.stone400} />
