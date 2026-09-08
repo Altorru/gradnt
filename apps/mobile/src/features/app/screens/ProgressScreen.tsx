@@ -10,6 +10,8 @@ import {
 } from '@/design-system'
 import { useActivitiesQuery, useGoalQuery, useTrainingMetricsQuery } from '@/hooks/use-gradnt-data'
 import {
+  getActivityDataState,
+  getDeterministicTrainingInsight,
   getGoalProgressPercentage,
   getRecentTrainingVolumeHours,
   getWeeklyRideCount,
@@ -23,9 +25,12 @@ export function ProgressScreen() {
   const metricsQuery = useTrainingMetricsQuery()
   const activitiesQuery = useActivitiesQuery()
 
+  const activities = activitiesQuery.data ?? []
+  const activityState = getActivityDataState(activities)
+  const insight = getDeterministicTrainingInsight(activities, '3to6')
   const goalProgress = goalQuery.data ? getGoalProgressPercentage(goalQuery.data, 258) : 0
   const volumeHours = metricsQuery.data ? getRecentTrainingVolumeHours(metricsQuery.data) : 0
-  const rideCount = getWeeklyRideCount(activitiesQuery.data ?? [])
+  const rideCount = getWeeklyRideCount(activities)
   const hasError = goalQuery.isError || metricsQuery.isError || activitiesQuery.isError
 
   return (
@@ -56,7 +61,7 @@ export function ProgressScreen() {
                 <XStack alignItems="center" gap="$1">
                   <ArrowUpRight size={15} color="$accent" />
                   <GradntText color="$accent" weight="semibold" fontSize={13}>
-                    +6 W ce mois-ci
+                    Valeur locale de démonstration
                   </GradntText>
                 </XStack>
               </YStack>
@@ -72,7 +77,7 @@ export function ProgressScreen() {
               <GradntText muted fontSize={13}>
                 {metricsQuery.isPending
                   ? 'Chargement…'
-                  : `${volumeHours} h sur les 30 derniers jours`}
+                  : `${volumeHours} h de données ${activityState === 'mock' ? 'de démonstration' : activityState === 'observed' ? 'observées' : 'déclarées'}`}
               </GradntText>
               <GradntMiniBars data={[30, 42, 36, 56, 48, 62, 58]} width={250} height={62} gap={7} />
             </GradntCard>
@@ -85,7 +90,9 @@ export function ProgressScreen() {
               <GradntText muted fontSize={13}>
                 {activitiesQuery.isPending
                   ? 'Chargement…'
-                  : `${rideCount} sortie${rideCount > 1 ? 's' : ''} récente${rideCount > 1 ? 's' : ''}`}
+                  : activityState === 'mock'
+                    ? 'Données locales de démonstration'
+                    : `${rideCount} sortie${rideCount > 1 ? 's' : ''} observée${rideCount > 1 ? 's' : ''}`}
               </GradntText>
               <GradntSparkline data={[30, 38, 33, 52, 58, 50, 68, 76]} width={250} height={62} />
             </GradntCard>
@@ -97,8 +104,7 @@ export function ProgressScreen() {
               <GradntText weight="semibold">À retenir</GradntText>
             </XStack>
             <GradntText muted lineHeight={20}>
-              Ta progression est régulière. La prochaine étape est de conserver ce rythme avant
-              d’ajouter davantage d’intensité.
+              {insight.message}
             </GradntText>
           </GradntCard>
         </YStack>

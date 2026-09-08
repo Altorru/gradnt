@@ -1,4 +1,5 @@
 import {
+  GradntCard,
   GradntChip,
   GradntGoalCard,
   GradntHeading,
@@ -11,26 +12,46 @@ import {
   GradntWorkoutCard,
 } from '@/design-system'
 import {
+  useActivitiesQuery,
+  useAthleteQuery,
   useCurrentGoalValueQuery,
   useGoalQuery,
   useUpcomingWorkoutsQuery,
 } from '@/hooks/use-gradnt-data'
-import { getGoalProgressPercentage, getNextWorkout } from '@/lib/domain'
+import {
+  getActivityDataState,
+  getDeterministicTrainingInsight,
+  getGoalProgressPercentage,
+  getNextWorkout,
+} from '@/lib/domain'
 import { XStack, YStack } from 'tamagui'
 
 import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
 export function HomeScreen() {
+  const athleteQuery = useAthleteQuery()
+  const activitiesQuery = useActivitiesQuery()
   const goalQuery = useGoalQuery()
   const currentValueQuery = useCurrentGoalValueQuery()
   const workoutsQuery = useUpcomingWorkoutsQuery()
 
   const goal = goalQuery.data
-  const currentValue = currentValueQuery.data ?? null
+  const currentGoalValue = currentValueQuery.data?.value ?? null
   const nextWorkout = getNextWorkout(workoutsQuery.data ?? [])
-  const progressPercentage = goal ? getGoalProgressPercentage(goal, currentValue) : 0
-  const hasError = goalQuery.isError || currentValueQuery.isError || workoutsQuery.isError
+  const activities = activitiesQuery.data ?? []
+  const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
+  const activityState = getActivityDataState(activities)
+  const insight = getDeterministicTrainingInsight(
+    activities,
+    athleteQuery.data?.weeklyVolumeBand ?? '3to6',
+  )
+  const hasError =
+    athleteQuery.isError ||
+    activitiesQuery.isError ||
+    goalQuery.isError ||
+    currentValueQuery.isError ||
+    workoutsQuery.isError
   const isLoading = goalQuery.isPending || currentValueQuery.isPending || workoutsQuery.isPending
 
   return (
@@ -52,7 +73,7 @@ export function HomeScreen() {
 
           <GradntGoalCard
             goal={goal}
-            currentValue={currentValue ?? undefined}
+            currentValue={currentGoalValue ?? undefined}
             progressPercentage={progressPercentage || undefined}
           />
 
@@ -62,16 +83,22 @@ export function HomeScreen() {
             <XStack gap="$3">
               <GradntStatusCard
                 label="Forme"
-                value={isLoading ? '—' : '78 ↗'}
-                detail={isLoading ? 'Chargement' : 'Bonne'}
+                value={isLoading ? '—' : 'Profil'}
+                detail={isLoading ? 'Chargement' : 'Déclaré'}
                 accent
                 visual={<GradntSparkline data={[46, 54, 67, 59, 72, 78, 73, 86]} />}
               />
               <GradntStatusCard
-                label="Charge"
-                value={isLoading ? '—' : 'Modérée'}
+                label="Historique"
+                value={
+                  activityState === 'observed'
+                    ? 'Importé'
+                    : activityState === 'mock'
+                      ? 'Démo'
+                      : 'À venir'
+                }
                 valueSize={21}
-                detail={isLoading ? 'Chargement' : 'Stable'}
+                detail={activityState === 'observed' ? 'Strava' : 'Plus précis après tes sorties'}
                 visual={<GradntMiniBars data={[18, 32, 52, 38, 29]} activeIndices={[0, 1, 2]} />}
               />
             </XStack>
@@ -92,19 +119,33 @@ export function HomeScreen() {
             </XStack>
           </YStack>
 
+          <GradntCard padding="$4" gap="$3">
+            <GradntText weight="semibold">{insight.title}</GradntText>
+            <GradntText muted fontSize={13} lineHeight={19}>
+              {insight.message}
+            </GradntText>
+            <GradntText muted fontSize={11}>
+              {activityState === 'none'
+                ? 'Basé sur ton profil déclaré'
+                : activityState === 'mock'
+                  ? 'Données locales de démonstration'
+                  : 'Basé sur des activités observées'}
+            </GradntText>
+          </GradntCard>
+
           <YStack gap="$4">
             <GradntSectionHeader title="Progression" />
             <XStack alignItems="center" justifyContent="space-around">
               <GradntProgressRing value={progressPercentage || 78} />
               <YStack gap="$2">
                 <GradntText muted fontSize={12}>
-                  Derniers 30 jours
+                  Objectif principal
                 </GradntText>
                 <GradntText weight="bold" fontSize={26}>
-                  +6 W
+                  {currentGoalValue ?? '—'} W
                 </GradntText>
                 <GradntText color="$accent" weight="semibold" fontSize={13}>
-                  FTP estimée
+                  Valeur de démonstration
                 </GradntText>
               </YStack>
             </XStack>

@@ -60,7 +60,12 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 export function ReviewScreen() {
   const router = useRouter()
-  const { profile, goal, availability, strava } = useOnboardingStore()
+  const complete = useOnboardingStore((state) => state.complete)
+  const reset = useOnboardingStore((state) => state.reset)
+  const profile = useOnboardingStore((state) => state.profile)
+  const goal = useOnboardingStore((state) => state.goal)
+  const availability = useOnboardingStore((state) => state.availability)
+  const strava = useOnboardingStore((state) => state.strava)
 
   const availableDays = (availability ?? []).filter((slot) => slot.available)
   const availabilitySummary = availableDays
@@ -187,20 +192,28 @@ export function ReviewScreen() {
             </GradntText>
 
             <GradntButton
-              iconAfter={<ArrowRightIcon />}
+              iconAfter={<ChevronRight size={18} color={colors.graphite950} />}
               onPress={() => {
+                complete()
                 router.replace('/')
               }}
             >
               Entrer dans GRADNT
+            </GradntButton>
+
+            <GradntButton
+              tone="ghost"
+              minHeight={44}
+              onPress={() => {
+                void reset()
+                router.replace('/onboarding')
+              }}
+            >
+              Recommencer l&apos;onboarding
             </GradntButton>
           </YStack>
         </YStack>
       </ScrollView>
     </GradntMobileShell>
   )
-}
-
-function ArrowRightIcon() {
-  return <ChevronRight size={18} color={colors.graphite950} />
 }

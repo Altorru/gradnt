@@ -1,11 +1,16 @@
 import { z } from 'zod'
 
+export const dataProvenanceSchema = z.enum(['declared', 'observed', 'mock'])
+
+export type DataProvenance = z.infer<typeof dataProvenanceSchema>
+
 export const athleteProfileSchema = z.object({
   id: z.string(),
   displayName: z.string().min(1),
   primaryDiscipline: z.enum(['road', 'gravel', 'mtb']),
   experienceLevel: z.enum(['beginner', 'regular', 'advanced']),
   weeklyVolumeBand: z.enum(['lt3', '3to6', '6to10', 'gt10']),
+  provenance: z.literal('declared'),
 })
 
 export const goalSchema = z.object({
@@ -33,6 +38,7 @@ export const activitySchema = z.object({
   normalizedPower: z.number().positive().nullable(),
   weightedPower: z.number().positive().nullable(),
   calories: z.number().nonnegative().nullable(),
+  provenance: z.enum(['observed', 'mock']),
 })
 
 export const plannedWorkoutSchema = z.object({
@@ -69,6 +75,7 @@ export const trainingMetricsSchema = z.object({
   distanceMeters: z.number().nonnegative(),
   elevationGainMeters: z.number().nonnegative(),
   activityCount: z.number().int().nonnegative(),
+  provenance: z.enum(['observed', 'mock']),
 })
 
 export type AthleteProfile = z.infer<typeof athleteProfileSchema>

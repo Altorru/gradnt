@@ -1,5 +1,6 @@
 import { ArrowRight, Brain, Route, Target } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
+import { useEffect } from 'react'
 import { ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
@@ -7,6 +8,7 @@ import { GradntButton, GradntHeading, GradntMobileShell, GradntText } from '@/de
 import { colors } from '@/design-system/tokens'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
+import { getOnboardingResumeRoute, useOnboardingStore } from '../store/onboarding.store'
 
 const benefits = [
   {
@@ -28,6 +30,24 @@ const benefits = [
 
 export function WelcomeScreen() {
   const router = useRouter()
+  const hydrated = useOnboardingStore((state) => state.hydrated)
+  const completed = useOnboardingStore((state) => state.completed)
+  const currentStep = useOnboardingStore((state) => state.currentStep)
+
+  useEffect(() => {
+    if (!hydrated) {
+      return
+    }
+
+    if (completed) {
+      router.replace('/')
+      return
+    }
+
+    if (currentStep > 1) {
+      router.replace(getOnboardingResumeRoute(currentStep))
+    }
+  }, [completed, currentStep, hydrated, router])
 
   return (
     <GradntMobileShell>
@@ -112,7 +132,7 @@ export function WelcomeScreen() {
                 router.push('/onboarding/profile')
               }}
             >
-              Commencer
+              {currentStep > 1 ? 'Reprendre' : 'Commencer'}
             </GradntButton>
 
             <GradntText muted textAlign="center" fontSize={12} lineHeight={17}>

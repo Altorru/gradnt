@@ -19,6 +19,7 @@ const athleteFixtureInput = {
   primaryDiscipline: 'road' as const,
   experienceLevel: 'regular' as const,
   weeklyVolumeBand: '3to6' as const,
+  provenance: 'declared' as const,
 }
 
 const goalFixtureInput = {
@@ -74,6 +75,7 @@ const metricsFixtureInput = {
   distanceMeters: 142000,
   elevationGainMeters: 1840,
   activityCount: 8,
+  provenance: 'mock' as const,
 }
 
 const activitiesFixtureInput = [
@@ -92,6 +94,7 @@ const activitiesFixtureInput = [
     normalizedPower: null,
     weightedPower: null,
     calories: 620,
+    provenance: 'mock' as const,
   },
 ]
 
