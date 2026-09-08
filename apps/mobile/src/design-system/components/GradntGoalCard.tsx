@@ -13,6 +13,7 @@ type GradntGoalCardProps = {
   currentValue?: number
   progressPercentage?: number
   changeLabel?: string
+  statusLabel?: string
 }
 
 export function GradntGoalCard({
@@ -20,6 +21,7 @@ export function GradntGoalCard({
   currentValue = 258,
   progressPercentage = 72,
   changeLabel = '+6 W ce mois-ci',
+  statusLabel = 'EN BONNE VOIE',
 }: GradntGoalCardProps) {
   const goalValue = goal?.targetValue ?? 280
   const goalUnit = goal?.targetUnit === 'w' ? 'W' : (goal?.targetUnit ?? 'W')
@@ -64,7 +66,7 @@ export function GradntGoalCard({
           </XStack>
         </YStack>
 
-        <GradntBadge tone="positive">EN BONNE VOIE</GradntBadge>
+        <GradntBadge tone="positive">{statusLabel}</GradntBadge>
       </XStack>
 
       {/* Zone réservée à l'artwork.

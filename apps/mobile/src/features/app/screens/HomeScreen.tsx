@@ -75,6 +75,14 @@ export function HomeScreen() {
             goal={goal}
             currentValue={currentGoalValue ?? undefined}
             progressPercentage={progressPercentage || undefined}
+            statusLabel={
+              currentValueQuery.data?.provenance === 'mock' ? 'DÉMO LOCALE' : 'EN BONNE VOIE'
+            }
+            changeLabel={
+              currentValueQuery.data?.provenance === 'mock'
+                ? 'Valeur illustrative'
+                : '+6 W ce mois-ci'
+            }
           />
 
           <YStack gap="$4">
