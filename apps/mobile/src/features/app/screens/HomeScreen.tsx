@@ -29,6 +29,13 @@ import { XStack, YStack } from 'tamagui'
 import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
+const goalUnits = {
+  w: 'W',
+  km: 'km',
+  m: 'm',
+  none: '',
+} as const
+
 export function HomeScreen() {
   const athleteQuery = useAthleteQuery()
   const activitiesQuery = useActivitiesQuery()
@@ -38,6 +45,7 @@ export function HomeScreen() {
 
   const goal = goalQuery.data
   const currentGoalValue = currentValueQuery.data?.value ?? null
+  const goalUnit = goal ? goalUnits[goal.targetUnit] : ''
   const nextWorkout = getNextWorkout(workoutsQuery.data ?? [])
   const activities = activitiesQuery.data ?? []
   const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
@@ -76,12 +84,18 @@ export function HomeScreen() {
             currentValue={currentGoalValue ?? undefined}
             progressPercentage={progressPercentage || undefined}
             statusLabel={
-              currentValueQuery.data?.provenance === 'mock' ? 'DÉMO LOCALE' : 'EN BONNE VOIE'
+              currentValueQuery.data?.provenance === 'mock'
+                ? 'DÉMO LOCALE'
+                : currentGoalValue === null
+                  ? 'POINT DE DÉPART'
+                  : 'EN BONNE VOIE'
             }
             changeLabel={
               currentValueQuery.data?.provenance === 'mock'
                 ? 'Valeur illustrative'
-                : '+6 W ce mois-ci'
+                : currentGoalValue === null
+                  ? 'Après tes premières sorties'
+                  : 'Progression observée'
             }
           />
 
@@ -150,10 +164,14 @@ export function HomeScreen() {
                   Objectif principal
                 </GradntText>
                 <GradntText weight="bold" fontSize={26}>
-                  {currentGoalValue ?? '—'} W
+                  {currentGoalValue ?? '—'} {goalUnit}
                 </GradntText>
                 <GradntText color="$accent" weight="semibold" fontSize={13}>
-                  Valeur de démonstration
+                  {currentValueQuery.data?.provenance === 'mock'
+                    ? 'Valeur de démonstration'
+                    : currentGoalValue === null
+                      ? 'À préciser après tes premières sorties'
+                      : 'Valeur observée'}
                 </GradntText>
               </YStack>
             </XStack>

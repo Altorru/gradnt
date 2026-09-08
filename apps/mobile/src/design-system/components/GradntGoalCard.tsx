@@ -10,7 +10,7 @@ import { GradntBadge, GradntCard, GradntHeading, GradntProgressBar, GradntText }
 
 type GradntGoalCardProps = {
   goal?: Goal
-  currentValue?: number
+  currentValue?: number | null
   progressPercentage?: number
   changeLabel?: string
   statusLabel?: string
@@ -18,13 +18,19 @@ type GradntGoalCardProps = {
 
 export function GradntGoalCard({
   goal,
-  currentValue = 258,
-  progressPercentage = 72,
-  changeLabel = '+6 W ce mois-ci',
-  statusLabel = 'EN BONNE VOIE',
+  currentValue,
+  progressPercentage,
+  changeLabel,
+  statusLabel,
 }: GradntGoalCardProps) {
-  const goalValue = goal?.targetValue ?? 280
-  const goalUnit = goal?.targetUnit === 'w' ? 'W' : (goal?.targetUnit ?? 'W')
+  const isPreview = goal === undefined
+  const currentGoalValue = isPreview ? (currentValue ?? 258) : currentValue
+  const goalValue = isPreview ? 280 : goal.targetValue
+  const progressValue = isPreview ? (progressPercentage ?? 72) : (progressPercentage ?? 0)
+  const goalUnit = isPreview ? 'W' : goal.targetUnit === 'w' ? 'W' : goal.targetUnit
+  const resolvedChangeLabel =
+    changeLabel ?? (isPreview ? '+6 W ce mois-ci' : 'Progression à préciser')
+  const resolvedStatusLabel = statusLabel ?? (isPreview ? 'EN BONNE VOIE' : 'POINT DE DÉPART')
 
   return (
     <GradntCard
@@ -57,16 +63,16 @@ export function GradntGoalCard({
 
           <XStack alignItems="center" gap="$2">
             <GradntText weight="bold" fontSize={36} lineHeight={38} letterSpacing={-1.7}>
-              {currentValue}
+              {currentGoalValue ?? '—'}
             </GradntText>
 
             <GradntText muted weight="semibold" fontSize={23} lineHeight={30} letterSpacing={-0.6}>
-              → {goalValue} {goalUnit}
+              {goalValue !== null ? `→ ${goalValue} ${goalUnit}` : 'Objectif à préciser'}
             </GradntText>
           </XStack>
         </YStack>
 
-        <GradntBadge tone="positive">{statusLabel}</GradntBadge>
+        <GradntBadge tone="positive">{resolvedStatusLabel}</GradntBadge>
       </XStack>
 
       {/* Zone réservée à l'artwork.
@@ -77,17 +83,17 @@ export function GradntGoalCard({
       <YStack zIndex={2} gap="$3" marginTop="auto">
         <XStack alignItems="center" gap="$3">
           <YStack flex={1}>
-            <GradntProgressBar value={progressPercentage} height={8} />
+            <GradntProgressBar value={progressValue} height={8} />
           </YStack>
 
           <GradntText weight="bold" fontSize={17} lineHeight={20}>
-            {progressPercentage} %
+            {progressValue} %
           </GradntText>
         </XStack>
 
         <XStack alignItems="center" gap="$1">
           <GradntText color="$accent" weight="semibold" fontSize={13} lineHeight={17}>
-            {changeLabel}
+            {resolvedChangeLabel}
           </GradntText>
 
           <ArrowUpRight size={14} color={colors.lime} />

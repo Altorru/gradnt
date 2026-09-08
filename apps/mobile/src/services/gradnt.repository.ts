@@ -105,9 +105,18 @@ export class MockGradntRepository implements GradntRepository {
   }
 
   async getCurrentGoalValue(): Promise<GoalValueSnapshot> {
+    const snapshot = await loadOnboardingSnapshot()
+
+    if (!snapshot) {
+      return {
+        value: 258,
+        provenance: 'mock',
+      }
+    }
+
     return {
-      value: 258,
-      provenance: 'mock',
+      value: null,
+      provenance: 'declared',
     }
   }
 
