@@ -2,7 +2,11 @@ import { CalendarDays, ChevronRight, Plus } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
 import { GradntBadge, GradntButton, GradntCard, GradntText } from '@/design-system'
-import { useUpcomingWorkoutsQuery } from '@/hooks/use-gradnt-data'
+import {
+  useMoveWorkoutMutation,
+  useSkipWorkoutMutation,
+  useUpcomingWorkoutsQuery,
+} from '@/hooks/use-gradnt-data'
 
 import { AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
@@ -25,10 +29,20 @@ const statusTone = {
   moved: 'warning',
 } as const
 
+const statusLabels = {
+  planned: 'À venir',
+  completed: 'Terminée',
+  skipped: 'Sautée',
+  moved: 'Déplacée',
+} as const
+
 export function PlanScreen() {
   const workoutsQuery = useUpcomingWorkoutsQuery()
+  const skipWorkout = useSkipWorkoutMutation()
+  const moveWorkout = useMoveWorkoutMutation()
   const workouts = workoutsQuery.data ?? []
   const plannedWorkouts = workouts.filter((workout) => workout.status === 'planned')
+  const isMutating = skipWorkout.isPending || moveWorkout.isPending
 
   return (
     <AppShell>
@@ -74,10 +88,41 @@ export function PlanScreen() {
                     </GradntText>
                   </YStack>
                   <GradntBadge tone={statusTone[workout.status]}>
-                    {workout.status === 'planned' ? 'À venir' : workout.status}
+                    {statusLabels[workout.status]}
                   </GradntBadge>
                   <ChevronRight size={18} color="$textSecondary" />
                 </XStack>
+
+                {workout.status === 'planned' ? (
+                  <XStack gap="$2">
+                    <YStack flex={1}>
+                      <GradntButton
+                        tone="ghost"
+                        minHeight={44}
+                        disabled={isMutating}
+                        onPress={() => {
+                          skipWorkout.mutate(workout.id)
+                        }}
+                      >
+                        Sauter
+                      </GradntButton>
+                    </YStack>
+                    <YStack flex={1}>
+                      <GradntButton
+                        tone="secondary"
+                        minHeight={44}
+                        disabled={isMutating}
+                        onPress={() => {
+                          const nextDate = new Date(workout.date)
+                          nextDate.setDate(nextDate.getDate() + 1)
+                          moveWorkout.mutate({ workoutId: workout.id, date: nextDate })
+                        }}
+                      >
+                        Décaler d&apos;un jour
+                      </GradntButton>
+                    </YStack>
+                  </XStack>
+                ) : null}
               </GradntCard>
             ))}
           </YStack>
