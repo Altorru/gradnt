@@ -3,9 +3,9 @@ import {
   demoActivities,
   demoAthlete,
   demoGoal,
-  demoMetrics,
   demoTrainingPlan,
   generateFirstPlan,
+  buildTrainingMetrics,
   trainingPlanSchema,
   type Activity,
   type AthleteProfile,
@@ -116,7 +116,11 @@ export class MockGradntRepository implements GradntRepository {
   }
 
   async getTrainingMetrics() {
-    return demoMetrics
+    return buildTrainingMetrics(
+      demoActivities,
+      '2026-08-10T00:00:00.000Z',
+      '2026-09-07T23:59:59.000Z',
+    )
   }
 
   async getTrainingPlan() {
