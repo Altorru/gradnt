@@ -3,6 +3,7 @@ import { generateFirstPlan, type PlannedWorkout, type TrainingPlan } from '@/lib
 import { loadOnboardingSnapshot } from '@/features/onboarding/services/onboarding.persistence'
 
 import { loadPlanOverrides, savePlanOverrides, type PlanOverride } from './plan.persistence'
+import { applyPlanOverrides } from './plan-overrides'
 import { gradntRepository } from './gradnt.repository'
 
 export interface PlanRepository {
@@ -10,30 +11,6 @@ export interface PlanRepository {
   skipWorkout(workoutId: string): Promise<TrainingPlan>
   completeWorkout(workoutId: string): Promise<TrainingPlan>
   moveWorkout(workoutId: string, date: Date): Promise<TrainingPlan>
-}
-
-function applyOverrides(plan: TrainingPlan, overrides: PlanOverride[]): TrainingPlan {
-  const overrideByWorkoutId = new Map(overrides.map((override) => [override.workoutId, override]))
-
-  return {
-    ...plan,
-    weeks: plan.weeks.map((week) => ({
-      ...week,
-      workouts: week.workouts.map((workout) => {
-        const override = overrideByWorkoutId.get(workout.id)
-
-        if (!override) {
-          return workout
-        }
-
-        return {
-          ...workout,
-          status: override.status,
-          date: override.date ?? workout.date,
-        }
-      }),
-    })),
-  }
 }
 
 async function getBasePlan(): Promise<TrainingPlan> {
@@ -69,10 +46,19 @@ export class LocalPlanRepository implements PlanRepository {
   async getPlan() {
     const plan = await getBasePlan()
     const overrides = await loadPlanOverrides()
-    return applyOverrides(plan, overrides)
+    return applyPlanOverrides(plan, overrides)
   }
 
   async updateWorkoutOverride(override: PlanOverride): Promise<TrainingPlan> {
+    const currentPlan = await getBasePlan()
+    const workoutExists = getPlanWorkouts(currentPlan).some(
+      (workout) => workout.id === override.workoutId,
+    )
+
+    if (!workoutExists) {
+      throw new Error(`Séance introuvable: ${override.workoutId}`)
+    }
+
     const overrides = await loadPlanOverrides()
     const nextOverrides = [
       ...overrides.filter((currentOverride) => currentOverride.workoutId !== override.workoutId),

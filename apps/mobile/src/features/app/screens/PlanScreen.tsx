@@ -15,6 +15,7 @@ import {
   useSkipWorkoutMutation,
   useUpcomingWorkoutsQuery,
 } from '@/hooks/use-gradnt-data'
+import { getPlanCompletionPercentage } from '@/lib/domain'
 
 import { AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
@@ -53,9 +54,7 @@ export function PlanScreen() {
   const plannedWorkouts = workouts.filter((workout) => workout.status === 'planned')
   const completedWorkouts = workouts.filter((workout) => workout.status === 'completed')
   const trackedWorkouts = workouts.filter((workout) => workout.status !== 'planned')
-  const completionPercentage = workouts.length
-    ? Math.round((completedWorkouts.length / workouts.length) * 100)
-    : 0
+  const completionPercentage = getPlanCompletionPercentage(workouts)
   const plannedMinutes = plannedWorkouts.reduce(
     (total, workout) => total + workout.durationMinutes,
     0,
