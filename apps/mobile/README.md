@@ -1,56 +1,57 @@
-# Welcome to your Expo app 👋
+# GRADNT mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile GRADNT construite avec Expo Router, React Native, TypeScript et Tamagui.
 
-## Get started
+## Installation
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Depuis la racine du monorepo :
 
 ```bash
-npm run reset-project
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Pour lancer l’expérience web avec le fallback de carte schématique :
 
-### Other setup steps
+```bash
+pnpm web
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Configuration Explore
 
-## Learn more
+Copie `.env.example` vers `.env.local`, puis renseigne la clé HeiGIT :
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+cp apps/mobile/.env.example apps/mobile/.env.local
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+La clé `EXPO_PUBLIC_HEIGIT_API_KEY` est utilisée côté client uniquement pour le prototype. Ne la commite jamais et ne l’utilise pas comme secret serveur.
 
-## Join the community
+Le routage réel est fourni par HeiGIT/openrouteservice sur `api.heigit.org`. Le fond cartographique utilise le style public OpenFreeMap par défaut :
 
-Join our community of developers creating universal apps.
+```text
+https://tiles.openfreemap.org/styles/liberty
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Le style peut être remplacé avec `EXPO_PUBLIC_MAP_STYLE_URL`.
+
+## Development build native
+
+MapLibre React Native n’est pas disponible dans Expo Go. Après l’installation ou une modification native :
+
+```bash
+pnpm --filter @gradnt/mobile exec expo prebuild --no-install
+pnpm ios
+# ou
+pnpm android
+```
+
+L’écran Explore utilise HeiGIT sur iOS/Android lorsque la clé est configurée. Le web conserve un aperçu SVG afin de rester compatible avec l’export statique.
+
+## Vérifications
+
+```bash
+pnpm format
+pnpm lint
+pnpm typecheck
+pnpm --filter @gradnt/mobile exec expo export --platform web
+```

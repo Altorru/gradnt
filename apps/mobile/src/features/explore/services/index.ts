@@ -1,3 +1,5 @@
+export * from './map-config'
 export * from './mock-routing.service'
 export * from './route-fixtures'
 export * from './routing-service'
+export * from './traffic-service'

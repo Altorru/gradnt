@@ -8,7 +8,6 @@ import {
   TrendingUp,
 } from '@tamagui/lucide-icons-2'
 import { useState } from 'react'
-import Svg, { Circle, Polyline } from 'react-native-svg'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -21,8 +20,8 @@ import {
   GradntSparkline,
   GradntText,
 } from '@/design-system'
-import { colors } from '@/design-system/tokens'
-import { useRouteProposalsQuery } from '@/features/explore/hooks'
+import { RouteMap } from '@/features/explore/components'
+import { isRealRoutingConfigured, useRouteProposalsQuery } from '@/features/explore/hooks'
 import {
   defaultRoutePreferences,
   type Route,
@@ -88,64 +87,6 @@ function getRecommendationLabel(label: RouteWithScore['recommendationLabel']) {
       : 'Plus entraînante'
 }
 
-function RoutePreview({ route }: { route: Route }) {
-  const width = 320
-  const height = 150
-  const longitudes = route.geometry.map((point) => point.longitude)
-  const latitudes = route.geometry.map((point) => point.latitude)
-  const minLongitude = Math.min(...longitudes)
-  const maxLongitude = Math.max(...longitudes)
-  const minLatitude = Math.min(...latitudes)
-  const maxLatitude = Math.max(...latitudes)
-  const longitudeRange = maxLongitude - minLongitude || 1
-  const latitudeRange = maxLatitude - minLatitude || 1
-  const points = route.geometry
-    .map((point) => {
-      const x = 18 + ((point.longitude - minLongitude) / longitudeRange) * (width - 36)
-      const y = height - 18 - ((point.latitude - minLatitude) / latitudeRange) * (height - 36)
-      return `${x},${y}`
-    })
-    .join(' ')
-  const firstPoint = points.split(' ')[0]?.split(',') ?? ['18', `${height - 18}`]
-
-  return (
-    <YStack gap="$2">
-      <YStack
-        height={height}
-        borderRadius="$4"
-        overflow="hidden"
-        backgroundColor="$backgroundSubtle"
-        borderWidth={1}
-        borderColor="$border"
-      >
-        <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
-          <Polyline
-            points={points}
-            fill="none"
-            stroke={colors.alpine}
-            strokeWidth={10}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity={0.12}
-          />
-          <Polyline
-            points={points}
-            fill="none"
-            stroke={colors.alpine}
-            strokeWidth={3}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <Circle cx={Number(firstPoint[0])} cy={Number(firstPoint[1])} r={6} fill={colors.lime} />
-        </Svg>
-      </YStack>
-      <GradntText muted fontSize={11}>
-        Aperçu schématique · données démo
-      </GradntText>
-    </YStack>
-  )
-}
-
 function RouteProposalCard({
   route,
   selected,
@@ -173,7 +114,7 @@ function RouteProposalCard({
         <ChevronRight size={19} color="$textSecondary" />
       </XStack>
 
-      <RoutePreview route={route} />
+      <RouteMap route={route} />
 
       <XStack justifyContent="space-between" gap="$2">
         <GradntMetric label="Distance" value={formatDistance(route.distanceMeters)} />
@@ -190,7 +131,7 @@ function RouteProposalCard({
         <XStack alignItems="center" gap="$2">
           <Gauge size={16} color="$positive" />
           <GradntText muted fontSize={13}>
-            Trafic {formatTrafficLabel(route.trafficExposure.label)}
+            Parcours {formatTrafficLabel(route.trafficExposure.label).toLowerCase()}
           </GradntText>
         </XStack>
         <GradntText muted fontSize={13}>
@@ -235,6 +176,7 @@ export function ExploreScreen() {
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const proposalsQuery = useRouteProposalsQuery(preferences)
   const proposals = proposalsQuery.data ?? []
+  const usesRealRouting = isRealRoutingConfigured()
 
   function updatePreferences(update: Partial<RoutePreferences>) {
     setSelectedRouteId(null)
@@ -316,18 +258,20 @@ export function ExploreScreen() {
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">Départ local</GradntText>
                 <GradntText muted fontSize={13}>
-                  Les propositions actuelles sont des données de démonstration autour de Lyon.
+                  {usesRealRouting
+                    ? 'Parcours calculés par HeiGIT depuis un départ local.'
+                    : 'Les propositions actuelles sont des données de démonstration autour de Lyon.'}
                 </GradntText>
               </YStack>
             </XStack>
             <XStack alignItems="center" gap="$2">
               <GradntChip
-                label="Moins de trafic"
+                label="Parcours plus calme"
                 selected={preferences.lowTraffic}
                 onPress={() => updatePreferences({ lowTraffic: !preferences.lowTraffic })}
               />
               <GradntText muted fontSize={12}>
-                Le trafic est une estimation, pas un niveau de sécurité.
+                L’exposition routière est une estimation, pas un niveau de sécurité.
               </GradntText>
             </XStack>
           </GradntCard>
@@ -338,8 +282,10 @@ export function ExploreScreen() {
               <GradntHeading level={2}>Tes propositions</GradntHeading>
             </XStack>
             <GradntText muted fontSize={13}>
-              Score déterministe basé sur la compatibilité avec ta demande. Les coordonnées réelles
-              seront fournies par HeiGIT lorsque la clé API sera configurée.
+              Score déterministe basé sur la compatibilité avec ta demande.{' '}
+              {usesRealRouting
+                ? 'La géométrie vient de HeiGIT et les métadonnées sont normalisées par GRADNT.'
+                : 'Les coordonnées réelles seront fournies par HeiGIT sur une build native configurée.'}
             </GradntText>
 
             {proposalsQuery.isPending ? (
