@@ -1,4 +1,5 @@
 import { CalendarDays, ChevronRight, Plus } from '@tamagui/lucide-icons-2'
+import { useRouter, type Href } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
 import { GradntBadge, GradntButton, GradntCard, GradntText } from '@/design-system'
@@ -37,6 +38,7 @@ const statusLabels = {
 } as const
 
 export function PlanScreen() {
+  const router = useRouter()
   const workoutsQuery = useUpcomingWorkoutsQuery()
   const skipWorkout = useSkipWorkoutMutation()
   const moveWorkout = useMoveWorkoutMutation()
@@ -77,7 +79,13 @@ export function PlanScreen() {
           <YStack gap="$3">
             {workouts.map((workout) => (
               <GradntCard key={workout.id} padding="$4" gap="$3">
-                <XStack alignItems="center" gap="$3">
+                <XStack
+                  alignItems="center"
+                  gap="$3"
+                  onPress={() => {
+                    router.push(`/plan/${workout.id}` as Href)
+                  }}
+                >
                   <YStack flex={1} gap="$1">
                     <GradntText muted fontSize={11} weight="semibold" letterSpacing={0.7}>
                       {new Date(workout.date).toLocaleDateString('fr-FR', { weekday: 'long' })}

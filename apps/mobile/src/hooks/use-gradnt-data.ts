@@ -59,6 +59,21 @@ export function useSkipWorkoutMutation() {
   })
 }
 
+export function useCompleteWorkoutMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (workoutId: string) => planRepository.completeWorkout(workoutId),
+    onSuccess: (plan) => {
+      queryClient.setQueryData(['training-plan'], plan)
+      queryClient.setQueryData(
+        ['upcoming-workouts'],
+        plan.weeks.flatMap((week) => week.workouts),
+      )
+    },
+  })
+}
+
 export function useMoveWorkoutMutation() {
   const queryClient = useQueryClient()
 

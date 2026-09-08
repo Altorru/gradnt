@@ -8,6 +8,7 @@ import { gradntRepository } from './gradnt.repository'
 export interface PlanRepository {
   getPlan(): Promise<TrainingPlan>
   skipWorkout(workoutId: string): Promise<TrainingPlan>
+  completeWorkout(workoutId: string): Promise<TrainingPlan>
   moveWorkout(workoutId: string, date: Date): Promise<TrainingPlan>
 }
 
@@ -86,6 +87,14 @@ export class LocalPlanRepository implements PlanRepository {
     return this.updateWorkoutOverride({
       workoutId,
       status: 'skipped',
+      date: null,
+    })
+  }
+
+  async completeWorkout(workoutId: string) {
+    return this.updateWorkoutOverride({
+      workoutId,
+      status: 'completed',
       date: null,
     })
   }

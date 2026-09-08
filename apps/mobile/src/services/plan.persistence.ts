@@ -6,7 +6,7 @@ const planOverridesStorageKey = 'gradnt.plan.overrides.v1'
 
 export const planOverrideSchema = z.object({
   workoutId: z.string(),
-  status: z.enum(['planned', 'skipped', 'moved']),
+  status: z.enum(['planned', 'completed', 'skipped', 'moved']),
   date: z.string().datetime().nullable(),
 })
 
