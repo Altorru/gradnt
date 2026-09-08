@@ -1,8 +1,15 @@
-import { CalendarDays, ChevronRight, Plus } from '@tamagui/lucide-icons-2'
+import { CalendarDays, ChevronRight } from '@tamagui/lucide-icons-2'
 import { useRouter, type Href } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
-import { GradntBadge, GradntButton, GradntCard, GradntText } from '@/design-system'
+import {
+  GradntBadge,
+  GradntButton,
+  GradntCard,
+  GradntHeading,
+  GradntProgressBar,
+  GradntText,
+} from '@/design-system'
 import {
   useMoveWorkoutMutation,
   useSkipWorkoutMutation,
@@ -44,6 +51,15 @@ export function PlanScreen() {
   const moveWorkout = useMoveWorkoutMutation()
   const workouts = workoutsQuery.data ?? []
   const plannedWorkouts = workouts.filter((workout) => workout.status === 'planned')
+  const completedWorkouts = workouts.filter((workout) => workout.status === 'completed')
+  const trackedWorkouts = workouts.filter((workout) => workout.status !== 'planned')
+  const completionPercentage = workouts.length
+    ? Math.round((completedWorkouts.length / workouts.length) * 100)
+    : 0
+  const plannedMinutes = plannedWorkouts.reduce(
+    (total, workout) => total + workout.durationMinutes,
+    0,
+  )
   const isMutating = skipWorkout.isPending || moveWorkout.isPending
 
   return (
@@ -56,9 +72,14 @@ export function PlanScreen() {
           />
 
           {workoutsQuery.isError ? (
-            <GradntText color="$danger" fontSize={13}>
-              Le plan est momentanément indisponible.
-            </GradntText>
+            <GradntCard padding="$4" gap="$3">
+              <GradntText color="$danger" fontSize={13} weight="semibold">
+                Le plan est momentanément indisponible.
+              </GradntText>
+              <GradntButton tone="secondary" onPress={() => void workoutsQuery.refetch()}>
+                Réessayer
+              </GradntButton>
+            </GradntCard>
           ) : null}
 
           <GradntCard accent gap="$4">
@@ -69,12 +90,44 @@ export function PlanScreen() {
                 <GradntText muted fontSize={13}>
                   {workoutsQuery.isPending
                     ? 'Chargement…'
-                    : `${plannedWorkouts.length} séances · ${plannedWorkouts.reduce((total, workout) => total + workout.durationMinutes, 0) / 60} h prévues`}
+                    : workouts.length
+                      ? `${plannedWorkouts.length} à venir · ${completedWorkouts.length} terminée${completedWorkouts.length > 1 ? 's' : ''}`
+                      : 'Aucune séance planifiée'}
                 </GradntText>
               </YStack>
-              <GradntBadge tone="positive">En cours</GradntBadge>
+              <GradntBadge tone={completionPercentage === 100 ? 'positive' : 'neutral'}>
+                {workoutsQuery.isPending ? '—' : `${completionPercentage}%`}
+              </GradntBadge>
             </XStack>
+            {!workoutsQuery.isPending && workouts.length ? (
+              <YStack gap="$2">
+                <XStack justifyContent="space-between">
+                  <GradntText muted fontSize={12}>
+                    Avancement du plan
+                  </GradntText>
+                  <GradntText muted fontSize={12}>
+                    {trackedWorkouts.length}/{workouts.length} suivies
+                  </GradntText>
+                </XStack>
+                <GradntProgressBar value={completionPercentage} />
+                <GradntText muted fontSize={12}>
+                  {plannedMinutes
+                    ? `${(plannedMinutes / 60).toFixed(1)} h encore prévues`
+                    : 'Semaine suivie'}
+                </GradntText>
+              </YStack>
+            ) : null}
           </GradntCard>
+
+          {!workoutsQuery.isPending && !workoutsQuery.isError && workouts.length === 0 ? (
+            <GradntCard padding="$4" gap="$2">
+              <GradntHeading level={3}>Ton plan est vide</GradntHeading>
+              <GradntText muted>
+                Termine l&apos;onboarding avec au moins un jour disponible pour générer ta première
+                semaine.
+              </GradntText>
+            </GradntCard>
+          ) : null}
 
           <YStack gap="$3">
             {workouts.map((workout) => (
@@ -134,10 +187,6 @@ export function PlanScreen() {
               </GradntCard>
             ))}
           </YStack>
-
-          <GradntButton tone="secondary" iconAfter={<Plus size={18} color="$color" />}>
-            Ajouter une disponibilité
-          </GradntButton>
         </YStack>
       </AppScrollView>
     </AppShell>

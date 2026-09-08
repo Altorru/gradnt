@@ -1,6 +1,6 @@
-import type { WeeklyAvailabilityForm } from '@/features/onboarding/domain/availability.schema'
-import type { CyclistGoalForm } from '@/features/onboarding/domain/goal.schema'
-import type { CyclistProfileForm } from '@/features/onboarding/domain/profile.schema'
+import type { WeeklyAvailabilityForm } from '../../features/onboarding/domain/availability.schema'
+import type { CyclistGoalForm } from '../../features/onboarding/domain/goal.schema'
+import type { CyclistProfileForm } from '../../features/onboarding/domain/profile.schema'
 
 import { plannedWorkoutSchema, type PlannedWorkout } from './schemas'
 
@@ -49,11 +49,13 @@ const workoutTemplates = [
   },
 ]
 
+function getDaysUntilTarget(startDate: Date, targetDay: number): number {
+  return (targetDay - startDate.getDay() + 7) % 7
+}
+
 function getNextDate(startDate: Date, targetDay: number): Date {
   const date = new Date(startDate)
-  const currentDay = date.getDay()
-  const daysUntilTarget = (targetDay - currentDay + 7) % 7
-  date.setDate(date.getDate() + daysUntilTarget)
+  date.setDate(date.getDate() + getDaysUntilTarget(startDate, targetDay))
   date.setHours(7, 0, 0, 0)
   return date
 }
@@ -73,7 +75,11 @@ function getIntensityTemplate(index: number, availableCount: number) {
 export function generateFirstPlan(input: FirstPlanInput): PlannedWorkout[] {
   const availableSlots = input.availability
     .filter((slot) => slot.available && slot.durationMinutes !== null)
-    .sort((left, right) => weekdayIndex[left.day] - weekdayIndex[right.day])
+    .sort(
+      (left, right) =>
+        getDaysUntilTarget(input.startDate, weekdayIndex[left.day]) -
+        getDaysUntilTarget(input.startDate, weekdayIndex[right.day]),
+    )
 
   const maxMinutes = Math.round(weeklyVolumeMinutes[input.profile.weeklyVolume] * 1.1)
   let scheduledMinutes = 0
