@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import {
+  aggregateSurfaceBreakdown,
   detectClimbs,
   getTrafficExposure,
   rankRouteProposals,
@@ -65,7 +66,6 @@ const heigitResponseSchema = z
   .passthrough()
 
 type HeigitFeature = z.infer<typeof heigitFeatureSchema>
-
 type HeigitExtraSummary = z.infer<typeof extraSummarySchema>
 
 const heigitProfileByMode: Record<RouteMode, string> = {
@@ -127,14 +127,16 @@ function toBreakdown(
   summaries: HeigitExtraSummary[] | undefined,
   labels: Record<number, string>,
   fallbackLabel: string,
+  routeDistanceMeters: number,
 ): BreakdownItem[] {
   if (!summaries?.length) {
-    return [{ label: fallbackLabel, percentage: 100 }]
+    return [{ label: fallbackLabel, percentage: 100, distanceMeters: routeDistanceMeters }]
   }
 
   return summaries.map((item) => ({
     label: labels[item.value] ?? `${fallbackLabel} ${item.value}`,
     percentage: Math.round(item.amount * 10) / 10,
+    distanceMeters: Math.round(item.distance),
   }))
 }
 
@@ -196,14 +198,11 @@ function normalizeFeature(feature: HeigitFeature, request: RouteRequest, index: 
     extras?.waytypes?.summary ?? extras?.waytype?.summary,
     wayTypeLabels,
     'Type de voie',
+    distanceMeters,
   )
   const suitabilityValue = getAverageExtraValue(extras?.suitability?.summary)
   const suitability = suitabilityValue === null ? 78 : Math.round((suitabilityValue / 10) * 100)
-  const trafficExposure = getTrafficExposure({
-    suitability,
-    wayTypeBreakdown,
-    lowTraffic: request.preferences.lowTraffic,
-  })
+  const trafficExposure = getTrafficExposure({ suitability, wayTypeBreakdown })
 
   return routeSchema.parse({
     id: `heigit-route-${index + 1}`,
@@ -216,7 +215,9 @@ function normalizeFeature(feature: HeigitFeature, request: RouteRequest, index: 
     elevationLossMeters: summary?.descent ?? 0,
     elevationProfile: usableProfile,
     climbs: detectClimbs(usableProfile),
-    surfaceBreakdown: toBreakdown(extras?.surface?.summary, surfaceLabels, 'Surface'),
+    surfaceBreakdown: aggregateSurfaceBreakdown(
+      toBreakdown(extras?.surface?.summary, surfaceLabels, 'Surface', distanceMeters),
+    ),
     wayTypeBreakdown,
     suitability: Math.min(100, Math.max(0, suitability)),
     trafficExposure: {
@@ -230,6 +231,10 @@ function normalizeFeature(feature: HeigitFeature, request: RouteRequest, index: 
       profile: heigitProfileByMode[request.preferences.mode],
     },
   })
+}
+
+export function normalizeHeigitFeature(feature: unknown, request: RouteRequest, index = 0) {
+  return normalizeFeature(heigitFeatureSchema.parse(feature), request, index)
 }
 
 export class HeigitRoutingService implements RoutingService {

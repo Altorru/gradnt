@@ -38,13 +38,13 @@ const sharedRouteFields = {
     },
   ],
   surfaceBreakdown: [
-    { label: 'Asphalte', percentage: 92 },
-    { label: 'Gravier', percentage: 8 },
+    { label: 'Asphalte', percentage: 92, distanceMeters: 23736 },
+    { label: 'Gravier', percentage: 8, distanceMeters: 2064 },
   ],
   wayTypeBreakdown: [
-    { label: 'Route secondaire', percentage: 58 },
-    { label: 'Piste cyclable', percentage: 24 },
-    { label: 'Route principale', percentage: 18 },
+    { label: 'Route secondaire', percentage: 58, distanceMeters: 14964 },
+    { label: 'Piste cyclable', percentage: 24, distanceMeters: 6192 },
+    { label: 'Route principale', percentage: 18, distanceMeters: 4644 },
   ],
   suitability: 86,
   trafficExposure: {
@@ -78,13 +78,13 @@ export const demoRoutes: Route[] = [
     elevationGainMeters: 142,
     elevationLossMeters: 142,
     surfaceBreakdown: [
-      { label: 'Asphalte', percentage: 96 },
-      { label: 'Gravier', percentage: 4 },
+      { label: 'Asphalte', percentage: 96, distanceMeters: 27456 },
+      { label: 'Gravier', percentage: 4, distanceMeters: 1144 },
     ],
     wayTypeBreakdown: [
-      { label: 'Route secondaire', percentage: 44 },
-      { label: 'Piste cyclable', percentage: 45 },
-      { label: 'Route principale', percentage: 11 },
+      { label: 'Route secondaire', percentage: 44, distanceMeters: 12584 },
+      { label: 'Piste cyclable', percentage: 45, distanceMeters: 12870 },
+      { label: 'Route principale', percentage: 11, distanceMeters: 3146 },
     ],
     suitability: 91,
     trafficExposure: {
@@ -104,13 +104,13 @@ export const demoRoutes: Route[] = [
     elevationGainMeters: 486,
     elevationLossMeters: 486,
     surfaceBreakdown: [
-      { label: 'Asphalte', percentage: 88 },
-      { label: 'Gravier', percentage: 12 },
+      { label: 'Asphalte', percentage: 88, distanceMeters: 26576 },
+      { label: 'Gravier', percentage: 12, distanceMeters: 3624 },
     ],
     wayTypeBreakdown: [
-      { label: 'Route secondaire', percentage: 71 },
-      { label: 'Piste cyclable', percentage: 8 },
-      { label: 'Route principale', percentage: 21 },
+      { label: 'Route secondaire', percentage: 71, distanceMeters: 21442 },
+      { label: 'Piste cyclable', percentage: 8, distanceMeters: 2416 },
+      { label: 'Route principale', percentage: 21, distanceMeters: 6342 },
     ],
     suitability: 79,
     trafficExposure: {

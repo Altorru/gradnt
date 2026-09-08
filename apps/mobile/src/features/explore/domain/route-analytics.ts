@@ -1,7 +1,9 @@
 import type { Route, RouteWithScore } from './route'
-import type { RoutePreferences } from './route-preferences'
+import { type RoutePreferences, type SurfacePreference } from './route-preferences'
 import { routeSchema } from './route'
 
+// A climb needs at least 300 m and 20 m of positive gain. Hysteresis keeps
+// gentle sections at or above 1% inside a climb after a 2% start threshold.
 const minimumClimbLengthMeters = 300
 const minimumClimbGainMeters = 20
 const climbStartGradientPercent = 2
@@ -110,10 +112,78 @@ export function detectClimbs(profile: Route['elevationProfile']): Route['climbs'
   return climbs
 }
 
+export function normalizeSurfaceGroup(
+  label: string,
+): 'paved' | 'compacted' | 'gravel' | 'trail' | 'unknown' {
+  const normalized = label.toLowerCase()
+
+  if (
+    normalized.includes('asphalt') ||
+    normalized.includes('asphalte') ||
+    normalized.includes('paved') ||
+    normalized.includes('revêt') ||
+    normalized.includes('béton') ||
+    normalized.includes('pavé')
+  ) {
+    return 'paved'
+  }
+
+  if (normalized.includes('compact')) {
+    return 'compacted'
+  }
+
+  if (normalized.includes('gravel') || normalized.includes('gravier')) {
+    return 'gravel'
+  }
+
+  if (
+    normalized.includes('dirt') ||
+    normalized.includes('terre') ||
+    normalized.includes('trail') ||
+    normalized.includes('sol') ||
+    normalized.includes('piste') ||
+    normalized.includes('sentier') ||
+    normalized.includes('herbe')
+  ) {
+    return 'trail'
+  }
+
+  return 'unknown'
+}
+
+const surfaceGroupLabels = {
+  paved: 'Asphalte / revêtu',
+  compacted: 'Compacté',
+  gravel: 'Gravier',
+  trail: 'Terre / sentier',
+  unknown: 'Inconnu',
+} as const
+
+export function aggregateSurfaceBreakdown(
+  breakdown: Route['surfaceBreakdown'],
+): Route['surfaceBreakdown'] {
+  const grouped = new Map<keyof typeof surfaceGroupLabels, number>()
+
+  for (const item of breakdown) {
+    const group = normalizeSurfaceGroup(item.label)
+    grouped.set(group, (grouped.get(group) ?? 0) + item.distanceMeters)
+  }
+
+  const totalDistance = breakdown.reduce((total, item) => total + item.distanceMeters, 0)
+  if (!totalDistance) {
+    return breakdown
+  }
+
+  return Array.from(grouped.entries()).map(([group, distanceMeters]) => ({
+    label: surfaceGroupLabels[group],
+    distanceMeters: Math.round(distanceMeters),
+    percentage: Math.round((distanceMeters / totalDistance) * 1000) / 10,
+  }))
+}
+
 export function getTrafficExposure(input: {
   suitability: number
   wayTypeBreakdown: Route['wayTypeBreakdown']
-  lowTraffic: boolean
 }): Route['trafficExposure'] {
   const cyclewayPercentage =
     input.wayTypeBreakdown.find((item) => item.label === 'Piste cyclable')?.percentage ?? 0
@@ -124,11 +194,10 @@ export function getTrafficExposure(input: {
     Math.min(100, Math.round(60 - cyclewayPercentage * 0.45 + mainRoadPercentage * 0.55)),
   )
 
-  const adjustedScore = input.lowTraffic ? score : Math.max(0, score - 5)
-  const label = adjustedScore <= 30 ? 'low' : adjustedScore <= 60 ? 'moderate' : 'high'
+  const label = score <= 30 ? 'low' : score <= 60 ? 'moderate' : 'high'
 
   return {
-    score: adjustedScore,
+    score,
     label,
     rationale:
       input.suitability >= 70
@@ -152,29 +221,63 @@ function elevationFit(route: Route, preferences: RoutePreferences) {
 }
 
 function intentFit(route: Route, preferences: RoutePreferences) {
-  if (preferences.trainingIntent === 'climbing') {
+  const intent = preferences.plannedWorkoutIntent ?? preferences.trainingIntent
+
+  if (intent === 'climbing') {
     return Math.min(100, route.trainingIntentFit + route.climbs.length * 5)
   }
 
-  if (preferences.trainingIntent === 'recovery') {
+  if (intent === 'recovery') {
     return Math.max(0, 100 - route.elevationGainMeters / 15)
+  }
+
+  if (intent === 'tempo') {
+    return Math.min(100, route.trainingIntentFit + (route.distanceMeters >= 25_000 ? 8 : 0))
   }
 
   return route.trainingIntentFit
 }
 
+function surfaceFit(route: Route, preferences: RoutePreferences) {
+  const surfaceMix = route.surfaceBreakdown.reduce(
+    (mix, item) => {
+      const group = normalizeSurfaceGroup(item.label)
+      if (group === 'paved') {
+        mix.paved += item.percentage
+      } else if (group === 'compacted' || group === 'gravel') {
+        mix.gravel += item.percentage
+      } else if (group === 'trail') {
+        mix.trail += item.percentage
+      }
+      return mix
+    },
+    { paved: 0, gravel: 0, trail: 0 },
+  )
+
+  const preferenceScore: Record<SurfacePreference, number> = {
+    paved: surfaceMix.paved,
+    mixed: Math.max(0, 100 - Math.abs(surfaceMix.gravel + surfaceMix.trail - 30)),
+    gravel: surfaceMix.gravel,
+    trail: surfaceMix.trail,
+  }
+
+  return preferenceScore[preferences.surfacePreference]
+}
+
 export function scoreRoute(route: Route, preferences: RoutePreferences): RouteWithScore {
   const trafficScore = preferences.lowTraffic ? 100 - route.trafficExposure.score : 70
   const score = Math.round(
-    distanceFit(route, preferences) * 0.3 +
-      elevationFit(route, preferences) * 0.2 +
+    distanceFit(route, preferences) * 0.25 +
+      elevationFit(route, preferences) * 0.15 +
+      surfaceFit(route, preferences) * 0.15 +
       intentFit(route, preferences) * 0.3 +
-      trafficScore * 0.2,
+      trafficScore * 0.15,
   )
 
   return {
     ...routeSchema.parse(route),
-    trainingIntent: preferences.trainingIntent,
+    trainingIntent: preferences.plannedWorkoutIntent ?? preferences.trainingIntent,
+    trainingIntentFit: Math.round(intentFit(route, preferences)),
     recommendationLabel: 'recommended',
     score,
   }
@@ -188,8 +291,27 @@ export function rankRouteProposals(
     .map((route) => scoreRoute(route, preferences))
     .sort((a, b) => b.score - a.score)
 
-  return ranked.map((route, index) => ({
-    ...route,
-    recommendationLabel: index === 0 ? 'recommended' : index === 1 ? 'quieter' : 'training',
-  }))
+  const recommended = ranked[0]
+
+  return ranked.map((route, index) => {
+    if (index === 0) {
+      return { ...route, recommendationLabel: 'recommended' as const }
+    }
+
+    const isQuieter = recommended
+      ? route.trafficExposure.score < recommended.trafficExposure.score
+      : false
+    const hasMoreClimbing = recommended
+      ? route.elevationGainMeters > recommended.elevationGainMeters
+      : false
+
+    return {
+      ...route,
+      recommendationLabel: isQuieter
+        ? ('quieter' as const)
+        : hasMoreClimbing
+          ? ('training' as const)
+          : ('alternative' as const),
+    }
+  })
 }

@@ -27,6 +27,7 @@ export const climbSchema = z.object({
 export const breakdownItemSchema = z.object({
   label: z.string().min(1),
   percentage: z.number().min(0).max(100),
+  distanceMeters: z.number().nonnegative(),
 })
 
 export const trafficExposureSchema = z.object({
@@ -74,6 +75,6 @@ export type Route = z.infer<typeof routeSchema>
 
 export type RouteWithScore = Route & {
   trainingIntent: z.infer<typeof trainingIntentSchema>
-  recommendationLabel: 'recommended' | 'quieter' | 'training'
+  recommendationLabel: 'recommended' | 'quieter' | 'training' | 'alternative'
   score: number
 }

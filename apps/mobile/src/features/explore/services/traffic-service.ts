@@ -3,7 +3,6 @@ import { getTrafficExposure, type Route, type TrafficExposure } from '../domain'
 export type RoadExposureRequest = {
   suitability: number
   wayTypeBreakdown: Route['wayTypeBreakdown']
-  lowTraffic: boolean
 }
 
 export interface TrafficService {

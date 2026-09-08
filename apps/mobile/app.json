@@ -38,6 +38,12 @@
       "expo-image",
       "@maplibre/maplibre-react-native",
       "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "GRADNT utilise ta position uniquement pour proposer un départ proche de toi."
+        }
+      ],
       "expo-font"
     ],
     "experiments": {

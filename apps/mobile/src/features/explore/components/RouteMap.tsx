@@ -1,1 +1,1 @@
-export { MapLibreRouteMap as RouteMap } from '../adapters/maplibre/MapLibreRouteMap'
+export { RouteMap } from './RouteMap.web'

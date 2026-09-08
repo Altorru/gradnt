@@ -1,12 +1,4 @@
-import {
-  ChevronRight,
-  Clock3,
-  Compass,
-  Gauge,
-  MapPin,
-  Sparkles,
-  TrendingUp,
-} from '@tamagui/lucide-icons-2'
+import { ChevronRight, Clock3, Compass, Gauge, MapPin, Sparkles } from '@tamagui/lucide-icons-2'
 import { useState } from 'react'
 import { XStack, YStack } from 'tamagui'
 
@@ -17,17 +9,17 @@ import {
   GradntChip,
   GradntHeading,
   GradntMetric,
-  GradntSparkline,
   GradntText,
 } from '@/design-system'
-import { RouteMap } from '@/features/explore/components'
-import { isRealRoutingConfigured, useRouteProposalsQuery } from '@/features/explore/hooks'
+import { RouteDetailPanel } from '@/features/explore/components'
+import { useCurrentRouteStart, useRouteProposalsQuery } from '@/features/explore/hooks'
 import {
   defaultRoutePreferences,
   type Route,
   type RouteMode,
   type RoutePreferences,
   type RouteWithScore,
+  type SurfacePreference,
   type TrainingIntent,
 } from '@/features/explore/domain'
 
@@ -41,6 +33,14 @@ const routeModes: { label: string; value: RouteMode }[] = [
 ]
 
 const distanceOptions = [30, 60, 90]
+const elevationOptions = [200, 500, 800]
+
+const surfaceOptions: { label: string; value: SurfacePreference }[] = [
+  { label: 'Asphalte', value: 'paved' },
+  { label: 'Mixte', value: 'mixed' },
+  { label: 'Gravier', value: 'gravel' },
+  { label: 'Sentier', value: 'trail' },
+]
 
 const intentOptions: { label: string; value: TrainingIntent }[] = [
   { label: 'Endurance', value: 'endurance' },
@@ -65,7 +65,7 @@ function formatDuration(durationSeconds: number) {
   return `${hours} h${remainingMinutes ? ` ${remainingMinutes} min` : ''}`
 }
 
-function formatTrafficLabel(label: Route['trafficExposure']['label']) {
+function formatExposureLabel(label: Route['trafficExposure']['label']) {
   return label === 'low'
     ? 'Faible'
     : label === 'moderate'
@@ -84,7 +84,13 @@ function getRecommendationLabel(label: RouteWithScore['recommendationLabel']) {
     ? 'Recommandée'
     : label === 'quieter'
       ? 'Plus calme'
-      : 'Plus entraînante'
+      : label === 'training'
+        ? 'Plus entraînante'
+        : 'Alternative'
+}
+
+function getTrainingFitLabel(score: number) {
+  return score >= 85 ? 'Très adaptée' : score >= 70 ? 'Adaptée' : 'À ajuster'
 }
 
 function RouteProposalCard({
@@ -96,7 +102,6 @@ function RouteProposalCard({
   selected: boolean
   onPress: () => void
 }) {
-  const elevationValues = route.elevationProfile.map((point) => point.elevationMeters)
   const mainSurface = route.surfaceBreakdown[0]
 
   return (
@@ -114,50 +119,25 @@ function RouteProposalCard({
         <ChevronRight size={19} color="$textSecondary" />
       </XStack>
 
-      <RouteMap route={route} />
-
-      <XStack justifyContent="space-between" gap="$2">
+      <XStack justifyContent="space-between" gap="$3">
         <GradntMetric label="Distance" value={formatDistance(route.distanceMeters)} />
         <GradntMetric label="Durée" value={formatDuration(route.durationSeconds)} />
+        <GradntMetric label="Dénivelé" value={`+${route.elevationGainMeters} m`} />
       </XStack>
 
-      <XStack gap="$4" flexWrap="wrap">
-        <XStack alignItems="center" gap="$2">
-          <TrendingUp size={16} color="$recovery" />
-          <GradntText muted fontSize={13}>
-            +{route.elevationGainMeters} m
-          </GradntText>
-        </XStack>
+      <XStack gap="$3" flexWrap="wrap">
         <XStack alignItems="center" gap="$2">
           <Gauge size={16} color="$positive" />
           <GradntText muted fontSize={13}>
-            Parcours {formatTrafficLabel(route.trafficExposure.label).toLowerCase()}
+            Route {formatExposureLabel(route.trafficExposure.label).toLowerCase()}
           </GradntText>
         </XStack>
         <GradntText muted fontSize={13}>
           {mainSurface?.percentage ?? 0}% {mainSurface?.label.toLowerCase() ?? 'surface'}
         </GradntText>
-      </XStack>
-
-      <YStack gap="$2">
-        <XStack justifyContent="space-between" alignItems="center">
-          <GradntText weight="semibold" fontSize={13}>
-            Profil d&apos;altitude
-          </GradntText>
-          <GradntText muted fontSize={12}>
-            {route.climbs.length} montée{route.climbs.length > 1 ? 's' : ''} détectée
-            {route.climbs.length > 1 ? 's' : ''}
-          </GradntText>
-        </XStack>
-        <GradntSparkline data={elevationValues} width={300} height={54} />
-      </YStack>
-
-      <XStack gap="$2" flexWrap="wrap">
-        {route.surfaceBreakdown.map((surface) => (
-          <GradntBadge key={`${route.id}-${surface.label}`} tone="neutral">
-            {`${surface.label} ${surface.percentage}%`}
-          </GradntBadge>
-        ))}
+        <GradntText muted fontSize={13}>
+          Séance {getTrainingFitLabel(route.trainingIntentFit).toLowerCase()}
+        </GradntText>
       </XStack>
 
       <GradntButton
@@ -165,7 +145,7 @@ function RouteProposalCard({
         iconAfter={<ChevronRight size={17} color={selected ? '$onAccent' : '$color'} />}
         onPress={onPress}
       >
-        {selected ? 'Parcours sélectionné' : 'Choisir ce parcours'}
+        {selected ? 'Détail ouvert' : 'Voir le détail'}
       </GradntButton>
     </GradntCard>
   )
@@ -174,9 +154,11 @@ function RouteProposalCard({
 export function ExploreScreen() {
   const [preferences, setPreferences] = useState<RoutePreferences>(defaultRoutePreferences)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
-  const proposalsQuery = useRouteProposalsQuery(preferences)
+  const routeStart = useCurrentRouteStart()
+  const proposalsQuery = useRouteProposalsQuery(preferences, routeStart.start)
   const proposals = proposalsQuery.data ?? []
-  const usesRealRouting = isRealRoutingConfigured()
+  const selectedRoute = proposals.find((route) => route.id === selectedRouteId)
+  const usesRealRouting = proposals.some((route) => route.provider.name === 'openrouteservice')
 
   function updatePreferences(update: Partial<RoutePreferences>) {
     setSelectedRouteId(null)
@@ -203,53 +185,65 @@ export function ExploreScreen() {
               </YStack>
             </XStack>
 
-            <YStack gap="$2">
-              <GradntText muted fontSize={12} weight="semibold">
-                TYPE DE PARCOURS
-              </GradntText>
-              <XStack gap="$2" flexWrap="wrap">
-                {routeModes.map((mode) => (
-                  <GradntChoice
-                    key={mode.value}
-                    label={mode.label}
-                    selected={preferences.mode === mode.value}
-                    onPress={() => updatePreferences({ mode: mode.value })}
-                  />
-                ))}
-              </XStack>
-            </YStack>
+            <PreferenceGroup label="TYPE DE PARCOURS">
+              {routeModes.map((mode) => (
+                <GradntChip
+                  key={mode.value}
+                  label={mode.label}
+                  selected={preferences.mode === mode.value}
+                  onPress={() => updatePreferences({ mode: mode.value })}
+                />
+              ))}
+            </PreferenceGroup>
 
-            <YStack gap="$2">
-              <GradntText muted fontSize={12} weight="semibold">
-                DISTANCE CIBLE
-              </GradntText>
-              <XStack gap="$2">
-                {distanceOptions.map((distance) => (
-                  <GradntChip
-                    key={distance}
-                    label={`${distance} km`}
-                    selected={preferences.targetDistanceKm === distance}
-                    onPress={() => updatePreferences({ targetDistanceKm: distance })}
-                  />
-                ))}
-              </XStack>
-            </YStack>
+            <PreferenceGroup label="DISTANCE CIBLE">
+              {distanceOptions.map((distance) => (
+                <GradntChip
+                  key={distance}
+                  label={`${distance} km`}
+                  selected={preferences.targetDistanceKm === distance}
+                  onPress={() => updatePreferences({ targetDistanceKm: distance })}
+                />
+              ))}
+            </PreferenceGroup>
 
-            <YStack gap="$2">
-              <GradntText muted fontSize={12} weight="semibold">
-                INTENTION
-              </GradntText>
-              <XStack gap="$2" flexWrap="wrap">
-                {intentOptions.map((intent) => (
-                  <GradntChip
-                    key={intent.value}
-                    label={intent.label}
-                    selected={preferences.trainingIntent === intent.value}
-                    onPress={() => updatePreferences({ trainingIntent: intent.value })}
-                  />
-                ))}
-              </XStack>
-            </YStack>
+            <PreferenceGroup label="DÉNIVELÉ CIBLE">
+              {elevationOptions.map((elevation) => (
+                <GradntChip
+                  key={elevation}
+                  label={`+${elevation} m`}
+                  selected={preferences.targetElevationGainMeters === elevation}
+                  onPress={() => updatePreferences({ targetElevationGainMeters: elevation })}
+                />
+              ))}
+            </PreferenceGroup>
+
+            <PreferenceGroup label="SURFACE">
+              {surfaceOptions.map((surface) => (
+                <GradntChip
+                  key={surface.value}
+                  label={surface.label}
+                  selected={preferences.surfacePreference === surface.value}
+                  onPress={() => updatePreferences({ surfacePreference: surface.value })}
+                />
+              ))}
+            </PreferenceGroup>
+
+            <PreferenceGroup label="INTENTION DE SÉANCE">
+              {intentOptions.map((intent) => (
+                <GradntChip
+                  key={intent.value}
+                  label={intent.label}
+                  selected={preferences.trainingIntent === intent.value}
+                  onPress={() =>
+                    updatePreferences({
+                      trainingIntent: intent.value,
+                      plannedWorkoutIntent: intent.value,
+                    })
+                  }
+                />
+              ))}
+            </PreferenceGroup>
           </GradntCard>
 
           <GradntCard padding="$4" gap="$3">
@@ -259,21 +253,36 @@ export function ExploreScreen() {
                 <GradntText weight="semibold">Départ local</GradntText>
                 <GradntText muted fontSize={13}>
                   {usesRealRouting
-                    ? 'Parcours calculés par HeiGIT depuis un départ local.'
+                    ? 'Parcours calculés par HeiGIT depuis le départ configuré.'
                     : 'Les propositions actuelles sont des données de démonstration autour de Lyon.'}
                 </GradntText>
               </YStack>
             </XStack>
-            <XStack alignItems="center" gap="$2">
+            <XStack alignItems="center" gap="$2" flexWrap="wrap">
               <GradntChip
                 label="Parcours plus calme"
                 selected={preferences.lowTraffic}
                 onPress={() => updatePreferences({ lowTraffic: !preferences.lowTraffic })}
               />
-              <GradntText muted fontSize={12}>
-                L’exposition routière est une estimation, pas un niveau de sécurité.
-              </GradntText>
+              <GradntButton
+                tone="secondary"
+                haptic={false}
+                disabled={routeStart.isRequesting}
+                onPress={() => void routeStart.requestCurrentLocation()}
+              >
+                {routeStart.isRequesting
+                  ? 'Localisation…'
+                  : routeStart.isDefaultStart
+                    ? 'Utiliser ma position'
+                    : 'Position actuelle utilisée'}
+              </GradntButton>
             </XStack>
+            <GradntText muted fontSize={12}>
+              {routeStart.error ??
+                (routeStart.isDefaultStart
+                  ? 'Départ de démonstration à Lyon. La position réelle est demandée uniquement à ton action.'
+                  : 'Les parcours partent de ta position actuelle.')}
+            </GradntText>
           </GradntCard>
 
           <YStack gap="$3">
@@ -282,10 +291,8 @@ export function ExploreScreen() {
               <GradntHeading level={2}>Tes propositions</GradntHeading>
             </XStack>
             <GradntText muted fontSize={13}>
-              Score déterministe basé sur la compatibilité avec ta demande.{' '}
-              {usesRealRouting
-                ? 'La géométrie vient de HeiGIT et les métadonnées sont normalisées par GRADNT.'
-                : 'Les coordonnées réelles seront fournies par HeiGIT sur une build native configurée.'}
+              Le score GRADNT combine distance, relief, surface, discipline, calme des voies et
+              intention d&apos;entraînement.
             </GradntText>
 
             {proposalsQuery.isPending ? (
@@ -311,9 +318,7 @@ export function ExploreScreen() {
 
             {!proposalsQuery.isPending && !proposalsQuery.isError && proposals.length === 0 ? (
               <GradntCard padding="$4">
-                <GradntText muted>
-                  Aucun parcours ne correspond encore à ces préférences.
-                </GradntText>
+                <GradntText muted>Aucun parcours ne correspond à ces préférences.</GradntText>
               </GradntCard>
             ) : null}
 
@@ -327,6 +332,10 @@ export function ExploreScreen() {
             ))}
           </YStack>
 
+          {selectedRoute ? (
+            <RouteDetailPanel route={selectedRoute} onClose={() => setSelectedRouteId(null)} />
+          ) : null}
+
           <XStack alignItems="center" gap="$2">
             <Clock3 size={16} color="$textSecondary" />
             <GradntText muted fontSize={12}>
@@ -339,23 +348,15 @@ export function ExploreScreen() {
   )
 }
 
-function GradntChoice({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string
-  selected: boolean
-  onPress: () => void
-}) {
+function PreferenceGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <GradntButton
-      tone={selected ? 'primary' : 'secondary'}
-      minHeight={42}
-      paddingHorizontal="$3"
-      onPress={onPress}
-    >
-      {label}
-    </GradntButton>
+    <YStack gap="$2">
+      <GradntText muted fontSize={12} weight="semibold">
+        {label}
+      </GradntText>
+      <XStack gap="$2" flexWrap="wrap">
+        {children}
+      </XStack>
+    </YStack>
   )
 }
