@@ -117,3 +117,10 @@ temp/
 # Generated local assets
 # =========================
 *.generated.*
+# =========================
+# Local agent state
+# =========================
+# Generated knowledge graph (regenerate with `graphify update .`)
+graphify-out/
+# Machine-specific permissions; .claude/settings.json (hooks) stays tracked
+.claude/settings.local.json
