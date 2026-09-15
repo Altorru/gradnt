@@ -1,6 +1,7 @@
 import type { Goal } from '@/lib/domain'
 
 import { ArrowUpRight } from '@tamagui/lucide-icons-2'
+import { useColorScheme } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import { gradntAssets } from '../assets'
@@ -22,6 +23,12 @@ export function GradntGoalCard({
   changeLabel,
   statusLabel,
 }: GradntGoalCardProps) {
+  // The artwork has a light and a dark variant, and the dark one was wired up
+  // for both themes — a dark illustration on a pale card. Assets are not theme
+  // tokens, so this is where the choice is made.
+  const scheme = useColorScheme()
+  const artwork =
+    scheme === 'light' ? gradntAssets.goals.ftpClimbLight : gradntAssets.goals.ftpClimbDark
   const isPreview = goal === undefined
   const currentGoalValue = isPreview ? (currentValue ?? 258) : currentValue
   const goalValue = isPreview ? 280 : goal.targetValue
@@ -41,7 +48,7 @@ export function GradntGoalCard({
       borderColor="$borderStrong"
       borderRadius={22}
     >
-      <GradntHeroArtwork source={gradntAssets.goals.ftpClimbDark} />
+      <GradntHeroArtwork source={artwork} />
 
       {/* HEADER */}
       <XStack zIndex={2} justifyContent="space-between" alignItems="flex-start">

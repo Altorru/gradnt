@@ -2,17 +2,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs'
 import { Platform, useColorScheme } from 'react-native'
 import { useTheme } from 'tamagui'
 
-/**
- * Applies an alpha channel to a theme colour.
- *
- * A Material ripple is a translucent wash over the bar; the theme roles are
- * opaque, so passing one straight through gives a solid flash instead. Falls
- * back to the colour unchanged when it is not a six-digit hex, rather than
- * emitting an invalid value.
- */
-function withAlpha(hex: string, alpha: string): string {
-  return /^#[0-9a-fA-F]{6}$/.test(hex) ? `${hex}${alpha}` : hex
-}
+import { withAlpha } from '@/design-system'
 
 /**
  * The app's five destinations.
@@ -88,9 +78,9 @@ export default function TabsLayout() {
       tintColor: selectedColor,
       // Behind the active icon. Left unset, this is Material You's
       // wallpaper-derived secondaryContainer.
-      indicatorColor: withAlpha(color('accent'), '26'),
+      indicatorColor: withAlpha(color('accent'), 0.15),
       // Left unset, this is Material You's wallpaper-derived primary.
-      rippleColor: withAlpha(color('accent'), '1F'),
+      rippleColor: withAlpha(color('accent'), 0.12),
     },
     default: {},
   })
