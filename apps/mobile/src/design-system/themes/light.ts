@@ -29,6 +29,7 @@ export const lightTheme = {
   placeholderColor: colors.stone500,
 
   accent: colors.limeStrong,
+  accentInk: colors.limeInkLight,
   accentHover: '#A6E20C',
   onAccent: colors.graphite950,
 

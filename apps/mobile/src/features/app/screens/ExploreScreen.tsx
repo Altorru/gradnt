@@ -176,7 +176,7 @@ export function ExploreScreen() {
 
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$3">
-              <Compass size={21} color="$accent" />
+              <Compass size={21} color="$accentInk" />
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">Trouver une sortie</GradntText>
                 <GradntText muted fontSize={13}>
@@ -287,7 +287,7 @@ export function ExploreScreen() {
 
           <YStack gap="$3">
             <XStack alignItems="center" gap="$2">
-              <Sparkles size={19} color="$accent" />
+              <Sparkles size={19} color="$accentInk" />
               <GradntHeading level={2}>Tes propositions</GradntHeading>
             </XStack>
             <GradntText muted fontSize={13}>

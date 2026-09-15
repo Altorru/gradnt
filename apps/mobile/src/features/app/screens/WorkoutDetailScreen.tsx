@@ -83,7 +83,7 @@ export function WorkoutDetailScreen() {
 
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$3">
-              <Clock3 size={20} color="$accent" />
+              <Clock3 size={20} color="$accentInk" />
               <YStack gap="$1">
                 <GradntText weight="semibold">Durée et intensité</GradntText>
                 <GradntText muted fontSize={13}>

@@ -152,7 +152,7 @@ export function RouteDetailPanel({
             Géométrie et données normalisées par GRADNT.
           </GradntText>
         </YStack>
-        <ChevronUp size={20} color="$accent" />
+        <ChevronUp size={20} color="$accentInk" />
       </XStack>
 
       <RouteMap route={route} />

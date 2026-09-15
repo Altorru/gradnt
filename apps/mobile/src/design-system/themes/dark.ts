@@ -28,7 +28,8 @@ export const darkTheme = {
 
   placeholderColor: colors.stone500,
 
-  accent: colors.lime,
+  accent: colors.limeDeep,
+  accentInk: colors.limeInkDark,
   accentHover: colors.limeStrong,
   onAccent: colors.graphite950,
 

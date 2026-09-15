@@ -91,11 +91,11 @@ export function GradntGoalCard({
         </XStack>
 
         <XStack alignItems="center" gap="$1">
-          <GradntText color="$accent" weight="semibold" fontSize={13} lineHeight={17}>
+          <GradntText color="$accentInk" weight="semibold" fontSize={13} lineHeight={17}>
             {resolvedChangeLabel}
           </GradntText>
 
-          <ArrowUpRight size={14} color={'$accent'} />
+          <ArrowUpRight size={14} color="$accentInk" />
         </XStack>
       </YStack>
     </GradntCard>

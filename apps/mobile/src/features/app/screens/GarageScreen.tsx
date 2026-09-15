@@ -18,7 +18,7 @@ export function GarageScreen() {
 
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$3">
-              <Bike size={21} color="$accent" />
+              <Bike size={21} color="$accentInk" />
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">Ton vélo principal</GradntText>
                 <GradntText muted fontSize={13}>

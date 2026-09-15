@@ -1,6 +1,6 @@
 import Svg, { Rect } from 'react-native-svg'
 
-import { colors } from '../../tokens'
+import { useThemeColor } from '../../hooks/useThemeColor'
 
 type GradntMiniBarsProps = {
   data: number[]
@@ -17,6 +17,8 @@ export function GradntMiniBars({
   height = 52,
   gap = 5,
 }: GradntMiniBarsProps) {
+  const themeColor = useThemeColor()
+
   if (!data.length) {
     return null
   }
@@ -46,7 +48,7 @@ export function GradntMiniBars({
             width={barWidth}
             height={barHeight}
             rx={barWidth / 2}
-            fill={active ? colors.lime : colors.graphite700}
+            fill={active ? themeColor('accentInk') : themeColor('border')}
             opacity={active ? 1 : 0.48}
           />
         )

@@ -2,7 +2,7 @@ import { area, curveMonotoneX, line } from 'd3-shape'
 import { useId } from 'react'
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg'
 
-import { colors } from '../../tokens'
+import { useThemeColor } from '../../hooks/useThemeColor'
 
 type Point = {
   x: number
@@ -17,6 +17,8 @@ type GradntSparklineProps = {
 
 export function GradntSparkline({ data, width = 96, height = 52 }: GradntSparklineProps) {
   const gradientId = `gradntSpark${useId().replace(/:/g, '')}`
+  const themeColor = useThemeColor()
+  const accent = themeColor('accentInk')
 
   if (data.length < 2) {
     return null
@@ -50,9 +52,9 @@ export function GradntSparkline({ data, width = 96, height = 52 }: GradntSparkli
     <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
       <Defs>
         <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={colors.lime} stopOpacity={0.22} />
+          <Stop offset="0" stopColor={accent} stopOpacity={0.22} />
 
-          <Stop offset="1" stopColor={colors.lime} stopOpacity={0} />
+          <Stop offset="1" stopColor={accent} stopOpacity={0} />
         </LinearGradient>
       </Defs>
 
@@ -61,7 +63,7 @@ export function GradntSparkline({ data, width = 96, height = 52 }: GradntSparkli
       <Path
         d={linePath}
         fill="none"
-        stroke={colors.lime}
+        stroke={accent}
         strokeWidth={7}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -71,7 +73,7 @@ export function GradntSparkline({ data, width = 96, height = 52 }: GradntSparkli
       <Path
         d={linePath}
         fill="none"
-        stroke={colors.lime}
+        stroke={accent}
         strokeWidth={2.25}
         strokeLinecap="round"
         strokeLinejoin="round"

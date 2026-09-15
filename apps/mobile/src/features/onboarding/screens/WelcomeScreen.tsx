@@ -104,7 +104,7 @@ export function WelcomeScreen() {
                       borderWidth={1}
                       borderColor="$border"
                     >
-                      <Icon size={19} color={'$accent'} />
+                      <Icon size={19} color="$accentInk" />
                     </YStack>
 
                     <YStack flex={1} gap="$1">

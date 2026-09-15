@@ -104,8 +104,8 @@ export function ProgressScreen() {
                   {goalQuery.isPending || currentValueQuery.isPending ? '—' : goalSummary}
                 </GradntText>
                 <XStack alignItems="center" gap="$1">
-                  <ArrowUpRight size={15} color="$accent" />
-                  <GradntText color="$accent" weight="semibold" fontSize={13}>
+                  <ArrowUpRight size={15} color="$accentInk" />
+                  <GradntText color="$accentInk" weight="semibold" fontSize={13}>
                     {currentValueQuery.data?.provenance === 'mock'
                       ? 'Valeur locale de démonstration'
                       : 'Valeur issue des données disponibles'}
@@ -118,7 +118,7 @@ export function ProgressScreen() {
           <YStack gap="$3">
             <GradntCard padding="$4" gap="$4">
               <XStack alignItems="center" gap="$3">
-                <Activity size={19} color="$accent" />
+                <Activity size={19} color="$accentInk" />
                 <GradntText weight="semibold">Volume récent</GradntText>
               </XStack>
               <GradntText muted fontSize={13}>
@@ -131,7 +131,7 @@ export function ProgressScreen() {
 
             <GradntCard padding="$4" gap="$4">
               <XStack alignItems="center" gap="$3">
-                <TrendingUp size={19} color="$accent" />
+                <TrendingUp size={19} color="$accentInk" />
                 <GradntText weight="semibold">Régularité</GradntText>
               </XStack>
               <GradntText muted fontSize={13}>

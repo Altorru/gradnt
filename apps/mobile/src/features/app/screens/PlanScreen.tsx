@@ -83,7 +83,7 @@ export function PlanScreen() {
 
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$3">
-              <CalendarDays size={20} color="$accent" />
+              <CalendarDays size={20} color="$accentInk" />
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">Cette semaine</GradntText>
                 <GradntText muted fontSize={13}>

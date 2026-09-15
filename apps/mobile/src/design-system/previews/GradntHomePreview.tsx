@@ -62,7 +62,6 @@ export function GradntHomePreview() {
                   label="Forme"
                   value="78 ↗"
                   detail="Bonne"
-                  accent
                   visual={<GradntSparkline data={[46, 54, 67, 59, 72, 78, 73, 86]} />}
                 />
 
@@ -107,7 +106,7 @@ export function GradntHomePreview() {
                     +6 W
                   </GradntText>
 
-                  <GradntText color="$accent" weight="semibold" fontSize={13}>
+                  <GradntText color="$accentInk" weight="semibold" fontSize={13}>
                     FTP estimée
                   </GradntText>
                 </YStack>

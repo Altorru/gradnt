@@ -1,7 +1,7 @@
 import { Circle, Svg } from 'react-native-svg'
 import { YStack } from 'tamagui'
 
-import { colors } from '../../tokens'
+import { useThemeColor } from '../../hooks/useThemeColor'
 import { GradntText } from './GradntText'
 
 type GradntProgressRingProps = {
@@ -11,6 +11,7 @@ type GradntProgressRingProps = {
 }
 
 export function GradntProgressRing({ value, size = 88, strokeWidth = 8 }: GradntProgressRingProps) {
+  const themeColor = useThemeColor()
   const normalized = Math.min(100, Math.max(0, value))
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
@@ -30,7 +31,7 @@ export function GradntProgressRing({ value, size = 88, strokeWidth = 8 }: Gradnt
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={colors.graphite700}
+          stroke={themeColor('border')}
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -39,7 +40,7 @@ export function GradntProgressRing({ value, size = 88, strokeWidth = 8 }: Gradnt
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={colors.lime}
+          stroke={themeColor('accentInk')}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"

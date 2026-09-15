@@ -3,6 +3,17 @@ export const colors = {
   lime: '#C8FF3D',
   limeStrong: '#B7F51F',
   limeMuted: '#DDFE82',
+  /**
+   * Deeper limes for the dark theme.
+   *
+   * `lime` is a very high-luminance green: ~16:1 against the dark background.
+   * That reads as glare rather than emphasis on thin strokes and small text.
+   */
+  limeDeep: '#A4E600',
+  /** Accent as *ink* on the dark background: text, thin strokes. Calmer still. */
+  limeInkDark: '#79B81C',
+  /** Accent as *ink* on a light background, where a bright lime vanishes. */
+  limeInkLight: '#3F6B00',
 
   // Neutral dark
   graphite950: '#0C0E0B',
