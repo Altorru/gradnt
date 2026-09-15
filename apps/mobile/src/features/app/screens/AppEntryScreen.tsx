@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { ActivityIndicator } from 'react-native'
 import { YStack } from 'tamagui'
 
-import { GradntMobileShell } from '@/design-system'
+import { GradntScreen } from '@/design-system'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 
 export default function AppEntryScreen() {
@@ -20,10 +20,10 @@ export default function AppEntryScreen() {
   }, [completed, hydrated, router])
 
   return (
-    <GradntMobileShell>
+    <GradntScreen>
       <YStack flex={1} alignItems="center" justifyContent="center">
         <ActivityIndicator />
       </YStack>
-    </GradntMobileShell>
+    </GradntScreen>
   )
 }

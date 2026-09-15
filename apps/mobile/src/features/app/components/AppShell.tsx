@@ -1,45 +1,44 @@
 import type { PropsWithChildren, ReactNode } from 'react'
-import { ScrollView } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { XStack, YStack } from 'tamagui'
 
-import { GradntBottomNav, GradntMobileShell } from '@/design-system'
+import { GradntBottomNav, GradntScreen, SCREEN_GUTTER } from '@/design-system'
 
+/**
+ * Frame for the tabbed app screens.
+ *
+ * Only the top edge is inset here: `GradntBottomNav` applies the bottom inset
+ * itself, so asking the frame for it too would count it twice.
+ *
+ * Horizontal padding is left to the content (`AppHeader`, `AppScrollView`)
+ * rather than the frame, so the two can never drift apart by a few pixels.
+ */
 export function AppShell({ children, header }: PropsWithChildren<{ header?: ReactNode }>) {
-  const insets = useSafeAreaInsets()
-
   return (
-    <GradntMobileShell>
-      <YStack flex={1} backgroundColor="$background">
-        <YStack flex={1} paddingTop={insets.top}>
-          {header}
-          {children}
-        </YStack>
+    <GradntScreen edges={['top']} padded={false}>
+      <YStack flex={1}>
+        {header}
+        <YStack flex={1}>{children}</YStack>
         <GradntBottomNav />
       </YStack>
-    </GradntMobileShell>
-  )
-}
-
-export function AppScrollView({ children }: PropsWithChildren) {
-  return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{
-        paddingHorizontal: 18,
-        paddingTop: 18,
-        paddingBottom: 28,
-      }}
-    >
-      {children}
-    </ScrollView>
+    </GradntScreen>
   )
 }
 
 export function AppHeader({ children }: PropsWithChildren) {
   return (
-    <XStack paddingHorizontal={18} paddingTop="$4" paddingBottom="$2" alignItems="center">
+    <XStack
+      paddingHorizontal={SCREEN_GUTTER}
+      paddingTop="$4"
+      paddingBottom="$2"
+      alignItems="center"
+    >
       {children}
     </XStack>
   )
 }
+
+/**
+ * Kept as an alias so the tabbed screens keep their existing import, while the
+ * gutter lives in exactly one place.
+ */
+export { GradntScrollView as AppScrollView } from '@/design-system'

@@ -1,10 +1,15 @@
 import { ArrowRight, Brain, Route, Target } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
-import { ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
-import { GradntButton, GradntHeading, GradntMobileShell, GradntText } from '@/design-system'
+import {
+  GradntButton,
+  GradntHeading,
+  GradntScreen,
+  GradntScrollView,
+  GradntText,
+} from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
@@ -50,16 +55,8 @@ export function WelcomeScreen() {
   }, [completed, currentStep, hydrated, router])
 
   return (
-    <GradntMobileShell>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: 22,
-          paddingTop: 22,
-          paddingBottom: 28,
-        }}
-      >
+    <GradntScreen>
+      <GradntScrollView contentStyle={{ flexGrow: 1 }}>
         <YStack flex={1} justifyContent="space-between" gap="$8">
           <YStack gap="$7">
             <XStack justifyContent="space-between" alignItems="center">
@@ -140,7 +137,7 @@ export function WelcomeScreen() {
             </GradntText>
           </YStack>
         </YStack>
-      </ScrollView>
-    </GradntMobileShell>
+      </GradntScrollView>
+    </GradntScreen>
   )
 }

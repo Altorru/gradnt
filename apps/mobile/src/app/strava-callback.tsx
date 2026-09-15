@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator } from 'react-native'
 import { YStack } from 'tamagui'
 
-import { GradntButton, GradntMobileShell, GradntText } from '@/design-system'
+import { GradntButton, GradntScreen, GradntText } from '@/design-system'
 import { takeStravaCallbackUrl } from '@/services/strava/oauth/strava-callback-url'
 
 import { stravaService } from '../features/onboarding/services/strava.service'
@@ -71,14 +71,8 @@ export default function StravaCallbackScreen() {
 
   if (message) {
     return (
-      <GradntMobileShell>
-        <YStack
-          flex={1}
-          alignItems="center"
-          justifyContent="center"
-          gap="$4"
-          paddingHorizontal={22}
-        >
+      <GradntScreen>
+        <YStack flex={1} alignItems="center" justifyContent="center" gap="$4">
           <GradntText weight="semibold">Connexion interrompue</GradntText>
 
           <GradntText muted textAlign="center">
@@ -87,16 +81,16 @@ export default function StravaCallbackScreen() {
 
           <GradntButton onPress={() => router.replace('/onboarding/strava')}>Retour</GradntButton>
         </YStack>
-      </GradntMobileShell>
+      </GradntScreen>
     )
   }
 
   return (
-    <GradntMobileShell>
+    <GradntScreen>
       <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
         <ActivityIndicator />
         <GradntText muted>Connexion à Strava…</GradntText>
       </YStack>
-    </GradntMobileShell>
+    </GradntScreen>
   )
 }

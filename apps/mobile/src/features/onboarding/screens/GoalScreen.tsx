@@ -10,7 +10,6 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useRouter } from 'expo-router'
-import { ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -19,7 +18,8 @@ import {
   GradntHeading,
   GradntIconButton,
   GradntInput,
-  GradntMobileShell,
+  GradntScreen,
+  GradntScrollView,
   GradntText,
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
@@ -146,15 +146,8 @@ export function GoalScreen() {
   })
 
   return (
-    <GradntMobileShell>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 22,
-          paddingTop: 22,
-          paddingBottom: 28,
-        }}
-      >
+    <GradntScreen>
+      <GradntScrollView>
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
@@ -298,7 +291,7 @@ export function GoalScreen() {
             Continuer
           </GradntButton>
         </YStack>
-      </ScrollView>
-    </GradntMobileShell>
+      </GradntScrollView>
+    </GradntScreen>
   )
 }

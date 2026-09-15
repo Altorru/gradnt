@@ -2,7 +2,6 @@ import { ArrowLeft, ArrowRight, Bike, Mountain, Route } from '@tamagui/lucide-ic
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { useRouter } from 'expo-router'
-import { ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -10,7 +9,8 @@ import {
   GradntChoiceCard,
   GradntHeading,
   GradntIconButton,
-  GradntMobileShell,
+  GradntScreen,
+  GradntScrollView,
   GradntText,
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
@@ -99,15 +99,8 @@ export function ProfileScreen() {
   })
 
   return (
-    <GradntMobileShell>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 22,
-          paddingTop: 22,
-          paddingBottom: 28,
-        }}
-      >
+    <GradntScreen>
+      <GradntScrollView>
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
@@ -223,7 +216,7 @@ export function ProfileScreen() {
             Continuer
           </GradntButton>
         </YStack>
-      </ScrollView>
-    </GradntMobileShell>
+      </GradntScrollView>
+    </GradntScreen>
   )
 }

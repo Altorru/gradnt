@@ -1,12 +1,17 @@
 import { Bell, Settings } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
-import { GradntIconButton, GradntText } from '@/design-system'
+import { GradntIconButton, GradntText, SCREEN_GUTTER } from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
 export function AppBrandHeader() {
   return (
-    <XStack paddingHorizontal={18} paddingTop="$4" paddingBottom="$2" alignItems="center">
+    <XStack
+      paddingHorizontal={SCREEN_GUTTER}
+      paddingTop="$4"
+      paddingBottom="$2"
+      alignItems="center"
+    >
       <XStack alignItems="center" gap="$2">
         <GradntText color="$accent" weight="bold" fontSize={17}>
           ▲

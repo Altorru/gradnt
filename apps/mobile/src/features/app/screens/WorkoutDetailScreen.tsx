@@ -1,6 +1,5 @@
 import { ArrowLeft, CheckCircle2, Clock3, SkipForward } from '@tamagui/lucide-icons-2'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -9,7 +8,8 @@ import {
   GradntCard,
   GradntHeading,
   GradntIconButton,
-  GradntMobileShell,
+  GradntScreen,
+  GradntScrollView,
   GradntText,
 } from '@/design-system'
 import {
@@ -35,26 +35,23 @@ export function WorkoutDetailScreen() {
 
   if (!workout) {
     return (
-      <GradntMobileShell>
-        <YStack flex={1} padding="$5" gap="$4">
+      <GradntScreen>
+        <YStack flex={1} gap="$4">
           <GradntIconButton onPress={() => router.back()}>
             <ArrowLeft size={18} />
           </GradntIconButton>
           <GradntHeading>Séance introuvable</GradntHeading>
           <GradntText muted>Cette séance n’est plus disponible dans ton plan local.</GradntText>
         </YStack>
-      </GradntMobileShell>
+      </GradntScreen>
     )
   }
 
   const isPending = completeWorkout.isPending || skipWorkout.isPending
 
   return (
-    <GradntMobileShell>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 22, paddingBottom: 28 }}
-      >
+    <GradntScreen>
+      <GradntScrollView>
         <YStack gap="$7">
           <GradntIconButton onPress={() => router.back()}>
             <ArrowLeft size={18} />
@@ -132,7 +129,7 @@ export function WorkoutDetailScreen() {
             </YStack>
           ) : null}
         </YStack>
-      </ScrollView>
-    </GradntMobileShell>
+      </GradntScrollView>
+    </GradntScreen>
   )
 }

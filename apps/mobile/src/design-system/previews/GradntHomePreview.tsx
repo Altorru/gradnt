@@ -1,5 +1,4 @@
 import { Bell, Settings } from '@tamagui/lucide-icons-2'
-import { ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -9,8 +8,9 @@ import {
   GradntHeading,
   GradntIconButton,
   GradntMiniBars,
-  GradntMobileShell,
   GradntProgressRing,
+  GradntScreen,
+  GradntScrollView,
   GradntSectionHeader,
   GradntSparkline,
   GradntStatusCard,
@@ -20,17 +20,9 @@ import {
 
 export function GradntHomePreview() {
   return (
-    <GradntMobileShell>
+    <GradntScreen>
       <YStack flex={1}>
-        <ScrollView
-          style={{ flex: 1 }}
-          fadingEdgeLength={0}
-          contentContainerStyle={{
-            paddingHorizontal: 18,
-            paddingTop: 18,
-            paddingBottom: 28,
-          }}
-        >
+        <GradntScrollView fadingEdgeLength={0}>
           <YStack gap="$7">
             <XStack justifyContent="space-between" alignItems="center">
               <XStack alignItems="center" gap="$2">
@@ -122,10 +114,10 @@ export function GradntHomePreview() {
               </XStack>
             </YStack>
           </YStack>
-        </ScrollView>
+        </GradntScrollView>
 
         <GradntBottomNav />
       </YStack>
-    </GradntMobileShell>
+    </GradntScreen>
   )
 }

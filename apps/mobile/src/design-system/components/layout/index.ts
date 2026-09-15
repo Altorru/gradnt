@@ -1,2 +1,2 @@
-export * from './GradntMobileCanvas'
-export * from './GradntSection'
+export * from './GradntScreen'
+export * from './GradntScrollView'
