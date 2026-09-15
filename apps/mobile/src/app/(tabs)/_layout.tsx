@@ -37,9 +37,7 @@ export default function TabsLayout() {
    * themes, so a miss is a typo, and a silent fallback is how an unreadable bar
    * ships.
    */
-  const color = (
-    role: 'backgroundElevated' | 'textPrimary' | 'textSecondary' | 'accent',
-  ): string => {
+  const color = (role: 'backgroundElevated' | 'textSecondary' | 'accent' | 'accentInk'): string => {
     const value = theme[role]
 
     if (value === undefined) {
@@ -50,27 +48,47 @@ export default function TabsLayout() {
   }
 
   /**
-   * The selected tab is the brand accent on dark, but a dark ink on light:
-   * the accent is a near-white lime there and reads as glare on a pale bar.
+   * The active tab is green in both themes — but not the *same* green.
+   *
+   * On light the vivid accent is a near-white lime: measured against a pale bar
+   * it is 1.2:1, so it would read as no highlight at all. Light therefore takes
+   * the ink green (6:1); dark takes the brand accent, which has room to pop
+   * against the inactive grey.
    */
-  const selectedColor = scheme === 'light' ? color('textPrimary') : color('accent')
+  const selectedColor = scheme === 'light' ? color('accentInk') : color('accent')
 
   /**
    * Android takes its tab bar colours from Material You, which derives them
    * from the device wallpaper and ignores light/dark entirely — so the bar kept
    * its palette while the rest of the app switched.
    *
-   * Guarded by platform rather than passed unconditionally: `backgroundColor`
-   * and `iconColor` also drive iOS, where the native bar already follows the
-   * system and should keep its own material.
+   * Guarded by platform rather than passed unconditionally: these props also
+   * drive iOS, where the native bar already follows the system and should keep
+   * its own material.
+   *
+   * The selected state goes through `tintColor`. `selectedIconColor` and
+   * `selectedLabelStyle` look like the obvious props and type-check on the host,
+   * but the navigator never reads them there — they are `Trigger` props, and on
+   * `<NativeTabs>` they fall into the rest spread and vanish. That is how the
+   * active tab ended up with no highlight at all once the indicator was off.
+   *
+   * The active indicator pill is deliberately left ON, tinted with the accent.
+   * It is the native Android treatment for the active tab, and the closest this
+   * platform gets to the filled glyph iOS shows — `md` symbols cannot switch
+   * between outline and filled, since Material's fill is a variable-font axis
+   * and `unstable_getMaterialSymbolSourceAsync` exposes no parameter for it.
    */
   const androidColors = Platform.select({
     android: {
       backgroundColor: color('backgroundElevated'),
+      // Inactive tabs.
       iconColor: color('textSecondary'),
-      selectedIconColor: selectedColor,
       labelStyle: { color: color('textSecondary') },
-      selectedLabelStyle: { color: selectedColor },
+      // Active tab: drives the icon and the label together.
+      tintColor: selectedColor,
+      // Behind the active icon. Left unset, this is Material You's
+      // wallpaper-derived secondaryContainer.
+      indicatorColor: withAlpha(color('accent'), '26'),
       // Left unset, this is Material You's wallpaper-derived primary.
       rippleColor: withAlpha(color('accent'), '1F'),
     },
@@ -78,10 +96,10 @@ export default function TabsLayout() {
   })
 
   return (
-    <NativeTabs disableIndicator labelVisibilityMode="labeled" {...androidColors}>
+    <NativeTabs labelVisibilityMode="labeled" {...androidColors}>
       <NativeTabs.Trigger name="home">
         <NativeTabs.Trigger.Label>Accueil</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+        <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="plan">
@@ -91,12 +109,15 @@ export default function TabsLayout() {
 
       <NativeTabs.Trigger name="progress">
         <NativeTabs.Trigger.Label>Progrès</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="chart.bar.fill" md="bar_chart" />
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }}
+          md="bar_chart"
+        />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="explore">
         <NativeTabs.Trigger.Label>Explorer</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="map.fill" md="map" />
+        <NativeTabs.Trigger.Icon sf={{ default: 'map', selected: 'map.fill' }} md="map" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="garage">
