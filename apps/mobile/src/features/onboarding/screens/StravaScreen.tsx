@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Link2, ShieldCheck } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ActivityIndicator, ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
@@ -16,56 +16,40 @@ import {
 import { colors } from '@/design-system/tokens'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
-import {
-  defaultStravaConnection,
-  deferredStravaConnection,
-  type StravaConnection,
-} from '../domain/strava.schema'
+import { defaultStravaConnection, deferredStravaConnection } from '../domain/strava.schema'
 import { useOnboardingStore } from '../store/onboarding.store'
 import { stravaService, type StravaServiceError } from '../services/strava.service'
 
 export function StravaScreen() {
   const router = useRouter()
   const setStrava = useOnboardingStore((state) => state.setStrava)
-  const [connection, setConnection] = useState<StravaConnection>(defaultStravaConnection)
-  const [isLoading, setIsLoading] = useState(true)
+  const storedStrava = useOnboardingStore((state) => state.strava)
+  const hydrated = useOnboardingStore((state) => state.hydrated)
+  const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<StravaServiceError | null>(null)
 
-  useEffect(() => {
-    let mounted = true
-
-    void stravaService.getConnection().then((currentConnection) => {
-      if (mounted) {
-        setConnection(currentConnection)
-        setStrava(currentConnection)
-        setIsLoading(false)
-      }
-    })
-
-    return () => {
-      mounted = false
-    }
-  }, [setStrava])
+  // The persisted store is the single source of truth, so a connection survives
+  // an app restart instead of being reset by an in-memory service default.
+  const connection = storedStrava ?? defaultStravaConnection
+  const isLoading = !hydrated || isConnecting
 
   const connect = async () => {
     setError(null)
-    setIsLoading(true)
+    setIsConnecting(true)
 
     const result = await stravaService.connect()
 
     if (result.ok) {
-      setConnection(result.connection)
       setStrava(result.connection)
     } else {
       setError(result.error)
     }
 
-    setIsLoading(false)
+    setIsConnecting(false)
   }
 
   const connected = connection.status === 'connected'
   const deferConnection = () => {
-    setConnection(deferredStravaConnection)
     setStrava(deferredStravaConnection)
     router.push('./review')
   }

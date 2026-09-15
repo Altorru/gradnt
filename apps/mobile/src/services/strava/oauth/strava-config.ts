@@ -1,4 +1,4 @@
-import type { StravaScope } from './strava-scopes'
+import { requiredScopes, type StravaScope } from './strava-scopes'
 
 export interface StravaAuthConfig {
   readonly clientId: string
@@ -7,6 +7,17 @@ export interface StravaAuthConfig {
   readonly scopes: readonly StravaScope[]
   readonly stateGenerator: () => string
 }
+
+export const stravaAuthorizationEndpoint = 'https://www.strava.com/oauth/authorize'
+
+/**
+ * Where the OS hands the authorization response back to the app, after the
+ * https bridge redirects to it. Never sent to Strava — Strava only accepts a
+ * bare callback domain, so the redirect_uri is the bridge URL instead.
+ *
+ * Must match the `scheme` in apps/mobile/app.json.
+ */
+export const stravaAppCallbackUri = 'mobile://strava/callback'
 
 /**
  * Builds the Strava authorization URL for the OAuth redirect flow.
@@ -24,4 +35,38 @@ export function buildAuthorizationUrl(config: StravaAuthConfig): string {
   url.searchParams.set('state', config.stateGenerator())
 
   return url.toString()
+}
+
+/**
+ * Reads the Strava wiring from the environment, or returns null when the
+ * application has not been configured yet. Callers surface that as
+ * `not_configured` rather than crashing on a missing client id.
+ *
+ * One URL serves both roles: the endpoint answers the OAuth redirect over GET
+ * (bridging to the app scheme) and the token exchange over POST. So it is also
+ * the `redirect_uri` sent to Strava, which is why the Strava callback domain
+ * must cover the host it lives on.
+ */
+export interface StravaRuntimeConfig {
+  auth: Omit<StravaAuthConfig, 'stateGenerator'>
+  endpointUrl: string
+}
+
+export function readStravaConfig(): StravaRuntimeConfig | null {
+  const clientId = process.env.EXPO_PUBLIC_STRAVA_CLIENT_ID?.trim()
+  const endpointUrl = process.env.EXPO_PUBLIC_STRAVA_ENDPOINT_URL?.trim()
+
+  if (!clientId || !endpointUrl) {
+    return null
+  }
+
+  return {
+    auth: {
+      clientId,
+      redirectUri: endpointUrl,
+      authorizationEndpoint: stravaAuthorizationEndpoint,
+      scopes: requiredScopes,
+    },
+    endpointUrl,
+  }
 }

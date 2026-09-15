@@ -28,6 +28,32 @@ describe('handleCallback', () => {
     })
   })
 
+  it('accepts a comma-delimited scope parameter, as the redirect sends', () => {
+    const result = handleCallback(
+      `${CALLBACK}?code=code-abc&state=fixed-state&scope=profile:read_all,activity:read_all`,
+      'fixed-state',
+    )
+
+    expect(result).toEqual({
+      status: 'success',
+      code: 'code-abc',
+      grantedScopes: ['profile:read_all', 'activity:read_all'],
+    })
+  })
+
+  it('accepts mixed comma and space delimiters', () => {
+    const result = handleCallback(
+      `${CALLBACK}?code=code-abc&state=fixed-state&scope=profile:read_all,%20activity:read_all`,
+      'fixed-state',
+    )
+
+    expect(result).toEqual({
+      status: 'success',
+      code: 'code-abc',
+      grantedScopes: ['profile:read_all', 'activity:read_all'],
+    })
+  })
+
   it('ignores unknown scopes when all required scopes are present', () => {
     const result = handleCallback(
       `${CALLBACK}?code=code-abc&state=fixed-state&scope=unknown_scope%20profile:read_all%20activity:read_all`,

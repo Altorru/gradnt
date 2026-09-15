@@ -63,10 +63,16 @@ export function handleCallback(callbackUrl: string, expectedState: string): Stra
 }
 
 /**
- * Parses the space-separated `scope` callback parameter, keeping only the
- * scopes GRADNT recognizes. Unknown scopes are silently ignored so the
+ * Parses the `scope` callback parameter, keeping only the scopes GRADNT
+ * recognizes.
+ *
+ * Strava documents scopes as "a comma- or URL-safe space-delimited string", so
+ * both delimiters are accepted — the redirect is observed sending commas while
+ * the token response sends spaces. Unknown scopes are silently ignored so the
  * domain model never carries untyped scope strings.
  */
 function parseScopes(scopeParam: string | null): StravaScope[] {
-  return (scopeParam ?? '').split(' ').filter((value): value is StravaScope => isStravaScope(value))
+  return (scopeParam ?? '')
+    .split(/[\s,]+/)
+    .filter((value): value is StravaScope => isStravaScope(value))
 }
