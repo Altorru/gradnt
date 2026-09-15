@@ -46,7 +46,7 @@ export function GradntWorkoutCard({
 
           <XStack alignItems="center" flexWrap="wrap" gap="$3">
             <XStack alignItems="center" gap="$1">
-              <Clock3 size={14} color={colors.stone400} />
+              <Clock3 size={14} color={'$textSecondary'} />
 
               <GradntText muted fontSize={12}>
                 {workoutDuration}
@@ -54,7 +54,7 @@ export function GradntWorkoutCard({
             </XStack>
 
             <XStack alignItems="center" gap="$1">
-              <BarChart3 size={14} color={colors.stone400} />
+              <BarChart3 size={14} color={'$textSecondary'} />
 
               <GradntText muted fontSize={12}>
                 {workoutDescription}

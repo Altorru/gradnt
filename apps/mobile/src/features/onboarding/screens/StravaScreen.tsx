@@ -52,7 +52,7 @@ export function StravaScreen() {
   const connected = connection.status === 'connected'
   const deferConnection = () => {
     setStrava(deferredStravaConnection)
-    router.push('./review')
+    router.push('/onboarding/review')
   }
 
   return (
@@ -61,7 +61,7 @@ export function StravaScreen() {
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
-              <ArrowLeft size={18} color={colors.bone100} />
+              <ArrowLeft size={18} color={'$textPrimary'} />
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
@@ -91,9 +91,9 @@ export function StravaScreen() {
                 backgroundColor="$backgroundSubtle"
               >
                 {connected ? (
-                  <CheckCircle2 size={21} color={colors.success} />
+                  <CheckCircle2 size={21} color={'$positive'} />
                 ) : (
-                  <Link2 size={21} color={colors.orange} />
+                  <Link2 size={21} color={'$warning'} />
                 )}
               </YStack>
 
@@ -112,7 +112,7 @@ export function StravaScreen() {
 
           <YStack gap="$4">
             <XStack gap="$3" alignItems="flex-start">
-              <ShieldCheck size={19} color={colors.alpine} />
+              <ShieldCheck size={19} color={'$recovery'} />
               <GradntText muted flex={1} fontSize={13} lineHeight={19}>
                 Tu contrôles la connexion. GRADNT utilisera uniquement les activités nécessaires
                 pour personnaliser ton expérience.
@@ -158,9 +158,9 @@ export function StravaScreen() {
             {connected ? (
               <GradntButton
                 tone="secondary"
-                iconAfter={<ArrowRight size={18} color={colors.bone100} />}
+                iconAfter={<ArrowRight size={18} color={'$textPrimary'} />}
                 onPress={() => {
-                  router.push('./review')
+                  router.push('/onboarding/review')
                 }}
               >
                 Continuer

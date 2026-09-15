@@ -16,7 +16,7 @@ export default function AppEntryScreen() {
       return
     }
 
-    router.replace(completed ? './home' : '/onboarding')
+    router.replace(completed ? '/home' : '/onboarding')
   }, [completed, hydrated, router])
 
   return (

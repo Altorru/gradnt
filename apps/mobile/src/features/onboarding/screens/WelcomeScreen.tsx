@@ -45,7 +45,7 @@ export function WelcomeScreen() {
     }
 
     if (completed) {
-      router.replace('../home')
+      router.replace('/home')
       return
     }
 
@@ -104,7 +104,7 @@ export function WelcomeScreen() {
                       borderWidth={1}
                       borderColor="$border"
                     >
-                      <Icon size={19} color={colors.lime} />
+                      <Icon size={19} color={'$accent'} />
                     </YStack>
 
                     <YStack flex={1} gap="$1">

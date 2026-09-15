@@ -14,8 +14,8 @@ type GradntScreenProps = PropsWithChildren<{
   /**
    * Safe-area edges to inset.
    *
-   * Omit `bottom` where a bottom bar already applies that inset itself
-   * (`GradntBottomNav` does), otherwise it is counted twice.
+   * Omit `bottom` where something else already owns the bottom of the screen
+   * (the tab bar does), otherwise the inset is counted twice.
    */
   edges?: readonly ScreenEdge[]
 }>

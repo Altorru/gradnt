@@ -94,7 +94,7 @@ export function ReviewScreen() {
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
-              <ArrowLeft size={18} color={colors.bone100} />
+              <ArrowLeft size={18} color={'$textPrimary'} />
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
@@ -161,7 +161,7 @@ export function ReviewScreen() {
               >
                 <Check
                   size={17}
-                  color={strava?.status === 'connected' ? colors.success : colors.stone400}
+                  color={strava?.status === 'connected' ? '$positive' : '$textSecondary'}
                 />
               </YStack>
               <YStack flex={1} gap="$1">
@@ -174,7 +174,7 @@ export function ReviewScreen() {
                       : 'Pas encore connecté'}
                 </GradntText>
               </YStack>
-              <ChevronRight size={17} color={colors.stone400} />
+              <ChevronRight size={17} color={'$textSecondary'} />
             </XStack>
           </GradntCard>
 
@@ -188,7 +188,7 @@ export function ReviewScreen() {
               iconAfter={<ChevronRight size={18} color={colors.graphite950} />}
               onPress={() => {
                 complete()
-                router.replace('../home')
+                router.replace('/home')
               }}
             >
               Entrer dans GRADNT

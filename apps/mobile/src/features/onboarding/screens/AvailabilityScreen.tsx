@@ -79,7 +79,7 @@ export function AvailabilityScreen() {
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
-              <ArrowLeft size={18} color={colors.bone100} />
+              <ArrowLeft size={18} color={'$textPrimary'} />
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
@@ -114,7 +114,7 @@ export function AvailabilityScreen() {
                   icon={
                     <Clock3
                       size={18}
-                      color={slot.available ? colors.graphite950 : colors.stone400}
+                      color={slot.available ? colors.graphite950 : '$textSecondary'}
                     />
                   }
                 />

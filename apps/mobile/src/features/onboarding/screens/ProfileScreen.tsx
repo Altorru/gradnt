@@ -104,7 +104,7 @@ export function ProfileScreen() {
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
-              <ArrowLeft size={18} color={colors.bone100} />
+              <ArrowLeft size={18} color={'$textPrimary'} />
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
@@ -144,7 +144,10 @@ export function ProfileScreen() {
                           field.onChange(item.value)
                         }}
                         icon={
-                          <Icon size={18} color={selected ? colors.graphite950 : colors.stone400} />
+                          <Icon
+                            size={18}
+                            color={selected ? colors.graphite950 : '$textSecondary'}
+                          />
                         }
                       />
                     )

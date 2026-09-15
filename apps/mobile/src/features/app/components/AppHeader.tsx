@@ -2,7 +2,6 @@ import { Bell, Settings } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
 import { GradntIconButton, GradntText, SCREEN_GUTTER } from '@/design-system'
-import { colors } from '@/design-system/tokens'
 
 export function AppBrandHeader() {
   return (
@@ -23,10 +22,10 @@ export function AppBrandHeader() {
 
       <XStack marginLeft="auto" gap="$2">
         <GradntIconButton accessibilityLabel="Ouvrir les notifications">
-          <Bell size={18} color={colors.bone100} />
+          <Bell size={18} color="$textPrimary" />
         </GradntIconButton>
         <GradntIconButton accessibilityLabel="Ouvrir les réglages">
-          <Settings size={18} color={colors.bone100} />
+          <Settings size={18} color="$textPrimary" />
         </GradntIconButton>
       </XStack>
     </XStack>

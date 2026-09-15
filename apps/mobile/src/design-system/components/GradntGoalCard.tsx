@@ -4,7 +4,6 @@ import { ArrowUpRight } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
 import { gradntAssets } from '../assets'
-import { colors } from '../tokens'
 import { GradntHeroArtwork } from './composites/GradntHeroArtwork'
 import { GradntBadge, GradntCard, GradntHeading, GradntProgressBar, GradntText } from './primitives'
 
@@ -96,7 +95,7 @@ export function GradntGoalCard({
             {resolvedChangeLabel}
           </GradntText>
 
-          <ArrowUpRight size={14} color={colors.lime} />
+          <ArrowUpRight size={14} color={'$accent'} />
         </XStack>
       </YStack>
     </GradntCard>
