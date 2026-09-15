@@ -52,12 +52,30 @@ Primary colors:
 
 - Graphite `#11130F`
 - Bone `#F4F1E8`
-- Acid Lime `#C8FF3D`
+- Acid Lime `#C8FF3D` — the brand reference, not a value to use directly
+
+The lime is consumed through two theme roles, because one value cannot do both
+jobs. A green light enough to carry dark text as a _fill_ is far too light to
+read as _ink_ on a pale surface: the brand lime measures 1.2:1 against the light
+background, which is invisible.
+
+| Role        | Use                                    | Dark      | Light     |
+| ----------- | -------------------------------------- | --------- | --------- |
+| `accent`    | Fills — buttons, chips, the brand mark | `#A4E600` | `#B7F51F` |
+| `accentInk` | Ink — small text, icons, chart strokes | `#79B81C` | `#3F6B00` |
+
+Never hand a palette entry to an icon or chart `color`. Tamagui components take
+the theme token (`color="$accentInk"`); `react-native-svg` needs a real value,
+so it goes through `useThemeColor`. Hardcoding is how the charts ended up on a
+green the rest of the theme had already moved away from.
 
 Semantic accents:
 
 - Orange `#FF6846`
 - Alpine Blue `#9DD7FF`
+
+These are the dark-theme values, reached through the `warning` and `recovery`
+roles. Light uses deeper variants so they stay legible on a pale surface.
 
 ## Technology
 
@@ -165,6 +183,7 @@ Prefer semantic theme roles:
 - textSecondary
 - border
 - accent
+- accentInk
 - onAccent
 - positive
 - warning

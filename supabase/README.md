@@ -36,6 +36,27 @@ The redirect target is a hard-coded constant, never derived from the request —
 only the query string is forwarded — so this cannot become an open redirect.
 `state` survives the hop, so the app still validates it.
 
+## Why `verify_jwt` is off
+
+`supabase/config.toml` sets `verify_jwt = false` for this function. That is
+deliberate, not an oversight: Edge Functions verify a JWT by default, and this
+one is called by a native app that holds no Supabase session, so every request
+would be rejected with `UNAUTHORIZED_NO_AUTH_HEADER` before reaching the code.
+
+The function stores nothing and needs no user identity, which is what makes the
+trade acceptable. Re-enabling it without adding auth would break the whole flow.
+
+## Scopes are parsed with either delimiter
+
+Strava documents scopes as "a comma- or URL-safe space-delimited string", and
+**the two endpoints disagree in practice**: the redirect callback sends commas,
+the token response sends spaces. Splitting on only one of them silently yields
+an empty scope list, which surfaces as "insufficient authorisations" for scopes
+the rider did grant.
+
+Both sides therefore split on `/[\s,]+/` — here and in
+`apps/mobile/src/services/strava/oauth/strava-callback.ts`.
+
 ## What is already built
 
 | Piece                      | Where                                                               |

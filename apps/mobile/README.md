@@ -34,6 +34,35 @@ https://tiles.openfreemap.org/styles/liberty
 
 Le style peut être remplacé avec `EXPO_PUBLIC_MAP_STYLE_URL`.
 
+## Configuration Strava
+
+La connexion Strava passe par une Edge Function Supabase, parce que l'échange du
+code d'autorisation exige un `client_secret` qui ne peut pas vivre dans une app
+mobile. Le déploiement, le domaine de redirection et le contrat de l'endpoint
+sont décrits dans [`supabase/README.md`](../../supabase/README.md).
+
+Côté mobile, deux variables dans `.env.local` :
+
+```bash
+EXPO_PUBLIC_STRAVA_CLIENT_ID=     # identifiant public de l'app Strava
+EXPO_PUBLIC_STRAVA_ENDPOINT_URL=  # URL déployée de la Edge Function
+```
+
+Tant qu'elles sont absentes, l'écran d'onboarding affiche `not_configured` au
+lieu d'échouer.
+
+**N'ajoute jamais `STRAVA_CLIENT_SECRET` ici.** Il n'a rien à faire dans l'app :
+son seul domicile est les secrets Supabase. Tout ce qui est préfixé
+`EXPO_PUBLIC_` finit dans le bundle livré aux appareils.
+
+Le retour d'autorisation arrive par deep link (`mobile://strava/callback`).
+`src/app/+native-intent.tsx` le réécrit vers la route `/strava-callback`, qui
+termine l'échange.
+
+Un module natif a été ajouté pour ce flux (`expo-crypto`, pour générer le
+`state` CSRF). Comme tout module natif, il exige un rebuild du dev client — voir
+la section suivante.
+
 ## Development build native
 
 MapLibre React Native n’est pas disponible dans Expo Go. Après l’installation ou une modification native :
