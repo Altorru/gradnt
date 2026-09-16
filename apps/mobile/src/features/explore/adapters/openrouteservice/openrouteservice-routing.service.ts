@@ -13,7 +13,10 @@ import {
 import type { RouteMode } from '../../domain/route-preferences'
 import type { RouteRequest, RoutingService } from '../../services/routing-service'
 
-const heigitEndpoint = 'https://api.heigit.org/v2/directions'
+// HeiGIT hosts OpenRouteService under `/openrouteservice` on this host. Without
+// that prefix the path does not exist and answers 404 — which the routing call
+// then reported as `HEIGIT_HTTP_404`, a wrong address rather than a wrong key.
+const heigitEndpoint = 'https://api.heigit.org/openrouteservice/v2/directions'
 
 const extraSummarySchema = z.object({
   value: z.number(),

@@ -129,7 +129,7 @@ export function ExploreScreen() {
               offset guessed from a hardcoded size. It steps aside for the detail
               panel, which is a reading state rather than a map one. */}
           {!isDetailOpen && routingConfigured ? (
-            <YStack alignSelf="flex-start">
+            <YStack alignSelf="flex-end">
               <LocationButton
                 isRequesting={routeStart.isRequesting}
                 needsSettings={routeStart.status === 'blocked'}
