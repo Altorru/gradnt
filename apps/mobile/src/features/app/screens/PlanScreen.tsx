@@ -19,7 +19,7 @@ import {
 import { useDateLocale, useNumberFormat, useTranslation, type Translate } from '@/i18n'
 import { getPlanCompletionPercentage } from '@/lib/domain'
 
-import { AppScreenIntro } from '../components/AppHeader'
+import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
 function formatWorkoutDuration(durationMinutes: number) {
@@ -70,7 +70,7 @@ export function PlanScreen() {
   const isMutating = skipWorkout.isPending || moveWorkout.isPending
 
   return (
-    <AppShell>
+    <AppShell header={<AppBrandHeader />}>
       <AppScrollView>
         <YStack gap="$7">
           <AppScreenIntro title={t('plan.title')} description={t('plan.description')} />

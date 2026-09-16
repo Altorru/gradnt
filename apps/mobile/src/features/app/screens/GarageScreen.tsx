@@ -5,14 +5,14 @@ import { GradntBadge, GradntButton, GradntCard, GradntText } from '@/design-syst
 
 import { useTranslation } from '@/i18n'
 
-import { AppScreenIntro } from '../components/AppHeader'
+import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
 export function GarageScreen() {
   const { t } = useTranslation()
 
   return (
-    <AppShell>
+    <AppShell header={<AppBrandHeader />}>
       <AppScrollView>
         <YStack gap="$7">
           <AppScreenIntro title={t('tabs.garage')} description={t('garage.description')} />

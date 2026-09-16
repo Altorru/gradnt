@@ -33,7 +33,7 @@ import {
 } from '@/lib/domain'
 import { describeActivityFailure } from '@/services/gradnt.repository'
 
-import { AppScreenIntro } from '../components/AppHeader'
+import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 
 /**
@@ -141,7 +141,7 @@ export function ProgressScreen() {
   // is more useful than a screen of zeroes.
   if (!connected) {
     return (
-      <AppShell>
+      <AppShell header={<AppBrandHeader />}>
         <AppScrollView>
           <YStack gap="$7">
             <AppScreenIntro title={t('progress.title')} description={t('progress.description')} />
@@ -158,7 +158,7 @@ export function ProgressScreen() {
   }
 
   return (
-    <AppShell>
+    <AppShell header={<AppBrandHeader />}>
       <AppScrollView>
         <YStack gap="$7">
           <AppScreenIntro title={t('progress.title')} description={t('progress.description')} />
