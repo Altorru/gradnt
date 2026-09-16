@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  matchesRanges,
   rangeFit,
   aggregateSurfaceBreakdown,
   detectClimbs,
@@ -150,5 +151,40 @@ describe('rangeFit', () => {
     // off it should cost something rather than nothing.
     expect(rangeFit(60, { min: 60, max: 60 })).toBe(100)
     expect(rangeFit(61, { min: 60, max: 60 })).toBeLessThan(100)
+  })
+})
+
+describe('matchesRanges', () => {
+  const preferences = {
+    ...defaultRoutePreferences,
+    distanceRangeKm: { min: 20, max: 60 },
+    elevationRangeM: { min: 0, max: 100 },
+  }
+
+  const route = (distanceKm: number, elevationM: number) =>
+    ({
+      distanceMeters: distanceKm * 1000,
+      elevationGainMeters: elevationM,
+    }) as Route
+
+  it('keeps a route inside both spans', () => {
+    expect(matchesRanges(route(40, 80), preferences)).toBe(true)
+  })
+
+  it('keeps the edges themselves', () => {
+    // The span is inclusive: a rider who says "up to 60" means 60.
+    expect(matchesRanges(route(20, 0), preferences)).toBe(true)
+    expect(matchesRanges(route(60, 100), preferences)).toBe(true)
+  })
+
+  it('drops a route that climbs more than the rider asked for', () => {
+    // This is the case that made the filters look broken: 200 m of climbing
+    // shown to someone who asked for at most 100.
+    expect(matchesRanges(route(40, 200), preferences)).toBe(false)
+  })
+
+  it('drops a route that is too long or too short', () => {
+    expect(matchesRanges(route(90, 50), preferences)).toBe(false)
+    expect(matchesRanges(route(10, 50), preferences)).toBe(false)
   })
 })

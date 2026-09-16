@@ -4,6 +4,7 @@ import {
   aggregateSurfaceBreakdown,
   detectClimbs,
   getTrafficExposure,
+  matchesRanges,
   midpointOf,
   rankRouteProposals,
   routeSchema,
@@ -326,7 +327,11 @@ export class HeigitRoutingService implements RoutingService {
       )
     })
 
-    return rankRouteProposals(routes, request.preferences)
+    // Ranked, then filtered: the ranking still decides the order of what
+    // survives, but nothing outside the rider's spans is proposed at all.
+    return rankRouteProposals(routes, request.preferences).filter((route) =>
+      matchesRanges(route, request.preferences),
+    )
   }
 }
 

@@ -228,6 +228,28 @@ export function rangeFit(value: number, range: { min: number; max: number }): nu
   return Math.max(0, 100 - (overshoot / span) * 100)
 }
 
+/**
+ * Whether a route sits inside the spans the rider asked for.
+ *
+ * A range is a constraint, not a preference. Ranking alone left a route with
+ * 200 m of climbing on screen when the rider had asked for at most 100 — worse
+ * ranked, but still proposed, which reads as the filter being broken. What
+ * falls outside is excluded, and when nothing is left the screen says so.
+ *
+ * The other filters stay soft: a surface preference or an intent describes what
+ * the rider would like, not what they will accept.
+ */
+export function matchesRanges(route: Route, preferences: RoutePreferences): boolean {
+  const distanceKm = route.distanceMeters / 1000
+
+  return (
+    distanceKm >= preferences.distanceRangeKm.min &&
+    distanceKm <= preferences.distanceRangeKm.max &&
+    route.elevationGainMeters >= preferences.elevationRangeM.min &&
+    route.elevationGainMeters <= preferences.elevationRangeM.max
+  )
+}
+
 function distanceFit(route: Route, preferences: RoutePreferences) {
   return rangeFit(route.distanceMeters / 1000, preferences.distanceRangeKm)
 }

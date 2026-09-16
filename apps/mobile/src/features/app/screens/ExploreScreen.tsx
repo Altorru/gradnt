@@ -59,6 +59,10 @@ export function ExploreScreen() {
   const selectedRoute =
     proposals.find((route) => route.id === selectedRouteId) ?? proposals[0] ?? null
 
+  // Both are needed to ask anything: a key to route with, and somewhere to
+  // start from.
+  const canPropose = routingConfigured && routeStart.hasStart
+
   // The tab bar owns the bottom of the screen on iOS and content runs under it,
   // so the strip is lifted clear by the same clearance the scroll container uses
   // elsewhere. Android already receives a bottom inset from the navigator.
@@ -185,6 +189,25 @@ export function ExploreScreen() {
             <PanelFrame>
               <RouteDetailPanel route={selectedRoute} onClose={() => setIsDetailOpen(false)} />
             </PanelFrame>
+          ) : !selectedRoute &&
+            canPropose &&
+            !proposalsQuery.isPending &&
+            !proposalsQuery.isError ? (
+            /* Everything the engine returned fell outside the rider's spans.
+               Saying so, and offering the way to widen them, beats showing
+               routes that answer a question they did not ask. */
+            <GradntCard padding="$4" gap="$3">
+              <GradntText weight="semibold">Aucun parcours ne correspond</GradntText>
+
+              <GradntText muted fontSize={13} lineHeight={19}>
+                Rien dans ce que le moteur a proposé ne tient dans tes fourchettes. Élargis la
+                distance ou le dénivelé pour voir plus de parcours.
+              </GradntText>
+
+              <GradntButton tone="secondary" onPress={() => setIsFiltersOpen(true)}>
+                Modifier les filtres
+              </GradntButton>
+            </GradntCard>
           ) : selectedRoute ? (
             <RouteResultStrip
               route={selectedRoute}
