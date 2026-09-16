@@ -190,6 +190,49 @@ export const fr = {
     settings: 'Ouvrir les réglages',
   },
 
+  notifications: {
+    section: 'NOTIFICATIONS',
+
+    session: {
+      title: 'Ta séance t’attend',
+      endurance: 'Endurance',
+      tempo: 'Tempo',
+      sweetSpot: 'Sweet Spot',
+      threshold: 'Seuil',
+      vo2Max: 'VO₂ max',
+      recovery: 'Récupération',
+      duration: '{{minutes}} min',
+    },
+
+    weekly: {
+      title: 'Ta semaine',
+      bodyWithFigures: '{{rides}} sorties · {{hours}} h · {{distance}} km',
+      bodyWithoutFigures: 'Ta semaine est prête. Ouvre GRADNT pour la voir.',
+    },
+
+    inactivity: {
+      title: 'On reprend ?',
+      body: 'Ta dernière sortie remonte à quelques jours.',
+    },
+
+    milestone: {
+      title: 'Objectif avancé',
+      body: 'Tu as passé les {{threshold}} % de ton objectif.',
+    },
+
+    settings: {
+      sessionReminder: 'Rappel de séance',
+      reminderHour: 'Heure du rappel',
+      weeklySummary: 'Bilan de semaine',
+      inactivityNudge: 'Relance d’inactivité',
+      permissionDenied: 'Les notifications sont coupées dans les réglages du système.',
+      openSystemSettings: 'Ouvrir les réglages',
+      channelSessions: 'Rappels de séance',
+      channelWeekly: 'Bilan de semaine',
+      channelNudges: 'Relances',
+    },
+  },
+
   home: {
     title: 'Ton prochain pas',
     subtitle: 'Une vue claire de ta progression et de ce qui vient ensuite.',

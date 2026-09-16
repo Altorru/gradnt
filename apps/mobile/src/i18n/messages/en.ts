@@ -170,6 +170,49 @@ export const en = {
     settings: 'Open settings',
   },
 
+  notifications: {
+    section: 'NOTIFICATIONS',
+
+    session: {
+      title: 'Your session is waiting',
+      endurance: 'Endurance',
+      tempo: 'Tempo',
+      sweetSpot: 'Sweet Spot',
+      threshold: 'Threshold',
+      vo2Max: 'VO₂ max',
+      recovery: 'Recovery',
+      duration: '{{minutes}} min',
+    },
+
+    weekly: {
+      title: 'Your week',
+      bodyWithFigures: '{{rides}} rides · {{hours}} h · {{distance}} km',
+      bodyWithoutFigures: 'Your week is ready. Open GRADNT to see it.',
+    },
+
+    inactivity: {
+      title: 'Back on the bike?',
+      body: 'Your last ride was a few days ago.',
+    },
+
+    milestone: {
+      title: 'Goal advanced',
+      body: 'You passed {{threshold}}% of your goal.',
+    },
+
+    settings: {
+      sessionReminder: 'Session reminder',
+      reminderHour: 'Reminder time',
+      weeklySummary: 'Weekly summary',
+      inactivityNudge: 'Inactivity nudge',
+      permissionDenied: 'Notifications are turned off in your system settings.',
+      openSystemSettings: 'Open settings',
+      channelSessions: 'Session reminders',
+      channelWeekly: 'Weekly summary',
+      channelNudges: 'Nudges',
+    },
+  },
+
   home: {
     title: 'Your next step',
     subtitle: 'A clear view of your progress and of what comes next.',

@@ -35,6 +35,31 @@ describe('catalogues', () => {
   })
 })
 
+describe('notification copy', () => {
+  it('has both weekly wordings, so the stale one is never a missing key', () => {
+    expect(translate('fr', 'notifications.weekly.bodyWithoutFigures')).not.toContain(
+      'notifications.',
+    )
+    expect(
+      translate('fr', 'notifications.weekly.bodyWithFigures', {
+        rides: 4,
+        hours: 6,
+        distance: 100,
+      }),
+    ).not.toContain('notifications.')
+    expect(translate('en', 'notifications.weekly.bodyWithoutFigures')).not.toContain(
+      'notifications.',
+    )
+    expect(
+      translate('en', 'notifications.weekly.bodyWithFigures', {
+        rides: 4,
+        hours: 6,
+        distance: 100,
+      }),
+    ).not.toContain('notifications.')
+  })
+})
+
 describe('resolveLanguage', () => {
   it('follows the device when the preference is system', () => {
     expect(resolveLanguage('system', 'fr')).toBe('fr')
