@@ -418,3 +418,7 @@ enabled = true
 # The native app calls this with no Supabase session, so there is no JWT to
 # verify. It is a stateless secret-holder that stores nothing.
 verify_jwt = false
+
+[functions.strava-refresh]
+# Same reasoning as strava-exchange: a native app with no Supabase session.
+verify_jwt = false

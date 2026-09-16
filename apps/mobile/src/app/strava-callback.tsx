@@ -52,15 +52,9 @@ export default function StravaCallbackScreen() {
       }
 
       // The other delivery path may have completed it first, in which case
-      // there is simply nothing left to do here. The service is checked before
-      // the store because it records the connection synchronously, while the
-      // store write happens on the Strava screen.
-      const serviceConnection = await stravaService.getConnection()
-
-      if (
-        serviceConnection.status === 'connected' ||
-        useOnboardingStore.getState().strava?.status === 'connected'
-      ) {
+      // there is simply nothing left to do here. One check covers it now: the
+      // service reads the same persisted store the Strava screen writes to.
+      if (useOnboardingStore.getState().strava?.status === 'connected') {
         router.replace('/onboarding/review')
         return
       }

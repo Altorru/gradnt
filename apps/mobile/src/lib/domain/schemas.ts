@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const dataProvenanceSchema = z.enum(['declared', 'observed', 'mock'])
+export const dataProvenanceSchema = z.enum(['declared', 'observed'])
 
 export type DataProvenance = z.infer<typeof dataProvenanceSchema>
 
@@ -38,7 +38,11 @@ export const activitySchema = z.object({
   normalizedPower: z.number().positive().nullable(),
   weightedPower: z.number().positive().nullable(),
   calories: z.number().nonnegative().nullable(),
-  provenance: z.enum(['observed', 'mock']),
+  /**
+   * Always observed: an activity only ever enters the app from Strava. The demo
+   * fixtures were the sole producer of `'mock'`, and they are gone.
+   */
+  provenance: z.literal('observed'),
 })
 
 export const plannedWorkoutSchema = z.object({
@@ -75,7 +79,12 @@ export const trainingMetricsSchema = z.object({
   distanceMeters: z.number().nonnegative(),
   elevationGainMeters: z.number().nonnegative(),
   activityCount: z.number().int().nonnegative(),
-  provenance: z.enum(['observed', 'mock']),
+  /**
+   * `'none'` rather than falling through to `'mock'`: with no activities there
+   * is nothing observed to report, and the old fall-through labelled a
+   * zero-ride history as demonstration data.
+   */
+  provenance: z.enum(['none', 'observed']),
 })
 
 export type AthleteProfile = z.infer<typeof athleteProfileSchema>

@@ -62,6 +62,7 @@ Both sides therefore split on `/[\s,]+/` — here and in
 | Piece                      | Where                                                               |
 | -------------------------- | ------------------------------------------------------------------- |
 | Redirect bridge + exchange | `functions/strava-exchange/index.ts`                                |
+| Token refresh              | `functions/strava-refresh/index.ts`                                 |
 | Browser + redirect flow    | `apps/mobile/src/services/strava/oauth/strava-connect.ts`           |
 | Mobile HTTP broker         | `apps/mobile/src/services/strava/oauth/strava-token-broker.http.ts` |
 | Token storage              | `apps/mobile/src/services/strava/oauth/strava-token.persistence.ts` |
@@ -109,6 +110,30 @@ instead of failing.
 `GET` (the OAuth redirect) forwards to `mobile://strava/callback` preserving the
 query. It answers `400` when neither `code` nor `error` is present.
 
+`POST /strava-refresh` with `{ "refreshToken": "..." }` returns the same
+`tokens` shape:
+
+```json
+{
+  "grantedScopes": ["profile:read_all", "activity:read_all"],
+  "tokens": {
+    "accessToken": "...",
+    "refreshToken": "...",
+    "expiresAt": "2026-09-15T12:00:00.000Z"
+  }
+}
+```
+
+**Strava rotates the refresh token on every refresh**: the one sent is already
+spent, so the caller must persist what comes back before using the access token.
+A lost response is therefore unrecoverable rather than retryable, which is why a
+dead refresh token is answered `401 refresh_rejected` — distinctly from a
+transient `502` — so the client can clear its session and ask the rider to
+authorize again.
+
+Errors: `missing_refresh_token` 400, `not_configured` 500, `strava_unreachable`
+502, `strava_unexpected_response` 502, `refresh_rejected` 401.
+
 `POST` with `{ "code": "<authorization code>" }`:
 
 ```json
@@ -131,10 +156,11 @@ because it can echo the submitted credentials back.
 
 ## Not done yet
 
-- **Token refresh.** Strava access tokens expire after ~6 hours. Nothing reads
-  activities yet, so there is no refresh path. Add a `strava-refresh` function
-  when the first activity fetch lands.
-- **Rate limiting.** The endpoint is public. The code it accepts is single-use,
-  short-lived and bound to the redirect URI, so the residual risk is abuse.
-- **Neither endpoint has automated tests.** Deno is not installed in this repo,
-  so the function is only exercised by hand against the deployed copy.
+- **Rate limiting.** Both endpoints are public. The code the exchange accepts is
+  single-use, short-lived and bound to the redirect URI, so the residual risk is
+  abuse.
+- **The refresh path has only been exercised against a rejected token.** A bogus
+  refresh token returns `401 refresh_rejected`, which proves the wiring reaches
+  Strava, but token _rotation_ needs a real connection to confirm.
+- **Neither function has automated tests.** Deno is not installed in this repo,
+  so they are only exercised by hand against the deployed copy.

@@ -70,3 +70,26 @@ export function readStravaConfig(): StravaRuntimeConfig | null {
     endpointUrl,
   }
 }
+
+/**
+ * URL of the refresh function.
+ *
+ * Derived from the exchange URL rather than configured separately: the two are
+ * siblings in the same deployment, and a second variable that has to agree with
+ * the first is one more way to misconfigure the app.
+ *
+ * Returns null when the URL does not have the shape we expect, so the caller
+ * reports a configuration problem instead of posting a refresh to the exchange
+ * endpoint and silently getting nothing back.
+ */
+export function readStravaRefreshUrl(): string | null {
+  const config = readStravaConfig()
+
+  if (config === null) {
+    return null
+  }
+
+  const match = /^(.*\/)strava-exchange\/?$/.exec(config.endpointUrl)
+
+  return match ? `${match[1]}strava-refresh` : null
+}

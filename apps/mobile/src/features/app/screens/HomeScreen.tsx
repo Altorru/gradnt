@@ -1,4 +1,5 @@
 import { useRouter, type Href } from 'expo-router'
+import { useState } from 'react'
 import {
   GradntCard,
   GradntChip,
@@ -6,8 +7,8 @@ import {
   GradntHeading,
   GradntMiniBars,
   GradntSectionHeader,
-  GradntSparkline,
   GradntStatusCard,
+  GradntStravaConnectBlock,
   GradntText,
   GradntWorkoutCard,
 } from '@/design-system'
@@ -18,19 +19,27 @@ import {
   useGoalQuery,
   useUpcomingWorkoutsQuery,
 } from '@/hooks/use-gradnt-data'
+import { describeActivityFailure } from '@/services/gradnt.repository'
 import {
   getActivityDataState,
   getDeterministicTrainingInsight,
   getGoalProgressPercentage,
   getNextWorkout,
+  getWeeklyVolumeSeries,
 } from '@/lib/domain'
 import { XStack, YStack } from 'tamagui'
 
 import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
+import { stravaService } from '@/features/onboarding/services/strava.service'
+import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 
 export function HomeScreen() {
   const router = useRouter()
+  const setStrava = useOnboardingStore((state) => state.setStrava)
+  const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
   const athleteQuery = useAthleteQuery()
   const activitiesQuery = useActivitiesQuery()
   const goalQuery = useGoalQuery()
@@ -43,6 +52,7 @@ export function HomeScreen() {
   const activities = activitiesQuery.data ?? []
   const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
   const activityState = getActivityDataState(activities)
+  const volumeSeries = getWeeklyVolumeSeries(activities)
   const insight = getDeterministicTrainingInsight(
     activities,
     athleteQuery.data?.weeklyVolumeBand ?? '3to6',
@@ -59,6 +69,24 @@ export function HomeScreen() {
   // switched to, not stacked on top of the current one.
   const openTab = (href: Href) => {
     router.navigate(href)
+  }
+
+  const connectStrava = async () => {
+    setIsConnecting(true)
+    setConnectError(null)
+
+    const result = await stravaService.connect()
+
+    if (result.ok) {
+      setStrava(result.connection)
+      // The activities come from Strava, so the figures on this screen are
+      // stale the moment the connection lands.
+      await activitiesQuery.refetch()
+    } else {
+      setConnectError(result.error.message)
+    }
+
+    setIsConnecting(false)
   }
 
   return (
@@ -80,27 +108,19 @@ export function HomeScreen() {
 
           {hasError ? (
             <GradntText color="$danger" fontSize={13}>
-              Les données de progression sont momentanément indisponibles.
+              {activitiesQuery.isError
+                ? describeActivityFailure(activitiesQuery.error)
+                : 'Les données de progression sont momentanément indisponibles.'}
             </GradntText>
           ) : null}
 
           <GradntGoalCard
-            goal={goal}
+            goal={goal ?? undefined}
             currentValue={currentGoalValue ?? undefined}
             progressPercentage={progressPercentage || undefined}
-            statusLabel={
-              currentValueQuery.data?.provenance === 'mock'
-                ? 'DÉMO LOCALE'
-                : currentGoalValue === null
-                  ? 'POINT DE DÉPART'
-                  : 'EN BONNE VOIE'
-            }
+            statusLabel={currentGoalValue === null ? 'POINT DE DÉPART' : 'EN BONNE VOIE'}
             changeLabel={
-              currentValueQuery.data?.provenance === 'mock'
-                ? 'Valeur illustrative'
-                : currentGoalValue === null
-                  ? 'Après tes premières sorties'
-                  : 'Progression observée'
+              currentGoalValue === null ? 'Après tes premières sorties' : 'Progression observée'
             }
           />
 
@@ -113,35 +133,41 @@ export function HomeScreen() {
             <GradntWorkoutCard workout={nextWorkout ?? undefined} />
           </YStack>
 
-          <YStack gap="$4">
-            <GradntSectionHeader
-              title="Ton état"
-              action="Voir plus"
-              onPress={() => openTab('/progress')}
-            />
+          {/*
+            Keyed on the connection, not on the activity list. A rider who is
+            connected but has not ridden yet also has no activities, and asking
+            them to connect again would be plainly wrong.
+          */}
+          {connected ? (
+            <YStack gap="$4">
+              <GradntSectionHeader
+                title="Ton état"
+                action="Voir plus"
+                onPress={() => openTab('/progress')}
+              />
 
-            <XStack gap="$3">
-              <GradntStatusCard
-                label="Forme"
-                value={isLoading ? '—' : 'Profil'}
-                detail={isLoading ? 'Chargement' : 'Déclaré'}
-                visual={<GradntSparkline data={[46, 54, 67, 59, 72, 78, 73, 86]} />}
-              />
-              <GradntStatusCard
-                label="Historique"
-                value={
-                  activityState === 'observed'
-                    ? 'Importé'
-                    : activityState === 'mock'
-                      ? 'Démo'
-                      : 'À venir'
-                }
-                valueSize={21}
-                detail={activityState === 'observed' ? 'Strava' : 'Plus précis après tes sorties'}
-                visual={<GradntMiniBars data={[18, 32, 52, 38, 29]} activeIndices={[0, 1, 2]} />}
-              />
-            </XStack>
-          </YStack>
+              <XStack gap="$3">
+                <GradntStatusCard
+                  label="Forme"
+                  value={isLoading ? '—' : 'Profil'}
+                  detail={isLoading ? 'Chargement' : 'Déclaré'}
+                />
+                <GradntStatusCard
+                  label="Historique"
+                  value={activityState === 'observed' ? 'Importé' : 'À venir'}
+                  valueSize={21}
+                  detail={activityState === 'observed' ? 'Strava' : 'Plus précis après tes sorties'}
+                  visual={<GradntMiniBars data={volumeSeries} activeIndices={[]} />}
+                />
+              </XStack>
+            </YStack>
+          ) : (
+            <GradntStravaConnectBlock
+              onConnect={() => void connectStrava()}
+              isConnecting={isConnecting}
+              errorMessage={connectError}
+            />
+          )}
 
           <YStack gap="$4">
             {/* No destination exists for this section, so it carries no action
@@ -163,9 +189,7 @@ export function HomeScreen() {
             <GradntText muted fontSize={11}>
               {activityState === 'none'
                 ? 'Basé sur ton profil déclaré'
-                : activityState === 'mock'
-                  ? 'Données locales de démonstration'
-                  : 'Basé sur des activités observées'}
+                : 'Basé sur des activités observées'}
             </GradntText>
           </GradntCard>
         </YStack>

@@ -1,4 +1,5 @@
 import { Activity, ArrowUpRight, CalendarDays, TrendingUp } from '@tamagui/lucide-icons-2'
+import { useState } from 'react'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -6,8 +7,11 @@ import {
   GradntMiniBars,
   GradntProgressRing,
   GradntSparkline,
+  GradntStravaConnectBlock,
   GradntText,
 } from '@/design-system'
+import { stravaService } from '@/features/onboarding/services/strava.service'
+import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import {
   useActivitiesQuery,
   useAthleteQuery,
@@ -21,7 +25,9 @@ import {
   getGoalProgressPercentage,
   getRecentTrainingVolumeHours,
   getWeeklyRideCount,
+  getWeeklyVolumeSeries,
 } from '@/lib/domain'
+import { describeActivityFailure } from '@/services/gradnt.repository'
 
 import { AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
@@ -49,6 +55,10 @@ const volumeLabels = {
 } as const
 
 export function ProgressScreen() {
+  const setStrava = useOnboardingStore((state) => state.setStrava)
+  const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
   const athleteQuery = useAthleteQuery()
   const goalQuery = useGoalQuery()
   const currentValueQuery = useCurrentGoalValueQuery()
@@ -57,6 +67,7 @@ export function ProgressScreen() {
 
   const activities = activitiesQuery.data ?? []
   const activityState = getActivityDataState(activities)
+  const volumeSeries = getWeeklyVolumeSeries(activities)
   const declaredVolume = athleteQuery.data?.weeklyVolumeBand ?? '3to6'
   const insight = getDeterministicTrainingInsight(activities, declaredVolume)
   const goal = goalQuery.data
@@ -78,6 +89,46 @@ export function ProgressScreen() {
     metricsQuery.isError ||
     activitiesQuery.isError
 
+  const connectStrava = async () => {
+    setIsConnecting(true)
+    setConnectError(null)
+
+    const result = await stravaService.connect()
+
+    if (result.ok) {
+      setStrava(result.connection)
+      await activitiesQuery.refetch()
+    } else {
+      setConnectError(result.error.message)
+    }
+
+    setIsConnecting(false)
+  }
+
+  // Every figure on this screen is computed from rides, so with no connection
+  // there is genuinely nothing to report — and offering the way to change that
+  // is more useful than a screen of zeroes.
+  if (!connected) {
+    return (
+      <AppShell>
+        <AppScrollView>
+          <YStack gap="$7">
+            <AppScreenIntro
+              title="Ta progression"
+              description="Les tendances utiles pour comprendre où tu en es, sans bruit inutile."
+            />
+
+            <GradntStravaConnectBlock
+              onConnect={() => void connectStrava()}
+              isConnecting={isConnecting}
+              errorMessage={connectError}
+            />
+          </YStack>
+        </AppScrollView>
+      </AppShell>
+    )
+  }
+
   return (
     <AppShell>
       <AppScrollView>
@@ -89,13 +140,15 @@ export function ProgressScreen() {
 
           {hasError ? (
             <GradntText color="$danger" fontSize={13}>
-              Certaines données de progression sont momentanément indisponibles.
+              {activitiesQuery.isError
+                ? describeActivityFailure(activitiesQuery.error)
+                : 'Certaines données de progression sont momentanément indisponibles.'}
             </GradntText>
           ) : null}
 
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$4">
-              <GradntProgressRing value={goalProgress || 78} size={92} />
+              <GradntProgressRing value={goalProgress} size={92} />
               <YStack flex={1} gap="$2">
                 <GradntText muted fontSize={12}>
                   {goalLabel}
@@ -106,9 +159,9 @@ export function ProgressScreen() {
                 <XStack alignItems="center" gap="$1">
                   <ArrowUpRight size={15} color="$accentInk" />
                   <GradntText color="$accentInk" weight="semibold" fontSize={13}>
-                    {currentValueQuery.data?.provenance === 'mock'
-                      ? 'Valeur locale de démonstration'
-                      : 'Valeur issue des données disponibles'}
+                    {currentValueQuery.data?.provenance === 'observed'
+                      ? 'Valeur issue de tes sorties'
+                      : 'À préciser après tes premières sorties'}
                   </GradntText>
                 </XStack>
               </YStack>
@@ -124,9 +177,9 @@ export function ProgressScreen() {
               <GradntText muted fontSize={13}>
                 {metricsQuery.isPending
                   ? 'Chargement…'
-                  : `${volumeHours} h de données ${activityState === 'mock' ? 'de démonstration' : activityState === 'observed' ? 'observées' : `basées sur ton profil (${volumeLabels[declaredVolume]})`}`}
+                  : `${volumeHours} h de données ${activityState === 'observed' ? 'observées' : `basées sur ton profil (${volumeLabels[declaredVolume]})`}`}
               </GradntText>
-              <GradntMiniBars data={[30, 42, 36, 56, 48, 62, 58]} width={250} height={62} gap={7} />
+              <GradntMiniBars data={volumeSeries} width={250} height={62} gap={7} />
             </GradntCard>
 
             <GradntCard padding="$4" gap="$4">
@@ -137,13 +190,11 @@ export function ProgressScreen() {
               <GradntText muted fontSize={13}>
                 {activitiesQuery.isPending
                   ? 'Chargement…'
-                  : activityState === 'mock'
-                    ? 'Données locales de démonstration'
-                    : activityState === 'observed'
-                      ? `${rideCount} sortie${rideCount > 1 ? 's' : ''} observée${rideCount > 1 ? 's' : ''}`
-                      : 'Elle sera plus précise après tes premières sorties'}
+                  : activityState === 'observed'
+                    ? `${rideCount} sortie${rideCount > 1 ? 's' : ''} observée${rideCount > 1 ? 's' : ''}`
+                    : 'Elle sera plus précise après tes premières sorties'}
               </GradntText>
-              <GradntSparkline data={[30, 38, 33, 52, 58, 50, 68, 76]} width={250} height={62} />
+              <GradntSparkline data={volumeSeries} width={250} height={62} />
             </GradntCard>
           </YStack>
 

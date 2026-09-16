@@ -1,11 +1,13 @@
 import type { Activity, Goal, PlannedWorkout, TrainingMetrics } from './schemas'
 
-export type ActivityDataState = 'none' | 'mock' | 'observed'
+export type ActivityDataState = 'none' | 'observed'
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 export type DeterministicTrainingInsight = {
   title: string
   message: string
-  provenance: 'declared' | 'observed' | 'mock'
+  provenance: 'declared' | 'observed'
 }
 
 export function getGoalProgressPercentage(goal: Goal, currentValue: number | null): number {
@@ -25,15 +27,7 @@ export function getWeeklyRideCount(activities: Activity[]): number {
 }
 
 export function getActivityDataState(activities: Activity[]): ActivityDataState {
-  if (activities.some((activity) => activity.provenance === 'observed')) {
-    return 'observed'
-  }
-
-  if (activities.some((activity) => activity.provenance === 'mock')) {
-    return 'mock'
-  }
-
-  return 'none'
+  return activities.length > 0 ? 'observed' : 'none'
 }
 
 export function getTotalDistanceKm(activities: Activity[]): number {
@@ -48,6 +42,37 @@ export function getTotalElevationGainMeters(activities: Activity[]): number {
   return Math.round(activities.reduce((total, activity) => total + activity.elevationGainMeters, 0))
 }
 
+/**
+ * Training hours per week, oldest first, for the last `weeks` weeks.
+ *
+ * Replaces the invented series these charts used to draw. A fabricated shape
+ * presented next to real totals is worse than no chart, because nothing on the
+ * screen distinguishes the two.
+ *
+ * Weeks with no riding are genuine zeroes and stay in the series, so a gap
+ * reads as a gap rather than as compression.
+ */
+export function getWeeklyVolumeSeries(activities: Activity[], weeks = 8): number[] {
+  const buckets = new Array<number>(weeks).fill(0)
+  const now = Date.now()
+
+  for (const activity of activities) {
+    const startAt = Date.parse(activity.startAt)
+
+    if (Number.isNaN(startAt)) {
+      continue
+    }
+
+    const index = weeks - 1 - Math.floor((now - startAt) / WEEK_MS)
+
+    if (index >= 0 && index < weeks) {
+      buckets[index] += activity.durationSeconds / 3600
+    }
+  }
+
+  return buckets.map((hours) => Math.round(hours * 10) / 10)
+}
+
 export function getDeterministicTrainingInsight(
   activities: Activity[],
   declaredWeeklyVolumeBand: 'lt3' | '3to6' | '6to10' | 'gt10',
@@ -59,15 +84,6 @@ export function getDeterministicTrainingInsight(
       title: 'Point de départ déclaré',
       message: `Le premier plan s’appuie sur ton volume déclaré (${declaredWeeklyVolumeBand}) et tes disponibilités. Il deviendra plus précis après tes premières sorties.`,
       provenance: 'declared',
-    }
-  }
-
-  if (activityState === 'mock') {
-    return {
-      title: 'Données de démonstration',
-      message:
-        'Ces indicateurs illustrent l’expérience GRADNT. Ils seront remplacés par tes activités importées lorsque Strava sera connecté.',
-      provenance: 'mock',
     }
   }
 

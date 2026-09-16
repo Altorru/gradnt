@@ -1,4 +1,5 @@
 import { defaultStravaConnection, type StravaConnection } from '../domain/strava.schema'
+import { useOnboardingStore } from '../store/onboarding.store'
 
 import type { StravaCallbackResult } from '@/services/strava/oauth/strava-callback'
 import { readStravaConfig, stravaAppCallbackUri } from '@/services/strava/oauth/strava-config'
@@ -67,10 +68,15 @@ const ignoredError: StravaServiceError = {
  * cancelling included) and the caller renders the reason.
  */
 export class LiveStravaService implements StravaService {
-  private connection: StravaConnection = defaultStravaConnection
-
+  /**
+   * Reads the persisted store rather than an in-memory copy.
+   *
+   * The service used to hold its own field, so a connection survived on the
+   * store but not through the service, and the two could disagree after a
+   * restart. The store wins because it is the one that is persisted.
+   */
   async getConnection() {
-    return this.connection
+    return useOnboardingStore.getState().strava ?? defaultStravaConnection
   }
 
   async connect(): Promise<StravaConnectionResult> {
@@ -101,8 +107,12 @@ export class LiveStravaService implements StravaService {
     return this.applyOutcome(await completeStravaConnect(callbackUrl, broker))
   }
 
+  /**
+   * Clears every place a connection lives: the persisted store the UI reads,
+   * the tokens, and any half-finished authorization.
+   */
   async disconnect() {
-    this.connection = defaultStravaConnection
+    useOnboardingStore.getState().setStrava(defaultStravaConnection)
     await clearStravaTokens()
     await clearPendingStravaState()
   }
@@ -119,7 +129,6 @@ export class LiveStravaService implements StravaService {
           status: 'connected',
           athleteName: outcome.connection.displayName ?? null,
         }
-        this.connection = connection
         return { ok: true, connection }
       }
 

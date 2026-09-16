@@ -17,6 +17,6 @@ export function buildTrainingMetrics(
     activityCount: activities.length,
     provenance: activities.some((activity) => activity.provenance === 'observed')
       ? 'observed'
-      : 'mock',
+      : 'none',
   }
 }
