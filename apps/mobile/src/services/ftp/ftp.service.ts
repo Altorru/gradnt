@@ -1,11 +1,17 @@
 import { getValidAccessToken } from '../strava/api/strava-session'
 
 import { estimateFtpFromZones, readPowerZones } from './ftp-from-zones'
-import { loadCurrentFtp, loadFtpHistory, recordFtp, type FtpEntry } from './ftp.persistence'
+import {
+  loadCurrentFtp,
+  loadFtpHistory,
+  recordFtp,
+  type FtpEntry,
+  type FtpSource,
+} from './ftp.persistence'
 import { fetchStravaZones } from './strava-zones.api'
 
-export type FtpImportResult =
-  | { status: 'imported'; value: number }
+export type DeduceFtpResult =
+  | { status: 'deduced'; value: number }
   /** The response was understood, and the rider has no power zones configured. */
   | { status: 'noPowerZones' }
   /** The response was not understood at all — a fault on our side, worth reporting. */
@@ -16,15 +22,20 @@ export type FtpImportResult =
   | { status: 'error'; error: unknown }
 
 /**
- * Reads the rider's FTP out of Strava's power zones and records it, dated.
+ * Reads the rider's FTP out of Strava's power zones.
+ *
+ * **It does not record anything.** The figure is a deduction from the zone
+ * boundaries, and a deduction should not become the rider's FTP without them
+ * seeing it — the caller pre-fills the field and they confirm. Recording here
+ * would also mean the provenance could never be corrected.
  *
  * `noPowerZones` and `unrecognized` are deliberately separate. The first is the
  * common case — most riders have never set an FTP in Strava — and has an
  * obvious remedy. The second means the response did not look like anything
  * expected, and reporting it as "you have no zones" is what made this look like
- * the rider's problem for two rounds of guessing.
+ * the rider's problem for three rounds of guessing.
  */
-export async function importFtpFromStrava(now: Date = new Date()): Promise<FtpImportResult> {
+export async function deduceFtpFromStrava(): Promise<DeduceFtpResult> {
   const session = await getValidAccessToken()
 
   if (session.status !== 'ready') {
@@ -43,13 +54,7 @@ export async function importFtpFromStrava(now: Date = new Date()): Promise<FtpIm
 
       const value = estimateFtpFromZones(response.zones)
 
-      if (value === null) {
-        return { status: 'noPowerZones' }
-      }
-
-      await recordFtp({ value, source: 'strava', recordedAt: now.toISOString() })
-
-      return { status: 'imported', value }
+      return value === null ? { status: 'noPowerZones' } : { status: 'deduced', value }
     }
 
     case 'unauthorized':
@@ -63,9 +68,19 @@ export async function importFtpFromStrava(now: Date = new Date()): Promise<FtpIm
   }
 }
 
-/** Records a figure the rider typed in, dated like any other. */
-export async function recordDeclaredFtp(value: number, now: Date = new Date()): Promise<void> {
-  await recordFtp({ value, source: 'declared', recordedAt: now.toISOString() })
+/**
+ * Records a figure, with where it came from.
+ *
+ * The source is the caller's to state: a value the rider left exactly as it was
+ * deduced is `strava`, and one they typed or corrected is `declared`. Losing
+ * that distinction would present an inference as a measurement.
+ */
+export async function saveFtp(
+  value: number,
+  source: FtpSource,
+  now: Date = new Date(),
+): Promise<void> {
+  await recordFtp({ value, source, recordedAt: now.toISOString() })
 }
 
 export { loadCurrentFtp, loadFtpHistory }

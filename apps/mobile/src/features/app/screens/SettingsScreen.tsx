@@ -29,8 +29,12 @@ import {
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { goalTypeLabels } from '@/features/onboarding/domain/goal.options'
 import { describeProfile } from '@/features/onboarding/domain/profile.options'
-import { importFtpFromStrava, loadFtpHistory, recordDeclaredFtp } from '@/services/ftp/ftp.service'
-import type { FtpEntry } from '@/services/ftp/ftp.persistence'
+import {
+  deduceFtpFromStrava,
+  loadFtpHistory,
+  saveFtp as saveFtpValue,
+} from '@/services/ftp/ftp.service'
+import type { FtpEntry, FtpSource } from '@/services/ftp/ftp.persistence'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { describeActivityFailure } from '@/services/gradnt.repository'
 import type { Activity } from '@/lib/domain'
@@ -133,7 +137,15 @@ export function SettingsScreen() {
    */
   const [ftpHistory, setFtpHistory] = useState<FtpEntry[]>([])
   const [draftFtp, setDraftFtp] = useState('')
-  const [isImportingFtp, setIsImportingFtp] = useState(false)
+  /**
+   * Where the value currently in the field came from.
+   *
+   * A figure left exactly as it was deduced is Strava's; one the rider typed or
+   * corrected is theirs. Losing the distinction would record an inference as a
+   * measurement.
+   */
+  const [draftedSource, setDraftedSource] = useState<FtpSource>('declared')
+  const [isReadingZones, setIsReadingZones] = useState(false)
   const [ftpMessage, setFtpMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -142,15 +154,19 @@ export function SettingsScreen() {
 
   const latestFtp = ftpHistory.at(-1) ?? null
 
-  const importFtp = async () => {
-    setIsImportingFtp(true)
+  const deduceFtp = async () => {
+    setIsReadingZones(true)
     setFtpMessage(null)
 
-    const result = await importFtpFromStrava()
+    const result = await deduceFtpFromStrava()
 
-    if (result.status === 'imported') {
-      setFtpHistory(await loadFtpHistory())
-      setFtpMessage(`${result.value} W, déduits de tes zones de puissance Strava.`)
+    if (result.status === 'deduced') {
+      // Pre-filled rather than saved. The figure is inverted from zone
+      // boundaries, so it belongs in front of the rider before it becomes the
+      // number every other figure is measured against.
+      setDraftFtp(String(result.value))
+      setDraftedSource('strava')
+      setFtpMessage(`${result.value} W déduits de tes zones. Il ne reste qu’à enregistrer.`)
     } else if (result.status === 'noPowerZones') {
       // The common case, not a failure: most riders have never set an FTP in
       // Strava, and there is an obvious thing for them to do about it.
@@ -159,10 +175,10 @@ export function SettingsScreen() {
       // Not the rider's problem, and not something to describe as one.
       setFtpMessage(`Réponse inattendue de Strava (${result.summary}). Saisis ta FTP ci-dessous.`)
     } else {
-      setFtpMessage('L’import a échoué. Réessaie dans un instant.')
+      setFtpMessage('La lecture de tes zones a échoué. Réessaie dans un instant.')
     }
 
-    setIsImportingFtp(false)
+    setIsReadingZones(false)
   }
 
   const saveFtp = async () => {
@@ -173,9 +189,10 @@ export function SettingsScreen() {
       return
     }
 
-    await recordDeclaredFtp(parsed)
+    await saveFtpValue(parsed, draftedSource)
     setFtpHistory(await loadFtpHistory())
     setDraftFtp('')
+    setDraftedSource('declared')
     setFtpMessage(null)
   }
 
@@ -363,19 +380,23 @@ export function SettingsScreen() {
 
               <GradntButton
                 tone="secondary"
-                disabled={isImportingFtp}
-                opacity={isImportingFtp ? 0.55 : 1}
+                disabled={isReadingZones}
+                opacity={isReadingZones ? 0.55 : 1}
                 iconAfter={<Download size={17} color="$textPrimary" />}
-                onPress={() => void importFtp()}
+                onPress={() => void deduceFtp()}
               >
-                {isImportingFtp ? 'Lecture des zones…' : 'Déduire de mes zones Strava'}
+                {isReadingZones ? 'Lecture des zones…' : 'Déduire de mes zones Strava'}
               </GradntButton>
 
               <XStack alignItems="center" gap="$3">
                 <GradntInput
                   flex={1}
                   value={draftFtp}
-                  onChangeText={setDraftFtp}
+                  onChangeText={(value) => {
+                    setDraftFtp(value)
+                    // Edited, so it is theirs now — however it was filled in.
+                    setDraftedSource('declared')
+                  }}
                   keyboardType="numeric"
                   placeholder="250"
                 />
