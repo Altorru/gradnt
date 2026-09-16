@@ -2,7 +2,7 @@ import type { NotificationPreferences } from '../../services/preferences/prefere
 
 import type { PlannedWorkout } from './schemas'
 
-const DAY_MS = 24 * 60 * 60 * 1000
+export const DAY_MS = 24 * 60 * 60 * 1000
 const HOUR_MS = 60 * 60 * 1000
 
 /** Beyond this, the data is too old to put a figure in a notification. */
@@ -88,6 +88,64 @@ function sessionNotifications(input: PlanInput): DesiredNotification[] {
     .filter((notification) => notification.fireAt > now)
 }
 
+/**
+ * Whether the figures we hold were read recently enough to be quoted.
+ *
+ * A local notification carries only what the app knew when it was scheduled,
+ * and Strava only syncs while the app is open. Past this window we cannot vouch
+ * for a number, so we stop using numbers.
+ */
+export function isFresh(lastSyncedAt: string | null, now: Date): boolean {
+  if (lastSyncedAt === null) {
+    return false
+  }
+
+  const synced = Date.parse(lastSyncedAt)
+
+  return !Number.isNaN(synced) && now.getTime() - synced < FRESHNESS_WINDOW_MS
+}
+
+/**
+ * The next Sunday evening, in local time.
+ *
+ * `WEEKLY_WEEKDAY` is Sunday in `expo-notifications` numbering, which runs 1..7
+ * from Sunday — one off `Date.getDay()`, which runs 0..6 from Sunday. Hence the
+ * `- 1`.
+ */
+function nextWeeklyFire(now: Date): Date {
+  const fireAt = new Date(now)
+  fireAt.setHours(WEEKLY_HOUR, WEEKLY_MINUTE, 0, 0)
+
+  const daysUntil = (WEEKLY_WEEKDAY - 1 - fireAt.getDay() + 7) % 7
+  fireAt.setDate(fireAt.getDate() + daysUntil)
+
+  if (fireAt <= now) {
+    fireAt.setDate(fireAt.getDate() + 7)
+  }
+
+  return fireAt
+}
+
+function weeklyNotifications(input: PlanInput): DesiredNotification[] {
+  if (!input.preferences.weeklySummary) {
+    return []
+  }
+
+  const fresh = isFresh(input.lastSyncedAt, input.now)
+  const fireAt = nextWeeklyFire(input.now)
+
+  return [
+    {
+      key: `weekly:${fireAt.toISOString().slice(0, 10)}`,
+      kind: 'weekly',
+      summary: fresh ? input.weeklySummary : null,
+      fireAt,
+    },
+  ]
+}
+
 export function planNotifications(input: PlanInput): DesiredNotification[] {
-  return [...sessionNotifications(input)].sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
+  return [...sessionNotifications(input), ...weeklyNotifications(input)].sort(
+    (a, b) => a.fireAt.getTime() - b.fireAt.getTime(),
+  )
 }

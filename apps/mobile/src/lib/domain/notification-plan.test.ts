@@ -1,4 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { PlannedWorkout } from './schemas'
+import {
+  FRESHNESS_WINDOW_MS,
+  isFresh,
+  planNotifications,
+  type PlanInput,
+} from './notification-plan'
 
 // Hoisted above the import by vitest, so the module under test sees the stubs.
 vi.mock('react-native', () => ({
@@ -6,9 +13,6 @@ vi.mock('react-native', () => ({
     OS: 'ios',
   },
 }))
-
-import type { PlannedWorkout } from './schemas'
-import { planNotifications, type PlanInput } from './notification-plan'
 
 const NOW = new Date('2026-09-16T06:00:00.000Z') // a Wednesday
 
@@ -83,5 +87,70 @@ describe('session reminders', () => {
     )
 
     expect(result).toHaveLength(0)
+  })
+})
+
+describe('weekly summary', () => {
+  const summary = { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 }
+
+  it('carries the figures while the data is fresh', () => {
+    const result = planNotifications(
+      input({
+        preferences: { ...input().preferences, weeklySummary: true },
+        weeklySummary: summary,
+        lastSyncedAt: new Date(NOW.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+      }),
+    )
+
+    expect(result).toHaveLength(1)
+    expect(result[0].kind).toBe('weekly')
+    expect(result[0]).toMatchObject({ summary })
+  })
+
+  it('drops the figures once the data is stale, rather than showing last week', () => {
+    const result = planNotifications(
+      input({
+        preferences: { ...input().preferences, weeklySummary: true },
+        weeklySummary: summary,
+        lastSyncedAt: new Date(NOW.getTime() - 30 * 60 * 60 * 1000).toISOString(),
+      }),
+    )
+
+    expect(result[0]).toMatchObject({ summary: null })
+  })
+
+  it('drops the figures when nothing was ever synced', () => {
+    const result = planNotifications(
+      input({
+        preferences: { ...input().preferences, weeklySummary: true },
+        weeklySummary: summary,
+        lastSyncedAt: null,
+      }),
+    )
+
+    expect(result[0]).toMatchObject({ summary: null })
+  })
+
+  it('lands on the next Sunday evening', () => {
+    const result = planNotifications(
+      input({ preferences: { ...input().preferences, weeklySummary: true } }),
+    )
+
+    expect(result[0].fireAt.getDay()).toBe(0) // Sunday
+    expect(result[0].fireAt.getHours()).toBe(18)
+  })
+})
+
+describe('isFresh', () => {
+  it('treats a missing sync as stale', () => {
+    expect(isFresh(null, NOW)).toBe(false)
+  })
+
+  it('holds for just under the window and fails at it', () => {
+    const justInside = new Date(NOW.getTime() - FRESHNESS_WINDOW_MS + 1000).toISOString()
+    const atTheEdge = new Date(NOW.getTime() - FRESHNESS_WINDOW_MS).toISOString()
+
+    expect(isFresh(justInside, NOW)).toBe(true)
+    expect(isFresh(atTheEdge, NOW)).toBe(false)
   })
 })
