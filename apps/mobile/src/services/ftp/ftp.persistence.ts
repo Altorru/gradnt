@@ -77,6 +77,32 @@ export async function recordFtp(entry: FtpEntry): Promise<void> {
   await writeStoredValue(JSON.stringify(next))
 }
 
+/**
+ * Removes the reading recorded at that instant.
+ *
+ * Identified by its timestamp rather than its position: the history is sorted
+ * by time, and an index would point at a different reading once anything else
+ * is added or removed.
+ */
+export async function deleteFtpEntry(recordedAt: string): Promise<void> {
+  const history = await loadFtpHistory()
+  const next = history.filter((entry) => entry.recordedAt !== recordedAt)
+
+  await writeStoredValue(JSON.stringify(next))
+}
+
+/** Replaces the reading recorded at that instant, keeping it in date order. */
+export async function updateFtpEntry(entry: FtpEntry): Promise<void> {
+  const history = await loadFtpHistory()
+  const next = history
+    .map((current) =>
+      current.recordedAt === entry.recordedAt ? ftpEntrySchema.parse(entry) : current,
+    )
+    .sort((left, right) => Date.parse(left.recordedAt) - Date.parse(right.recordedAt))
+
+  await writeStoredValue(JSON.stringify(next))
+}
+
 /** The most recent figure in the history, or null when there is none. */
 export async function loadCurrentFtp(): Promise<number | null> {
   const history = await loadFtpHistory()

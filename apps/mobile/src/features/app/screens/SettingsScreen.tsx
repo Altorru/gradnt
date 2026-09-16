@@ -1,13 +1,16 @@
 import {
   ArrowLeft,
+  ChevronDown,
   ChevronRight,
   Download,
+  Pencil,
   RefreshCw,
   ShieldCheck,
+  Trash2,
   Unlink,
 } from '@tamagui/lucide-icons-2'
 import { useQueryClient } from '@tanstack/react-query'
-import { formatDistanceToNow } from 'date-fns'
+import { format as formatDate, formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
@@ -31,7 +34,9 @@ import { goalTypeLabels } from '@/features/onboarding/domain/goal.options'
 import { describeProfile } from '@/features/onboarding/domain/profile.options'
 import {
   deduceFtpFromStrava,
+  editFtp,
   loadFtpHistory,
+  removeFtp,
   saveFtp as saveFtpValue,
 } from '@/services/ftp/ftp.service'
 import type { FtpEntry, FtpSource } from '@/services/ftp/ftp.persistence'
@@ -146,14 +151,26 @@ export function SettingsScreen() {
    */
   const [draftedSource, setDraftedSource] = useState<FtpSource>('declared')
   const [isReadingZones, setIsReadingZones] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  /** The reading being corrected, or null when the field is a new one. */
+  const [editingRecordedAt, setEditingRecordedAt] = useState<string | null>(null)
   /**
-   * Failures only.
+   * One place for both outcomes.
    *
-   * A successful deduction needs no line of its own — the field filling up says
-   * it, and a second copy of the number was appearing three times over: in the
-   * field, in the message and in the title.
+   * The field is pre-filled from what is on record, so pressing Save without
+   * changing anything used to hit the "unchanged" guard and return in silence —
+   * a button that appears dead. Every press now says what it did.
    */
-  const [ftpError, setFtpError] = useState<string | null>(null)
+  const [ftpFeedback, setFtpFeedback] = useState<{
+    tone: 'ok' | 'error'
+    text: string
+  } | null>(null)
+
+  const refreshHistory = async () => {
+    const history = await loadFtpHistory()
+    setFtpHistory(history)
+    return history
+  }
 
   useEffect(() => {
     void loadFtpHistory().then((history) => {
@@ -174,7 +191,7 @@ export function SettingsScreen() {
 
   const deduceFtp = async () => {
     setIsReadingZones(true)
-    setFtpError(null)
+    setFtpFeedback(null)
 
     const result = await deduceFtpFromStrava()
 
@@ -184,39 +201,83 @@ export function SettingsScreen() {
       // number every other figure is measured against.
       setDraftFtp(String(result.value))
       setDraftedSource('strava')
+      setFtpFeedback({ tone: 'ok', text: `${result.value} W déduits. Il reste à enregistrer.` })
     } else if (result.status === 'noPowerZones') {
       // The common case, not a failure: most riders have never set an FTP in
       // Strava, and there is an obvious thing for them to do about it.
-      setFtpError('Strava n’a pas de zones de puissance pour toi.')
+      setFtpFeedback({ tone: 'error', text: 'Strava n’a pas de zones de puissance pour toi.' })
     } else if (result.status === 'unrecognized') {
       // Not the rider's problem, and not something to describe as one.
-      setFtpError(`Réponse inattendue de Strava (${result.summary}).`)
+      setFtpFeedback({
+        tone: 'error',
+        text: `Réponse inattendue de Strava (${result.summary}).`,
+      })
     } else {
-      setFtpError('La lecture de tes zones a échoué. Réessaie dans un instant.')
+      setFtpFeedback({ tone: 'error', text: 'La lecture de tes zones a échoué.' })
     }
 
     setIsReadingZones(false)
+  }
+
+  const startEditing = (entry: FtpEntry) => {
+    setDraftFtp(String(entry.value))
+    setDraftedSource(entry.source)
+    setEditingRecordedAt(entry.recordedAt)
+    setFtpFeedback(null)
+  }
+
+  const cancelEditing = () => {
+    const latest = ftpHistory.at(-1)
+
+    setEditingRecordedAt(null)
+    setDraftFtp(latest === undefined ? '' : String(latest.value))
+    setDraftedSource(latest?.source ?? 'declared')
+    setFtpFeedback(null)
+  }
+
+  const removeEntry = async (entry: FtpEntry) => {
+    await removeFtp(entry.recordedAt)
+    const history = await refreshHistory()
+
+    // The reading being corrected is gone, so the field goes back to what is
+    // left rather than holding a value that no longer exists.
+    if (editingRecordedAt === entry.recordedAt) {
+      const latest = history.at(-1)
+      setEditingRecordedAt(null)
+      setDraftFtp(latest === undefined ? '' : String(latest.value))
+      setDraftedSource(latest?.source ?? 'declared')
+    }
+
+    setFtpFeedback({ tone: 'ok', text: 'Relevé supprimé.' })
   }
 
   const saveFtp = async () => {
     const parsed = Math.round(Number(draftFtp))
 
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setFtpError('Indique une valeur en watts.')
+      setFtpFeedback({ tone: 'error', text: 'Indique une valeur en watts.' })
       return
     }
 
-    // The field holds the recorded value, so saving it unchanged is a no-op
-    // rather than a second entry: the history is read as a progression, and
-    // repeated identical readings would flatten it.
+    if (editingRecordedAt !== null) {
+      await editFtp(editingRecordedAt, parsed, draftedSource)
+      await refreshHistory()
+      setEditingRecordedAt(null)
+      setFtpFeedback({ tone: 'ok', text: 'Relevé corrigé.' })
+      return
+    }
+
+    // The field holds the recorded value, so saving it unchanged is not a new
+    // reading — the history is read as a progression, and repeated identical
+    // entries would flatten it. It still has to say so.
     if (latestFtp !== null && latestFtp.value === parsed && latestFtp.source === draftedSource) {
-      setFtpError(null)
+      setFtpFeedback({ tone: 'ok', text: 'Cette valeur est déjà enregistrée.' })
       return
     }
 
     await saveFtpValue(parsed, draftedSource)
-    setFtpHistory(await loadFtpHistory())
-    setFtpError(null)
+    await refreshHistory()
+    setFtpFeedback({ tone: 'ok', text: 'FTP enregistrée.' })
   }
 
   const connect = async () => {
@@ -385,21 +446,111 @@ export function SettingsScreen() {
             </GradntText>
 
             <GradntCard gap="$4" padding="$4">
-              <YStack gap="$1">
-                <GradntText weight="semibold">FTP</GradntText>
-                <GradntText muted fontSize={13} lineHeight={18}>
-                  {latestFtp === null
-                    ? 'Aucune valeur enregistrée : ton objectif FTP ne peut pas être suivi.'
-                    : `${latestFtp.value} W — ${
-                        latestFtp.source === 'strava'
-                          ? 'déduite de tes zones Strava'
-                          : 'saisie par toi'
-                      }, ${formatDistanceToNow(Date.parse(latestFtp.recordedAt), {
-                        addSuffix: true,
-                        locale: fr,
-                      })}.`}
-                </GradntText>
-              </YStack>
+              {/* The header doubles as the control that reveals the history:
+                  there is nothing else to do with the block, and a chevron on
+                  its own would be a second thing to aim at. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Historique de la FTP"
+                accessibilityState={{ expanded: isHistoryOpen }}
+                disabled={ftpHistory.length === 0}
+                onPress={() => setIsHistoryOpen((open) => !open)}
+                hitSlop={8}
+              >
+                {({ pressed }) => (
+                  <XStack
+                    alignItems="center"
+                    justifyContent="space-between"
+                    gap="$3"
+                    opacity={pressed ? 0.6 : 1}
+                  >
+                    <YStack flex={1} gap="$1">
+                      <GradntText weight="semibold">FTP</GradntText>
+                      <GradntText muted fontSize={13} lineHeight={18}>
+                        {latestFtp === null
+                          ? 'Aucune valeur enregistrée : ton objectif FTP ne peut pas être suivi.'
+                          : `${latestFtp.value} W — ${
+                              latestFtp.source === 'strava'
+                                ? 'déduite de tes zones Strava'
+                                : 'saisie par toi'
+                            }, ${formatDistanceToNow(Date.parse(latestFtp.recordedAt), {
+                              addSuffix: true,
+                              locale: fr,
+                            })}.`}
+                      </GradntText>
+                    </YStack>
+
+                    {ftpHistory.length > 0 ? (
+                      isHistoryOpen ? (
+                        <ChevronDown size={17} color="$textSecondary" />
+                      ) : (
+                        <ChevronRight size={17} color="$textSecondary" />
+                      )
+                    ) : null}
+                  </XStack>
+                )}
+              </Pressable>
+
+              {isHistoryOpen ? (
+                <YStack gap="$3">
+                  {[...ftpHistory].reverse().map((entry) => (
+                    <XStack
+                      key={entry.recordedAt}
+                      alignItems="center"
+                      justifyContent="space-between"
+                      gap="$3"
+                    >
+                      {/* Tapping a reading loads it into the field to correct
+                          it, which is the only edit that makes sense: the date
+                          is when it happened and is not the rider's to move. */}
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Corriger le relevé de ${entry.value} watts`}
+                        onPress={() => startEditing(entry)}
+                        style={{ flex: 1 }}
+                      >
+                        {({ pressed }) => (
+                          <XStack
+                            alignItems="center"
+                            gap="$3"
+                            opacity={pressed ? 0.6 : 1}
+                            borderWidth={1}
+                            borderColor={
+                              editingRecordedAt === entry.recordedAt ? '$accentInk' : 'transparent'
+                            }
+                            borderRadius={14}
+                            paddingHorizontal="$2"
+                            paddingVertical="$2"
+                          >
+                            <YStack flex={1} gap="$1">
+                              <GradntText weight="semibold">{entry.value} W</GradntText>
+                              <GradntText muted fontSize={12}>
+                                {entry.source === 'strava' ? 'Déduite de Strava' : 'Saisie'} ·{' '}
+                                {formatDate(Date.parse(entry.recordedAt), 'd MMM yyyy', {
+                                  locale: fr,
+                                })}
+                              </GradntText>
+                            </YStack>
+
+                            <Pencil size={15} color="$textSecondary" />
+                          </XStack>
+                        )}
+                      </Pressable>
+
+                      <GradntIconButton
+                        accessibilityLabel={`Supprimer le relevé de ${entry.value} watts`}
+                        onPress={() => void removeEntry(entry)}
+                      >
+                        <Trash2 size={16} color="$danger" />
+                      </GradntIconButton>
+                    </XStack>
+                  ))}
+
+                  <GradntText muted fontSize={11} lineHeight={16}>
+                    Touche un relevé pour le corriger.
+                  </GradntText>
+                </YStack>
+              ) : null}
 
               <GradntButton
                 tone="secondary"
@@ -411,6 +562,27 @@ export function SettingsScreen() {
                 {isReadingZones ? 'Lecture des zones…' : 'Déduire de mes zones Strava'}
               </GradntButton>
 
+              {editingRecordedAt !== null ? (
+                <XStack alignItems="center" justifyContent="space-between" gap="$3">
+                  <GradntText color="$accentInk" weight="semibold" fontSize={12}>
+                    Correction d’un relevé existant
+                  </GradntText>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Annuler la correction"
+                    onPress={cancelEditing}
+                    hitSlop={8}
+                  >
+                    {({ pressed }) => (
+                      <GradntText muted fontSize={12} opacity={pressed ? 0.6 : 1}>
+                        Annuler
+                      </GradntText>
+                    )}
+                  </Pressable>
+                </XStack>
+              ) : null}
+
               <XStack alignItems="center" gap="$3">
                 <GradntInput
                   flex={1}
@@ -419,17 +591,24 @@ export function SettingsScreen() {
                     setDraftFtp(value)
                     // Edited, so it is theirs now — however it was filled in.
                     setDraftedSource('declared')
+                    setFtpFeedback(null)
                   }}
                   keyboardType="numeric"
                   placeholder="250"
                 />
                 <GradntText muted>W</GradntText>
-                <GradntButton onPress={() => void saveFtp()}>Enregistrer</GradntButton>
+                <GradntButton onPress={() => void saveFtp()}>
+                  {editingRecordedAt !== null ? 'Corriger' : 'Enregistrer'}
+                </GradntButton>
               </XStack>
 
-              {ftpError ? (
-                <GradntText color="$danger" fontSize={12} lineHeight={18}>
-                  {ftpError}
+              {ftpFeedback ? (
+                <GradntText
+                  color={ftpFeedback.tone === 'error' ? '$danger' : '$positive'}
+                  fontSize={12}
+                  lineHeight={18}
+                >
+                  {ftpFeedback.text}
                 </GradntText>
               ) : null}
             </GradntCard>

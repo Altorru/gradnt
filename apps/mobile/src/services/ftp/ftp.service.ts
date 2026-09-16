@@ -2,9 +2,11 @@ import { getValidAccessToken } from '../strava/api/strava-session'
 
 import { estimateFtpFromZones, readPowerZones } from './ftp-from-zones'
 import {
+  deleteFtpEntry,
   loadCurrentFtp,
   loadFtpHistory,
   recordFtp,
+  updateFtpEntry,
   type FtpEntry,
   type FtpSource,
 } from './ftp.persistence'
@@ -81,6 +83,21 @@ export async function saveFtp(
   now: Date = new Date(),
 ): Promise<void> {
   await recordFtp({ value, source, recordedAt: now.toISOString() })
+}
+
+/**
+ * Corrects a reading already on record, keeping its original date.
+ *
+ * The date stays because the reading happened when it happened — moving it
+ * would rewrite the history rather than correct it, and the whole point of
+ * keeping dates is to read the progression honestly.
+ */
+export async function editFtp(recordedAt: string, value: number, source: FtpSource): Promise<void> {
+  await updateFtpEntry({ value, source, recordedAt })
+}
+
+export async function removeFtp(recordedAt: string): Promise<void> {
+  await deleteFtpEntry(recordedAt)
 }
 
 export { loadCurrentFtp, loadFtpHistory }
