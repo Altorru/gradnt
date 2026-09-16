@@ -1,10 +1,12 @@
 import { Camera, GeoJSONSource, Layer, Map, UserLocation } from '@maplibre/maplibre-react-native'
 import type { FeatureCollection, LineString, Point } from 'geojson'
+import { useColorScheme } from 'react-native'
 
+import { useThemeColor } from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
 import type { Route, RoutePoint } from '../domain'
-import { openFreeMapStyleUrl } from '../services'
+import { useMapStyle } from '../hooks'
 
 type ExploreMapProps = {
   routes: Route[]
@@ -96,9 +98,15 @@ export function ExploreMap({
   followUser = false,
 }: ExploreMapProps) {
   const selectedRoute = routes.find((route) => route.id === selectedRouteId)
+  const scheme = useColorScheme()
+  const mapStyle = useMapStyle(scheme)
+  // The ring around the start marker has to read against the tiles, and the
+  // tiles now change colour with the app. A graphite ring is invisible on the
+  // dark style, so the ring is the theme background instead.
+  const markerRing = useThemeColor()('background')
 
   return (
-    <Map style={{ flex: 1 }} mapStyle={openFreeMapStyleUrl} attribution logo compass>
+    <Map style={{ flex: 1 }} mapStyle={mapStyle} attribution logo compass>
       {followUser && start ? (
         <Camera center={[start.longitude, start.latitude]} zoom={14} duration={650} />
       ) : selectedRoute ? (
@@ -142,7 +150,7 @@ export function ExploreMap({
             paint={{
               'circle-color': colors.lime,
               'circle-radius': 6,
-              'circle-stroke-color': colors.graphite900,
+              'circle-stroke-color': markerRing,
               'circle-stroke-width': 2,
             }}
           />

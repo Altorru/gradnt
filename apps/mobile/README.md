@@ -26,13 +26,16 @@ cp apps/mobile/.env.example apps/mobile/.env.local
 
 La clé `EXPO_PUBLIC_HEIGIT_API_KEY` est utilisée côté client uniquement pour le prototype. Ne la commite jamais et ne l’utilise pas comme secret serveur.
 
-Le routage réel est fourni par HeiGIT/openrouteservice sur `api.heigit.org`. Le fond cartographique utilise le style public OpenFreeMap par défaut :
+Le routage réel est fourni par HeiGIT/openrouteservice sur `api.heigit.org`. Le fond cartographique utilise les styles publics OpenFreeMap, et suit l'apparence de l'app :
 
 ```text
-https://tiles.openfreemap.org/styles/liberty
+https://tiles.openfreemap.org/styles/liberty   # clair
+https://tiles.openfreemap.org/styles/dark      # sombre
 ```
 
-Le style peut être remplacé avec `EXPO_PUBLIC_MAP_STYLE_URL`.
+`EXPO_PUBLIC_MAP_STYLE_URL` remplace les deux d'un coup : il sert à viser un autre hébergeur de tuiles, et un hébergeur sert une seule apparence.
+
+Les libellés suivent la langue du système. Les tuiles portent tout le jeu de langues (`name:fr`, `name:ja`, `name:zh-Hant`…), mais le style ne lit que `name:latin` ou `name:en` — donc le style est récupéré, ses libellés réécrits, et l'objet passé à la carte. MapLibre ne permet pas de le faire autrement : l'API native n'expose rien qui atteigne une couche du fond. En cas d'échec, la carte retombe sur le style par URL avec ses libellés d'origine.
 
 ## Configuration Strava
 

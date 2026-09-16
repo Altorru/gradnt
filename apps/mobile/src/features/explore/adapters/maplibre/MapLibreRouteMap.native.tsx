@@ -1,12 +1,13 @@
 import { Camera, GeoJSONSource, Layer, Map } from '@maplibre/maplibre-react-native'
 import type { FeatureCollection, LineString, Point } from 'geojson'
+import { useColorScheme } from 'react-native'
 import { YStack } from 'tamagui'
 
-import { GradntText } from '@/design-system'
+import { GradntText, useThemeColor } from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
 import type { Route } from '../../domain'
-import { openFreeMapStyleUrl } from '../../services'
+import { useMapStyle } from '../../hooks'
 
 type RouteMapProps = {
   route: Route
@@ -62,6 +63,11 @@ export function MapLibreRouteMap({ route }: RouteMapProps) {
   ]
   const routeData = toRouteFeatureCollection(route)
   const startData = toStartFeatureCollection(route)
+  const scheme = useColorScheme()
+  const mapStyle = useMapStyle(scheme)
+  // As on the Explore map: the ring has to read against tiles that change
+  // colour with the app, so it follows the theme rather than being graphite.
+  const markerRing = useThemeColor()('background')
 
   return (
     <YStack
@@ -72,7 +78,7 @@ export function MapLibreRouteMap({ route }: RouteMapProps) {
       borderWidth={1}
       borderColor="$border"
     >
-      <Map style={{ flex: 1 }} mapStyle={openFreeMapStyleUrl} attribution logo compass scaleBar>
+      <Map style={{ flex: 1 }} mapStyle={mapStyle} attribution logo compass scaleBar>
         <Camera
           initialViewState={{
             bounds: routeBounds,
@@ -103,7 +109,7 @@ export function MapLibreRouteMap({ route }: RouteMapProps) {
             paint={{
               'circle-color': colors.lime,
               'circle-radius': 6,
-              'circle-stroke-color': colors.graphite900,
+              'circle-stroke-color': markerRing,
               'circle-stroke-width': 2,
             }}
           />
