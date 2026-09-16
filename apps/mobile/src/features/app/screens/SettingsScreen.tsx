@@ -1,0 +1,248 @@
+import { ArrowLeft, RefreshCw, ShieldCheck, Unlink } from '@tamagui/lucide-icons-2'
+import { useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'expo-router'
+import { useState } from 'react'
+import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated'
+import { XStack, YStack } from 'tamagui'
+
+import {
+  GradntButton,
+  GradntCard,
+  GradntHeading,
+  GradntIconButton,
+  GradntScreen,
+  GradntScrollView,
+  GradntStravaConnectBlock,
+  GradntText,
+} from '@/design-system'
+import { stravaService } from '@/features/onboarding/services/strava.service'
+import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
+import { describeActivityFailure } from '@/services/gradnt.repository'
+import type { Activity } from '@/lib/domain'
+
+/**
+ * Queries whose value comes from Strava.
+ *
+ * Named rather than matched by predicate: a predicate would quietly pick up
+ * future queries that happen to share a word, and each one refetched here costs
+ * a request from a quota shared by every user.
+ */
+const STRAVA_QUERY_KEYS = [['activities'], ['training-metrics'], ['goal-current-value']] as const
+
+/**
+ * One turn every 900ms, straight through — constant motion, so linear. A bezier
+ * that eases would make the glyph visibly pulse once per revolution.
+ *
+ * Runs on the UI thread as a keyframe loop, so it keeps turning while the sync
+ * occupies JS. Nothing else on the screen depends on the angle, so there is no
+ * shared value to read and no React state to churn.
+ */
+const SPIN = {
+  animationName: {
+    from: { transform: [{ rotate: '0deg' }] },
+    to: { transform: [{ rotate: '360deg' }] },
+  },
+  animationDuration: 900,
+  animationIterationCount: 'infinite' as const,
+  animationTimingFunction: cubicBezier(0, 0, 1, 1),
+}
+
+/**
+ * The refresh glyph, turning while a sync runs.
+ *
+ * Reduced motion throws the rotation away and keeps the button's own
+ * "Synchronisation…" label, which already says what is happening.
+ */
+function RefreshGlyph({ spinning }: { spinning: boolean }) {
+  const reducedMotion = useReducedMotion()
+
+  return (
+    <Animated.View style={spinning && !reducedMotion ? SPIN : undefined}>
+      <RefreshCw size={17} color="$textPrimary" />
+    </Animated.View>
+  )
+}
+
+export function SettingsScreen() {
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const connection = useOnboardingStore((state) => state.strava)
+  const setStrava = useOnboardingStore((state) => state.setStrava)
+  const connected = connection?.status === 'connected'
+
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [isDisconnecting, setIsDisconnecting] = useState(false)
+  const [confirmingDisconnect, setConfirmingDisconnect] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [syncReport, setSyncReport] = useState<string | null>(null)
+
+  const connect = async () => {
+    setIsConnecting(true)
+    setError(null)
+
+    const result = await stravaService.connect()
+
+    if (result.ok) {
+      setStrava(result.connection)
+      await Promise.all(
+        STRAVA_QUERY_KEYS.map((queryKey) => queryClient.refetchQueries({ queryKey })),
+      )
+    } else {
+      setError(result.error.message)
+    }
+
+    setIsConnecting(false)
+  }
+
+  const resync = async () => {
+    setIsSyncing(true)
+    setError(null)
+    setSyncReport(null)
+
+    // `refetchQueries` resolves whether or not the query succeeded, so the
+    // outcome has to be read back off the query it produced. Without that, a
+    // sync that fetched nothing ends in silence and looks like it worked.
+    await Promise.all(STRAVA_QUERY_KEYS.map((queryKey) => queryClient.refetchQueries({ queryKey })))
+
+    const activities = queryClient.getQueryState(['activities'])
+
+    if (activities?.status === 'error') {
+      setError(describeActivityFailure(activities.error))
+    } else {
+      const count = queryClient.getQueryData<Activity[]>(['activities'])?.length ?? 0
+      setSyncReport(`${count} sortie${count > 1 ? 's' : ''} importée${count > 1 ? 's' : ''}`)
+    }
+
+    setIsSyncing(false)
+  }
+
+  const disconnect = async () => {
+    if (!confirmingDisconnect) {
+      // Two-step rather than a native alert, which behaves differently on web.
+      setConfirmingDisconnect(true)
+      return
+    }
+
+    setIsDisconnecting(true)
+    setError(null)
+
+    await stravaService.disconnect()
+    queryClient.removeQueries({ queryKey: ['activities'] })
+    queryClient.removeQueries({ queryKey: ['training-metrics'] })
+    queryClient.removeQueries({ queryKey: ['goal-current-value'] })
+
+    setConfirmingDisconnect(false)
+    setIsDisconnecting(false)
+  }
+
+  return (
+    <GradntScreen>
+      <GradntScrollView>
+        <YStack gap="$6">
+          <XStack alignItems="center" gap="$3">
+            <GradntIconButton accessibilityLabel="Revenir en arrière" onPress={() => router.back()}>
+              <ArrowLeft size={18} color="$textPrimary" />
+            </GradntIconButton>
+            <GradntHeading>Réglages</GradntHeading>
+          </XStack>
+
+          {error ? (
+            <GradntText color="$danger" fontSize={13}>
+              {error}
+            </GradntText>
+          ) : null}
+
+          {syncReport ? (
+            <GradntText muted fontSize={13}>
+              {syncReport}
+            </GradntText>
+          ) : null}
+
+          <YStack gap="$4">
+            <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+              STRAVA
+            </GradntText>
+
+            <GradntCard gap="$4" padding="$4">
+              <YStack gap="$1">
+                <GradntText weight="semibold">
+                  {connected ? 'Compte connecté' : 'Aucun compte connecté'}
+                </GradntText>
+                <GradntText muted fontSize={13}>
+                  {connection?.athleteName ?? 'Relie ton compte pour importer tes sorties.'}
+                </GradntText>
+              </YStack>
+
+              {connected ? (
+                <YStack gap="$3">
+                  <GradntButton
+                    tone="secondary"
+                    disabled={isSyncing}
+                    opacity={isSyncing ? 0.55 : 1}
+                    iconAfter={<RefreshGlyph spinning={isSyncing} />}
+                    onPress={() => void resync()}
+                  >
+                    {isSyncing ? 'Synchronisation…' : 'Resynchroniser mes sorties'}
+                  </GradntButton>
+
+                  <GradntButton
+                    tone={confirmingDisconnect ? 'danger' : 'ghost'}
+                    disabled={isDisconnecting}
+                    iconAfter={<Unlink size={17} color="$textPrimary" />}
+                    onPress={() => void disconnect()}
+                  >
+                    {confirmingDisconnect ? 'Confirmer la déconnexion' : 'Déconnecter Strava'}
+                  </GradntButton>
+
+                  {confirmingDisconnect ? (
+                    <GradntText muted fontSize={12} lineHeight={18}>
+                      Tes sorties importées seront effacées de cet appareil. Rien n’est supprimé
+                      chez Strava.
+                    </GradntText>
+                  ) : null}
+                </YStack>
+              ) : (
+                // Connects in place rather than pushing to the onboarding
+                // screen: that one is step 5 of 6 and would walk a rider who
+                // has already signed up back through the review flow.
+                <GradntStravaConnectBlock
+                  title="Connecter Strava"
+                  description="GRADNT lit ton historique pour situer ton point de départ et adapter ce qu’il te propose."
+                  onConnect={() => void connect()}
+                  isConnecting={isConnecting}
+                  errorMessage={error}
+                />
+              )}
+            </GradntCard>
+          </YStack>
+
+          <YStack gap="$4">
+            <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+              TES DONNÉES
+            </GradntText>
+
+            <GradntCard gap="$3" padding="$4">
+              <XStack alignItems="center" gap="$3">
+                <ShieldCheck size={19} color="$recovery" />
+                <GradntText weight="semibold">Ce qui est conservé</GradntText>
+              </XStack>
+
+              <GradntText muted fontSize={13} lineHeight={19}>
+                Tes jetons d’accès Strava sont chiffrés dans le trousseau de cet appareil, avec ton
+                profil et ton objectif saisis à l’inscription. GRADNT ne conserve rien sur ses
+                serveurs : la fonction qui échange le code d’autorisation est sans état et n’écrit
+                aucune donnée.
+              </GradntText>
+
+              <GradntText muted fontSize={13} lineHeight={19}>
+                Déconnecter Strava efface les jetons et les sorties importées de cet appareil. Les
+                activités elles-mêmes restent chez Strava, où tu gardes la main dessus.
+              </GradntText>
+            </GradntCard>
+          </YStack>
+        </YStack>
+      </GradntScrollView>
+    </GradntScreen>
+  )
+}

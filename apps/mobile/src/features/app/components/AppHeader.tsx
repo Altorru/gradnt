@@ -1,9 +1,12 @@
 import { Bell, Settings } from '@tamagui/lucide-icons-2'
+import { useRouter } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
 import { GradntIconButton, GradntText, SCREEN_GUTTER } from '@/design-system'
 
 export function AppBrandHeader() {
+  const router = useRouter()
+
   return (
     <XStack
       paddingHorizontal={SCREEN_GUTTER}
@@ -24,7 +27,14 @@ export function AppBrandHeader() {
         <GradntIconButton accessibilityLabel="Ouvrir les notifications">
           <Bell size={18} color="$textPrimary" />
         </GradntIconButton>
-        <GradntIconButton accessibilityLabel="Ouvrir les réglages">
+        {/*
+          Settings is pushed rather than given a tab: native tabs cap at five on
+          Android, and the app already has five.
+        */}
+        <GradntIconButton
+          accessibilityLabel="Ouvrir les réglages"
+          onPress={() => router.push('/settings')}
+        >
           <Settings size={18} color="$textPrimary" />
         </GradntIconButton>
       </XStack>
