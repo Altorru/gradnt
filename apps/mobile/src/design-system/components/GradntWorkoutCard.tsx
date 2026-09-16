@@ -67,7 +67,6 @@ export function GradntWorkoutCard({
           <GradntMiniBars
             data={[12, 42, 14, 42, 14, 42, 12]}
             activeIndices={[1, 3, 5]}
-            width={76}
             height={48}
             gap={4}
           />

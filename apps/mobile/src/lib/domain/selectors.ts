@@ -170,16 +170,21 @@ export function getGoalCurrentValue(
 }
 
 /**
- * Training hours per week, oldest first, for the last `weeks` weeks.
+ * Spreads activities across the last `weeks` weeks, oldest first, weighing each
+ * by whatever the caller cares about.
  *
- * Replaces the invented series these charts used to draw. A fabricated shape
- * presented next to real totals is worse than no chart, because nothing on the
- * screen distinguishes the two.
+ * Shared by the two series the progress charts draw, so they bucket identically
+ * — a ride that lands in week 3 for one must land in week 3 for the other, or
+ * the two charts would disagree about the same history.
  *
- * Weeks with no riding are genuine zeroes and stay in the series, so a gap
- * reads as a gap rather than as compression.
+ * Weeks with no riding are genuine zeroes and stay in the series, so a gap reads
+ * as a gap rather than as compression.
  */
-export function getWeeklyVolumeSeries(activities: Activity[], weeks = 8): number[] {
+function bucketActivitiesByWeek(
+  activities: Activity[],
+  weeks: number,
+  weigh: (activity: Activity) => number,
+): number[] {
   const buckets = new Array<number>(weeks).fill(0)
   const now = Date.now()
 
@@ -193,11 +198,38 @@ export function getWeeklyVolumeSeries(activities: Activity[], weeks = 8): number
     const index = weeks - 1 - Math.floor((now - startAt) / WEEK_MS)
 
     if (index >= 0 && index < weeks) {
-      buckets[index] += activity.durationSeconds / 3600
+      buckets[index] += weigh(activity)
     }
   }
 
-  return buckets.map((hours) => Math.round(hours * 10) / 10)
+  return buckets
+}
+
+/**
+ * Training hours per week.
+ *
+ * Replaces the invented series these charts used to draw. A fabricated shape
+ * presented next to real totals is worse than no chart, because nothing on the
+ * screen distinguishes the two.
+ */
+export function getWeeklyVolumeSeries(activities: Activity[], weeks = 8): number[] {
+  return bucketActivitiesByWeek(
+    activities,
+    weeks,
+    (activity) => activity.durationSeconds / 3600,
+  ).map((hours) => Math.round(hours * 10) / 10)
+}
+
+/**
+ * Rides per week, as whole numbers.
+ *
+ * A separate series from the hours, because they answer different questions: an
+ * hour count says how much the rider trained, a ride count says how often. The
+ * progress screen was drawing hours on both cards, so the card about regularity
+ * was showing the same shape as the one about volume.
+ */
+export function getWeeklyRideCountSeries(activities: Activity[], weeks = 8): number[] {
+  return bucketActivitiesByWeek(activities, weeks, () => 1)
 }
 
 export function getDeterministicTrainingInsight(

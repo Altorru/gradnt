@@ -1,12 +1,11 @@
-import { Activity, ArrowUpRight, CalendarDays, TrendingUp } from '@tamagui/lucide-icons-2'
+import { ArrowUpRight, CalendarDays } from '@tamagui/lucide-icons-2'
 import { useState } from 'react'
 import { XStack, YStack } from 'tamagui'
 
 import {
   GradntCard,
-  GradntMiniBars,
+  GradntChartCard,
   GradntProgressRing,
-  GradntSparkline,
   GradntStravaConnectBlock,
   GradntText,
 } from '@/design-system'
@@ -25,6 +24,7 @@ import {
   getGoalProgressPercentage,
   getRecentTrainingVolumeHours,
   getWeeklyRideCount,
+  getWeeklyRideCountSeries,
   getWeeklyVolumeSeries,
 } from '@/lib/domain'
 import { describeActivityFailure } from '@/services/gradnt.repository'
@@ -69,6 +69,7 @@ export function ProgressScreen() {
   const activities = activitiesQuery.data ?? []
   const activityState = getActivityDataState(activities)
   const volumeSeries = getWeeklyVolumeSeries(activities)
+  const rideSeries = getWeeklyRideCountSeries(activities)
   const declaredVolume = athleteQuery.data?.weeklyVolumeBand ?? '3to6'
   const insight = getDeterministicTrainingInsight(activities, declaredVolume)
   const goal = goalQuery.data
@@ -170,33 +171,33 @@ export function ProgressScreen() {
           </GradntCard>
 
           <YStack gap="$3">
-            <GradntCard padding="$4" gap="$4">
-              <XStack alignItems="center" gap="$3">
-                <Activity size={19} color="$accentInk" />
-                <GradntText weight="semibold">Volume récent</GradntText>
-              </XStack>
-              <GradntText muted fontSize={13}>
-                {metricsQuery.isPending
+            <GradntChartCard
+              title="Volume récent"
+              unit="h"
+              data={volumeSeries}
+              description={
+                metricsQuery.isPending
                   ? 'Chargement…'
-                  : `${volumeHours} h de données ${activityState === 'observed' ? 'observées' : `basées sur ton profil (${volumeLabels[declaredVolume]})`}`}
-              </GradntText>
-              <GradntMiniBars data={volumeSeries} width={250} height={62} gap={7} />
-            </GradntCard>
+                  : `${volumeHours} h de données ${activityState === 'observed' ? 'observées' : `basées sur ton profil (${volumeLabels[declaredVolume]})`}`
+              }
+            />
 
-            <GradntCard padding="$4" gap="$4">
-              <XStack alignItems="center" gap="$3">
-                <TrendingUp size={19} color="$accentInk" />
-                <GradntText weight="semibold">Régularité</GradntText>
-              </XStack>
-              <GradntText muted fontSize={13}>
-                {activitiesQuery.isPending
+            {/* Ride counts, not hours. The card speaks about regularity, and it
+                was drawing the same series as the volume card above it — the
+                same shape, twice, presented as two insights. */}
+            <GradntChartCard
+              title="Régularité"
+              unit="sorties"
+              variant="line"
+              data={rideSeries}
+              description={
+                activitiesQuery.isPending
                   ? 'Chargement…'
                   : activityState === 'observed'
-                    ? `${rideCount} sortie${rideCount > 1 ? 's' : ''} observée${rideCount > 1 ? 's' : ''}`
-                    : 'Elle sera plus précise après tes premières sorties'}
-              </GradntText>
-              <GradntSparkline data={volumeSeries} width={250} height={62} />
-            </GradntCard>
+                    ? `${rideCount} sortie${rideCount > 1 ? 's' : ''} cette semaine`
+                    : 'Elle sera plus précise après tes premières sorties'
+              }
+            />
           </YStack>
 
           <GradntCard padding="$4" gap="$3">
