@@ -83,11 +83,17 @@ export function planNotifications(input: {
   lastActivityAt: string | null
   lastSyncedAt: string | null
   weeklySummary: WeeklySummary | null
+  goal: { key: string; progress: number } | null
   celebrated: CelebrationRecord
   now: Date
-  translation: Translation
 }): DesiredNotification[]
 ```
+
+**Raffinement décidé en écrivant le plan :** `planNotifications` ne prend **pas** de
+traduction. Décider _ce qui_ et _quand_ est une préoccupation ; décider _comment ça
+se dit_ en est une autre. La mise en mots vit dans `describeNotification` (même
+module, pure aussi), et le déclencheur « changement de langue » fonctionne
+toujours : la réconciliation re-décrit à chaque passage.
 
 Les types que la signature emploie :
 
@@ -126,9 +132,12 @@ fois ne duplique rien.
 Seules les notifications portant une clé de notre espace de nommage sont
 considérées ; on n'annule jamais autre chose.
 
-### `src/services/notifications/notification.preferences.ts`
+### Les préférences, dans le fichier existant
 
-Schéma zod et persistance des préférences (voir ci-dessous).
+Pas de `notification.preferences.ts` : les cinq champs rejoignent
+`src/services/preferences/preferences.persistence.ts`. Un second fichier de
+persistance voudrait dire une seconde hydratation, et deux chemins qui peuvent
+diverger sur ce que « les préférences » contiennent.
 
 ### Le point d'entrée unique
 
@@ -190,9 +199,9 @@ implémentable.
 
 - `lastActivityAt` — `max(activity.startAt)` sur les activités connues, `null` s'il
   n'y en a aucune.
-- `lastSyncedAt` — l'instant de la dernière lecture **réussie** du repository.
-  Cet instant n'existe nulle part aujourd'hui : il faut le mémoriser à chaque
-  fetch d'activités réussi.
+- `lastSyncedAt` — l'instant de la dernière lecture **réussie** des activités.
+  TanStack Query 5.103 l'expose déjà : `activitiesQuery.dataUpdatedAt` **est** cet
+  instant. Rien à persister, contrairement à ce que ce spec supposait d'abord.
 - **Seuil : 24 heures.** Au-delà, les chiffres ne paraissent plus.
 
 Pourquoi 24 h : c'est le plus long intervalle pendant lequel un rider actif peut
@@ -249,9 +258,14 @@ notification reçue app ouverte est jetée silencieusement.
 | -------------- | ------------------------------------------------------ | ------------------- |
 | Canal par type | `sessions` / `weekly` / `nudges`, importance distincte | —                   |
 | Accent         | `color: '#76B900'`                                     | —                   |
-| `subtitle`     | `subText`                                              | sous-titre          |
 | Niveau         | `priority`                                             | `interruptionLevel` |
 | Regroupement   | canal                                                  | `threadIdentifier`  |
+
+`subtitle` a été **écarté** en écrivant le plan. Le seul contenu honnête à y mettre
+serait le jour (« Demain », « mardi »), et le dire proprement demande une couche de
+formatage de date sensible à la langue que la notification ne justifie pas — le
+corps porte déjà l'essentiel. Un champ rempli pour remplir n'est pas de
+l'enrichissement.
 
 `interruptionLevel` différencié : **`active`** pour le rappel de séance,
 **`passive`** pour le bilan de semaine — il atterrit dans le centre de
