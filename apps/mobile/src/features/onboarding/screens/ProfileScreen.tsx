@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Bike, Mountain, Route } from '@tamagui/lucide-icons-2'
+import { ArrowLeft, ArrowRight } from '@tamagui/lucide-icons-2'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { useRouter } from 'expo-router'
@@ -17,62 +17,8 @@ import { colors } from '@/design-system/tokens'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { useOnboardingStore } from '../store/onboarding.store'
+import { disciplines, experiences, volumes } from '../domain/profile.options'
 import { cyclistProfileSchema, type CyclistProfileForm } from '../domain/profile.schema'
-
-const disciplines = [
-  {
-    value: 'road',
-    title: 'Route',
-    description: 'Performance, endurance et sorties sur route.',
-    icon: Route,
-  },
-  {
-    value: 'gravel',
-    title: 'Gravel',
-    description: 'Route et chemins, avec plus de liberté.',
-    icon: Bike,
-  },
-  {
-    value: 'mtb',
-    title: 'VTT',
-    description: 'Sentiers, technique et dénivelé.',
-    icon: Mountain,
-  },
-] as const
-
-const experiences = [
-  {
-    value: 'beginner',
-    label: 'Débutant',
-  },
-  {
-    value: 'regular',
-    label: 'Régulier',
-  },
-  {
-    value: 'advanced',
-    label: 'Avancé',
-  },
-] as const
-
-const volumes = [
-  {
-    value: 'lt3',
-    label: '< 3 h',
-  },
-  {
-    value: '3to6',
-    label: '3–6 h',
-  },
-  {
-    value: '6to10',
-    label: '6–10 h',
-  },
-  {
-    value: 'gt10',
-    label: '10 h+',
-  },
-] as const
 
 export function ProfileScreen() {
   const router = useRouter()

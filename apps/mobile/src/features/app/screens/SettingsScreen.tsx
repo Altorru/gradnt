@@ -1,7 +1,8 @@
-import { ArrowLeft, RefreshCw, ShieldCheck, Unlink } from '@tamagui/lucide-icons-2'
+import { ArrowLeft, ChevronRight, RefreshCw, ShieldCheck, Unlink } from '@tamagui/lucide-icons-2'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
+import { Pressable } from 'react-native'
 import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated'
 import { XStack, YStack } from 'tamagui'
 
@@ -16,6 +17,8 @@ import {
   GradntText,
 } from '@/design-system'
 import { stravaService } from '@/features/onboarding/services/strava.service'
+import { goalTypeLabels } from '@/features/onboarding/domain/goal.options'
+import { describeProfile } from '@/features/onboarding/domain/profile.options'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { describeActivityFailure } from '@/services/gradnt.repository'
 import type { Activity } from '@/lib/domain'
@@ -63,10 +66,45 @@ function RefreshGlyph({ spinning }: { spinning: boolean }) {
   )
 }
 
+/** A tappable settings entry: what it is, its current value, and where it goes. */
+function SettingsRow({
+  label,
+  value,
+  onPress,
+}: {
+  label: string
+  value: string
+  onPress: () => void
+}) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={8}>
+      {({ pressed }) => (
+        <XStack
+          alignItems="center"
+          justifyContent="space-between"
+          gap="$3"
+          opacity={pressed ? 0.6 : 1}
+        >
+          <YStack flex={1} gap="$1">
+            <GradntText weight="semibold">{label}</GradntText>
+            <GradntText muted fontSize={13}>
+              {value}
+            </GradntText>
+          </YStack>
+
+          <ChevronRight size={17} color="$textSecondary" />
+        </XStack>
+      )}
+    </Pressable>
+  )
+}
+
 export function SettingsScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const connection = useOnboardingStore((state) => state.strava)
+  const storedGoal = useOnboardingStore((state) => state.goal)
+  const storedProfile = useOnboardingStore((state) => state.profile)
   const setStrava = useOnboardingStore((state) => state.setStrava)
   const connected = connection?.status === 'connected'
 
@@ -214,6 +252,26 @@ export function SettingsScreen() {
                   errorMessage={error}
                 />
               )}
+            </GradntCard>
+          </YStack>
+
+          <YStack gap="$4">
+            <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+              TON PROFIL
+            </GradntText>
+
+            <GradntCard gap="$4" padding="$4">
+              <SettingsRow
+                label="Profil cycliste"
+                value={describeProfile(storedProfile)}
+                onPress={() => router.push('/settings/profile')}
+              />
+
+              <SettingsRow
+                label="Objectif"
+                value={storedGoal ? goalTypeLabels[storedGoal.type] : 'À définir'}
+                onPress={() => router.push('/settings/goal')}
+              />
             </GradntCard>
           </YStack>
 

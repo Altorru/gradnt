@@ -1,12 +1,4 @@
-import {
-  ArrowLeft,
-  ArrowRight,
-  CalendarDays,
-  Gauge,
-  Mountain,
-  Route,
-  TrendingUp,
-} from '@tamagui/lucide-icons-2'
+import { ArrowLeft, ArrowRight } from '@tamagui/lucide-icons-2'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useRouter } from 'expo-router'
@@ -25,72 +17,9 @@ import {
 import { colors } from '@/design-system/tokens'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
+import { getTargetMeta, goalTypes } from '../domain/goal.options'
 import { cyclistGoalSchema, type CyclistGoalForm } from '../domain/goal.schema'
 import { useOnboardingStore } from '../store/onboarding.store'
-
-const goalTypes = [
-  {
-    value: 'ftp',
-    title: 'Améliorer ma FTP',
-    description: 'Développer ta puissance durable et suivre ta progression en watts.',
-    icon: Gauge,
-  },
-  {
-    value: 'distance',
-    title: 'Rouler plus loin',
-    description: 'Préparer une distance cible et améliorer ton endurance.',
-    icon: Route,
-  },
-  {
-    value: 'event',
-    title: 'Préparer un événement',
-    description: 'Construire ta progression autour d’une cyclosportive, course ou sortie.',
-    icon: CalendarDays,
-  },
-  {
-    value: 'climbing',
-    title: 'Mieux grimper',
-    description: 'Progresser dans les ascensions et accumuler davantage de dénivelé.',
-    icon: Mountain,
-  },
-  {
-    value: 'fitness',
-    title: 'Progresser globalement',
-    description: 'Rouler régulièrement et améliorer ta forme sans objectif chiffré précis.',
-    icon: TrendingUp,
-  },
-] as const
-
-function getTargetMeta(type: CyclistGoalForm['type']) {
-  switch (type) {
-    case 'ftp':
-      return {
-        label: 'FTP cible',
-        placeholder: '280',
-        unit: 'W',
-        keyboardType: 'numeric' as const,
-      }
-
-    case 'distance':
-      return {
-        label: 'Distance cible',
-        placeholder: '150',
-        unit: 'km',
-        keyboardType: 'numeric' as const,
-      }
-
-    case 'climbing':
-      return {
-        label: 'Dénivelé cible',
-        placeholder: '2000',
-        unit: 'm D+',
-        keyboardType: 'numeric' as const,
-      }
-
-    default:
-      return null
-  }
-}
 
 export function GoalScreen() {
   const router = useRouter()
