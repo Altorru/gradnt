@@ -7,7 +7,7 @@ import {
   Unlink,
 } from '@tamagui/lucide-icons-2'
 import { useQueryClient } from '@tanstack/react-query'
-import { format as formatDate, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
@@ -146,7 +146,14 @@ export function SettingsScreen() {
    */
   const [draftedSource, setDraftedSource] = useState<FtpSource>('declared')
   const [isReadingZones, setIsReadingZones] = useState(false)
-  const [ftpMessage, setFtpMessage] = useState<string | null>(null)
+  /**
+   * Failures only.
+   *
+   * A successful deduction needs no line of its own — the field filling up says
+   * it, and a second copy of the number was appearing three times over: in the
+   * field, in the message and in the title.
+   */
+  const [ftpError, setFtpError] = useState<string | null>(null)
 
   useEffect(() => {
     void loadFtpHistory().then(setFtpHistory)
@@ -156,7 +163,7 @@ export function SettingsScreen() {
 
   const deduceFtp = async () => {
     setIsReadingZones(true)
-    setFtpMessage(null)
+    setFtpError(null)
 
     const result = await deduceFtpFromStrava()
 
@@ -166,16 +173,15 @@ export function SettingsScreen() {
       // number every other figure is measured against.
       setDraftFtp(String(result.value))
       setDraftedSource('strava')
-      setFtpMessage(`${result.value} W déduits de tes zones. Il ne reste qu’à enregistrer.`)
     } else if (result.status === 'noPowerZones') {
       // The common case, not a failure: most riders have never set an FTP in
       // Strava, and there is an obvious thing for them to do about it.
-      setFtpMessage('Strava n’a pas de zones de puissance pour toi. Saisis ta FTP ci-dessous.')
+      setFtpError('Strava n’a pas de zones de puissance pour toi.')
     } else if (result.status === 'unrecognized') {
       // Not the rider's problem, and not something to describe as one.
-      setFtpMessage(`Réponse inattendue de Strava (${result.summary}). Saisis ta FTP ci-dessous.`)
+      setFtpError(`Réponse inattendue de Strava (${result.summary}).`)
     } else {
-      setFtpMessage('La lecture de tes zones a échoué. Réessaie dans un instant.')
+      setFtpError('La lecture de tes zones a échoué. Réessaie dans un instant.')
     }
 
     setIsReadingZones(false)
@@ -185,7 +191,7 @@ export function SettingsScreen() {
     const parsed = Math.round(Number(draftFtp))
 
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setFtpMessage('Indique une valeur en watts.')
+      setFtpError('Indique une valeur en watts.')
       return
     }
 
@@ -193,7 +199,7 @@ export function SettingsScreen() {
     setFtpHistory(await loadFtpHistory())
     setDraftFtp('')
     setDraftedSource('declared')
-    setFtpMessage(null)
+    setFtpError(null)
   }
 
   const connect = async () => {
@@ -404,17 +410,9 @@ export function SettingsScreen() {
                 <GradntButton onPress={() => void saveFtp()}>Enregistrer</GradntButton>
               </XStack>
 
-              {ftpMessage ? (
-                <GradntText muted fontSize={12} lineHeight={18}>
-                  {ftpMessage}
-                </GradntText>
-              ) : null}
-
-              {ftpHistory.length > 1 ? (
-                <GradntText muted fontSize={11} lineHeight={16}>
-                  {ftpHistory.length} valeurs enregistrées depuis{' '}
-                  {formatDate(Date.parse(ftpHistory[0]!.recordedAt), 'd MMMM yyyy', { locale: fr })}
-                  .
+              {ftpError ? (
+                <GradntText color="$danger" fontSize={12} lineHeight={18}>
+                  {ftpError}
                 </GradntText>
               ) : null}
             </GradntCard>
