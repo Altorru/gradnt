@@ -105,7 +105,6 @@ export function GoalScreen() {
             render={({ field }) => (
               <YStack gap="$2">
                 {goalTypes.map((goal) => {
-                  const Icon = goal.icon
                   const selected = field.value === goal.value
 
                   return (
@@ -117,9 +116,7 @@ export function GoalScreen() {
                       onPress={() => {
                         selectGoal(goal.value)
                       }}
-                      icon={
-                        <Icon size={18} color={selected ? colors.graphite950 : '$textSecondary'} />
-                      }
+                      icon={goal.icon}
                     />
                   )
                 })}

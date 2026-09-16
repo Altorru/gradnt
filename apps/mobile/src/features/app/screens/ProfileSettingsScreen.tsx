@@ -80,7 +80,7 @@ export function ProfileSettingsScreen() {
                     key={discipline.value}
                     title={discipline.title}
                     description={discipline.description}
-                    icon={<discipline.icon size={19} color="$accentInk" />}
+                    icon={discipline.icon}
                     selected={field.value === discipline.value}
                     onPress={() => field.onChange(discipline.value)}
                   />

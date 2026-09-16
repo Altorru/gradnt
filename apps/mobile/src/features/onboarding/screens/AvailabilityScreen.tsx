@@ -111,12 +111,7 @@ export function AvailabilityScreen() {
                       durationMinutes: slot.available ? null : 60,
                     })
                   }}
-                  icon={
-                    <Clock3
-                      size={18}
-                      color={slot.available ? colors.graphite950 : '$textSecondary'}
-                    />
-                  }
+                  icon={Clock3}
                 />
 
                 {slot.available ? (

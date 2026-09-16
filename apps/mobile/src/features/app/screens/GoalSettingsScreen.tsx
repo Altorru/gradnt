@@ -76,7 +76,7 @@ export function GoalSettingsScreen() {
                   <GradntChoiceCard
                     title={goalType.title}
                     description={goalType.description}
-                    icon={<goalType.icon size={19} color="$accentInk" />}
+                    icon={goalType.icon}
                     selected={field.value === goalType.value}
                     onPress={() => field.onChange(goalType.value)}
                   />

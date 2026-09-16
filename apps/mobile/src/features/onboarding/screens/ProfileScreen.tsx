@@ -77,7 +77,6 @@ export function ProfileScreen() {
               render={({ field }) => (
                 <YStack gap="$2">
                   {disciplines.map((item) => {
-                    const Icon = item.icon
                     const selected = field.value === item.value
 
                     return (
@@ -89,12 +88,7 @@ export function ProfileScreen() {
                         onPress={() => {
                           field.onChange(item.value)
                         }}
-                        icon={
-                          <Icon
-                            size={18}
-                            color={selected ? colors.graphite950 : '$textSecondary'}
-                          />
-                        }
+                        icon={item.icon}
                       />
                     )
                   })}
