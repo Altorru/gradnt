@@ -15,7 +15,7 @@ import { useOnboardingStore } from '../features/onboarding/store/onboarding.stor
  * Landing route for the Strava redirect.
  *
  * Reached via `+native-intent.tsx`, which stashes the callback URL and rewrites
- * `mobile://strava/callback` to this path. The exchange is guarded inside the
+ * `gradnt://strava/callback` to this path. The exchange is guarded inside the
  * service: whichever of this route and the pending `beginStravaConnect` call
  * gets there first consumes the pending state, and the other reports `ignored`.
  *

@@ -1,4 +1,5 @@
 import { CalendarDays, ChevronRight } from '@tamagui/lucide-icons-2'
+import { format as formatDate } from 'date-fns'
 import { useRouter, type Href } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
@@ -15,6 +16,7 @@ import {
   useSkipWorkoutMutation,
   useUpcomingWorkoutsQuery,
 } from '@/hooks/use-gradnt-data'
+import { useDateLocale, useNumberFormat, useTranslation, type Translate } from '@/i18n'
 import { getPlanCompletionPercentage } from '@/lib/domain'
 
 import { AppScreenIntro } from '../components/AppHeader'
@@ -38,14 +40,20 @@ const statusTone = {
   moved: 'warning',
 } as const
 
-const statusLabels = {
-  planned: 'À venir',
-  completed: 'Terminée',
-  skipped: 'Sautée',
-  moved: 'Déplacée',
-} as const
+/** The same words the workout screen uses: one state, one name. */
+function statusLabels(t: Translate) {
+  return {
+    planned: t('plan.status.planned'),
+    completed: t('plan.status.completed'),
+    skipped: t('plan.status.skipped'),
+    moved: t('plan.status.moved'),
+  }
+}
 
 export function PlanScreen() {
+  const { t, plural } = useTranslation()
+  const dateLocale = useDateLocale()
+  const formatNumber = useNumberFormat()
   const router = useRouter()
   const workoutsQuery = useUpcomingWorkoutsQuery()
   const skipWorkout = useSkipWorkoutMutation()
@@ -65,18 +73,15 @@ export function PlanScreen() {
     <AppShell>
       <AppScrollView>
         <YStack gap="$7">
-          <AppScreenIntro
-            title="Ton plan"
-            description="Les séances qui te rapprochent de ton objectif, avec de la marge pour la vraie vie."
-          />
+          <AppScreenIntro title={t('plan.title')} description={t('plan.description')} />
 
           {workoutsQuery.isError ? (
             <GradntCard padding="$4" gap="$3">
               <GradntText color="$danger" fontSize={13} weight="semibold">
-                Le plan est momentanément indisponible.
+                {t('plan.unavailable')}
               </GradntText>
               <GradntButton tone="secondary" onPress={() => void workoutsQuery.refetch()}>
-                Réessayer
+                {t('common.retry')}
               </GradntButton>
             </GradntCard>
           ) : null}
@@ -85,13 +90,13 @@ export function PlanScreen() {
             <XStack alignItems="center" gap="$3">
               <CalendarDays size={20} color="$accentInk" />
               <YStack flex={1} gap="$1">
-                <GradntText weight="semibold">Cette semaine</GradntText>
+                <GradntText weight="semibold">{t('plan.thisWeek')}</GradntText>
                 <GradntText muted fontSize={13}>
                   {workoutsQuery.isPending
-                    ? 'Chargement…'
+                    ? t('common.loading')
                     : workouts.length
-                      ? `${plannedWorkouts.length} à venir · ${completedWorkouts.length} terminée${completedWorkouts.length > 1 ? 's' : ''}`
-                      : 'Aucune séance planifiée'}
+                      ? `${t('plan.upcoming', { count: plannedWorkouts.length })} · ${plural('plan.completed', completedWorkouts.length)}`
+                      : t('plan.nonePlanned')}
                 </GradntText>
               </YStack>
               <GradntBadge tone={completionPercentage === 100 ? 'positive' : 'neutral'}>
@@ -102,17 +107,22 @@ export function PlanScreen() {
               <YStack gap="$2">
                 <XStack justifyContent="space-between">
                   <GradntText muted fontSize={12}>
-                    Avancement du plan
+                    {t('plan.progress')}
                   </GradntText>
                   <GradntText muted fontSize={12}>
-                    {trackedWorkouts.length}/{workouts.length} suivies
+                    {t('plan.tracked', {
+                      tracked: trackedWorkouts.length,
+                      total: workouts.length,
+                    })}
                   </GradntText>
                 </XStack>
                 <GradntProgressBar value={completionPercentage} />
                 <GradntText muted fontSize={12}>
                   {plannedMinutes
-                    ? `${(plannedMinutes / 60).toFixed(1)} h encore prévues`
-                    : 'Semaine suivie'}
+                    ? t('plan.remaining', {
+                        hours: formatNumber(plannedMinutes / 60, { maximumFractionDigits: 1 }),
+                      })
+                    : t('plan.weekTracked')}
                 </GradntText>
               </YStack>
             ) : null}
@@ -120,11 +130,8 @@ export function PlanScreen() {
 
           {!workoutsQuery.isPending && !workoutsQuery.isError && workouts.length === 0 ? (
             <GradntCard padding="$4" gap="$2">
-              <GradntHeading level={3}>Ton plan est vide</GradntHeading>
-              <GradntText muted>
-                Termine l&apos;onboarding avec au moins un jour disponible pour générer ta première
-                semaine.
-              </GradntText>
+              <GradntHeading level={3}>{t('plan.emptyTitle')}</GradntHeading>
+              <GradntText muted>{t('plan.emptyNote')}</GradntText>
             </GradntCard>
           ) : null}
 
@@ -140,7 +147,7 @@ export function PlanScreen() {
                 >
                   <YStack flex={1} gap="$1">
                     <GradntText muted fontSize={11} weight="semibold" letterSpacing={0.7}>
-                      {new Date(workout.date).toLocaleDateString('fr-FR', { weekday: 'long' })}
+                      {formatDate(new Date(workout.date), 'EEEE', { locale: dateLocale })}
                     </GradntText>
                     <GradntText weight="semibold">{workout.title}</GradntText>
                     <GradntText muted fontSize={13}>
@@ -148,7 +155,7 @@ export function PlanScreen() {
                     </GradntText>
                   </YStack>
                   <GradntBadge tone={statusTone[workout.status]}>
-                    {statusLabels[workout.status]}
+                    {statusLabels(t)[workout.status]}
                   </GradntBadge>
                   <ChevronRight size={18} color="$textSecondary" />
                 </XStack>
@@ -164,7 +171,7 @@ export function PlanScreen() {
                           skipWorkout.mutate(workout.id)
                         }}
                       >
-                        Sauter
+                        {t('plan.skip')}
                       </GradntButton>
                     </YStack>
                     <YStack flex={1}>
@@ -178,7 +185,7 @@ export function PlanScreen() {
                           moveWorkout.mutate({ workoutId: workout.id, date: nextDate })
                         }}
                       >
-                        Décaler d&apos;un jour
+                        {t('plan.moveOneDay')}
                       </GradntButton>
                     </YStack>
                   </XStack>

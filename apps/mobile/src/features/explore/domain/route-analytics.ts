@@ -1,4 +1,4 @@
-import type { Route, RouteWithScore } from './route'
+import type { Route, RouteWithScore, SurfaceCode, SurfaceGroupCode } from './route'
 import { type RoutePreferences, type SurfacePreference } from './route-preferences'
 import { routeSchema } from './route'
 
@@ -112,60 +112,48 @@ export function detectClimbs(profile: Route['elevationProfile']): Route['climbs'
   return climbs
 }
 
-export function normalizeSurfaceGroup(
-  label: string,
-): 'paved' | 'compacted' | 'gravel' | 'trail' | 'unknown' {
-  const normalized = label.toLowerCase()
-
-  if (
-    normalized.includes('asphalt') ||
-    normalized.includes('asphalte') ||
-    normalized.includes('paved') ||
-    normalized.includes('revêt') ||
-    normalized.includes('béton') ||
-    normalized.includes('pavé')
-  ) {
-    return 'paved'
-  }
-
-  if (normalized.includes('compact')) {
-    return 'compacted'
-  }
-
-  if (normalized.includes('gravel') || normalized.includes('gravier')) {
-    return 'gravel'
-  }
-
-  if (
-    normalized.includes('dirt') ||
-    normalized.includes('terre') ||
-    normalized.includes('trail') ||
-    normalized.includes('sol') ||
-    normalized.includes('piste') ||
-    normalized.includes('sentier') ||
-    normalized.includes('herbe')
-  ) {
-    return 'trail'
-  }
-
-  return 'unknown'
+/**
+ * Which user-facing group a source surface belongs to.
+ *
+ * An exact mapping, where this used to match substrings of the French label.
+ * That version classified "non revêtue" as paved, having found `revêt` inside
+ * the word that says the opposite, and it matched nothing at all once the
+ * labels were translated.
+ */
+const surfaceGroupByCode: Record<SurfaceCode, SurfaceGroupCode> = {
+  unknown: 'unknown',
+  paved: 'paved',
+  // The source did not say. Calling it trail would be inventing a fact.
+  unpaved: 'unknown',
+  asphalt: 'paved',
+  concrete: 'paved',
+  pavingStones: 'paved',
+  metal: 'paved',
+  wood: 'paved',
+  concretePlates: 'paved',
+  compactedGravel: 'compacted',
+  fineGravel: 'gravel',
+  gravel: 'gravel',
+  dirt: 'trail',
+  ground: 'trail',
+  sand: 'trail',
+  woodchips: 'trail',
+  grass: 'trail',
+  grassPaver: 'trail',
+  ice: 'unknown',
 }
 
-const surfaceGroupLabels = {
-  paved: 'Asphalte / revêtu',
-  compacted: 'Compacté',
-  gravel: 'Gravier',
-  trail: 'Terre / sentier',
-  unknown: 'Inconnu',
-} as const
+export function normalizeSurfaceGroup(code: string): SurfaceGroupCode {
+  return surfaceGroupByCode[code as SurfaceCode] ?? 'unknown'
+}
 
 export function aggregateSurfaceBreakdown(
   breakdown: Route['surfaceBreakdown'],
 ): Route['surfaceBreakdown'] {
-  const grouped = new Map<keyof typeof surfaceGroupLabels, number>()
+  const grouped = new Map<SurfaceGroupCode, number>()
 
   for (const item of breakdown) {
-    const group = normalizeSurfaceGroup(item.label)
+    const group = normalizeSurfaceGroup(item.code)
     grouped.set(group, (grouped.get(group) ?? 0) + item.distanceMeters)
   }
 
@@ -175,7 +163,7 @@ export function aggregateSurfaceBreakdown(
   }
 
   return Array.from(grouped.entries()).map(([group, distanceMeters]) => ({
-    label: surfaceGroupLabels[group],
+    code: group,
     distanceMeters: Math.round(distanceMeters),
     percentage: Math.round((distanceMeters / totalDistance) * 1000) / 10,
   }))
@@ -185,10 +173,13 @@ export function getTrafficExposure(input: {
   suitability: number
   wayTypeBreakdown: Route['wayTypeBreakdown']
 }): Route['trafficExposure'] {
+  // By code, not by label. This compared the French words until the labels
+  // moved into the catalogue, where a translation would have matched nothing —
+  // a zero exposure score and no error anywhere.
   const cyclewayPercentage =
-    input.wayTypeBreakdown.find((item) => item.label === 'Piste cyclable')?.percentage ?? 0
+    input.wayTypeBreakdown.find((item) => item.code === 'cycleway')?.percentage ?? 0
   const mainRoadPercentage =
-    input.wayTypeBreakdown.find((item) => item.label === 'Route principale')?.percentage ?? 0
+    input.wayTypeBreakdown.find((item) => item.code === 'primary')?.percentage ?? 0
   const score = Math.max(
     0,
     Math.min(100, Math.round(60 - cyclewayPercentage * 0.45 + mainRoadPercentage * 0.55)),
@@ -199,10 +190,7 @@ export function getTrafficExposure(input: {
   return {
     score,
     label,
-    rationale:
-      input.suitability >= 70
-        ? 'Score basé sur la compatibilité cyclable et les types de voies disponibles.'
-        : 'Score prudent : la compatibilité cyclable des voies est partielle.',
+    rationaleCode: input.suitability >= 70 ? 'scored' : 'partial',
   }
 }
 
@@ -285,7 +273,7 @@ function surfaceFit(route: Route, preferences: RoutePreferences) {
 
   const surfaceMix = route.surfaceBreakdown.reduce(
     (mix, item) => {
-      const group = normalizeSurfaceGroup(item.label)
+      const group = normalizeSurfaceGroup(item.code)
       if (group === 'paved') {
         mix.paved += item.percentage
       } else if (group === 'compacted' || group === 'gravel') {

@@ -11,6 +11,8 @@ import {
   type BreakdownItem,
   type Route,
   type RouteWithScore,
+  type SurfaceCode,
+  type WayTypeCode,
 } from '../../domain'
 import type { RouteMode } from '../../domain/route-preferences'
 import type { RouteRequest, RoutingService } from '../../services/routing-service'
@@ -95,40 +97,42 @@ const heigitProfileByMode: Record<RouteMode, string> = {
   mtb: 'cycling-mountain',
 }
 
-const surfaceLabels: Record<number, string> = {
-  0: 'Inconnue',
-  1: 'Revêtue',
-  2: 'Non revêtue',
-  3: 'Asphalte',
-  4: 'Béton',
-  5: 'Pavés',
-  6: 'Métal',
-  7: 'Bois',
-  8: 'Gravier compacté',
-  9: 'Gravier fin',
-  10: 'Gravier',
-  11: 'Terre',
-  12: 'Sol naturel',
-  13: 'Neige/glace',
-  14: 'Pavés béton',
-  15: 'Sable',
-  16: 'Copeaux',
-  17: 'Herbe',
-  18: 'Dalles engazonnées',
+/** ORS surface codes, as the app's own vocabulary. The words are in the catalogue. */
+const surfaceCodesByOrs: Record<number, SurfaceCode> = {
+  0: 'unknown',
+  1: 'paved',
+  2: 'unpaved',
+  3: 'asphalt',
+  4: 'concrete',
+  5: 'pavingStones',
+  6: 'metal',
+  7: 'wood',
+  8: 'compactedGravel',
+  9: 'fineGravel',
+  10: 'gravel',
+  11: 'dirt',
+  12: 'ground',
+  13: 'ice',
+  14: 'concretePlates',
+  15: 'sand',
+  16: 'woodchips',
+  17: 'grass',
+  18: 'grassPaver',
 }
 
-const wayTypeLabels: Record<number, string> = {
-  0: 'Voie inconnue',
-  1: 'Route principale',
-  2: 'Route secondaire',
-  3: 'Rue',
-  4: 'Chemin',
-  5: 'Piste',
-  6: 'Piste cyclable',
-  7: 'Voie piétonne',
-  8: 'Escaliers',
-  9: 'Ferry',
-  10: 'Travaux',
+/** ORS way-type codes, likewise. */
+const wayTypeCodesByOrs: Record<number, WayTypeCode> = {
+  0: 'unknown',
+  1: 'primary',
+  2: 'secondary',
+  3: 'street',
+  4: 'path',
+  5: 'track',
+  6: 'cycleway',
+  7: 'footway',
+  8: 'steps',
+  9: 'ferry',
+  10: 'construction',
 }
 
 function getApiKey(): string | null {
@@ -146,16 +150,17 @@ function getDistanceBetweenPoints(first: [number, number], second: [number, numb
 
 function toBreakdown(
   summaries: HeigitExtraSummary[] | undefined,
-  labels: Record<number, string>,
-  fallbackLabel: string,
+  codes: Record<number, string>,
   routeDistanceMeters: number,
 ): BreakdownItem[] {
+  // No breakdown at all is `unknown`, not a guess: the service simply did not
+  // report one.
   if (!summaries?.length) {
-    return [{ label: fallbackLabel, percentage: 100, distanceMeters: routeDistanceMeters }]
+    return [{ code: 'unknown', percentage: 100, distanceMeters: routeDistanceMeters }]
   }
 
   return summaries.map((item) => ({
-    label: labels[item.value] ?? `${fallbackLabel} ${item.value}`,
+    code: codes[item.value] ?? 'unknown',
     percentage: Math.round(item.amount * 10) / 10,
     distanceMeters: Math.round(item.distance),
   }))
@@ -217,8 +222,7 @@ function normalizeFeature(feature: HeigitFeature, request: RouteRequest, index: 
   const distanceMeters = summary?.distance ?? usableProfile.at(-1)?.distanceMeters ?? 0
   const wayTypeBreakdown = toBreakdown(
     extras?.waytypes?.summary ?? extras?.waytype?.summary,
-    wayTypeLabels,
-    'Type de voie',
+    wayTypeCodesByOrs,
     distanceMeters,
   )
   const suitabilityValue = getAverageExtraValue(extras?.suitability?.summary)
@@ -239,14 +243,11 @@ function normalizeFeature(feature: HeigitFeature, request: RouteRequest, index: 
     elevationProfile: usableProfile,
     climbs: detectClimbs(usableProfile),
     surfaceBreakdown: aggregateSurfaceBreakdown(
-      toBreakdown(extras?.surface?.summary, surfaceLabels, 'Surface', distanceMeters),
+      toBreakdown(extras?.surface?.summary, surfaceCodesByOrs, distanceMeters),
     ),
     wayTypeBreakdown,
     suitability: Math.min(100, Math.max(0, suitability)),
-    trafficExposure: {
-      ...trafficExposure,
-      rationale: `Exposition routière calculée à partir des données OSM HeiGIT. ${trafficExposure.rationale}`,
-    },
+    trafficExposure,
     liveTraffic: [],
     trainingIntentFit: request.preferences.trainingIntent === 'climbing' ? 88 : 78,
     provider: {

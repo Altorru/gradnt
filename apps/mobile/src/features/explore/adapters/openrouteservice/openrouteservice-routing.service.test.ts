@@ -67,11 +67,11 @@ describe('HeiGIT route normalization', () => {
     expect(route.geometry).toHaveLength(3)
     expect(route.elevationProfile).toHaveLength(3)
     expect(route.surfaceBreakdown).toEqual([
-      { label: 'Asphalte / revêtu', percentage: 80, distanceMeters: 16_000 },
-      { label: 'Gravier', percentage: 20, distanceMeters: 4_000 },
+      { code: 'paved', percentage: 80, distanceMeters: 16_000 },
+      { code: 'gravel', percentage: 20, distanceMeters: 4_000 },
     ])
     expect(route.wayTypeBreakdown[0]).toEqual({
-      label: 'Route secondaire',
+      code: 'secondary',
       percentage: 75,
       distanceMeters: 15_000,
     })

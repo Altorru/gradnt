@@ -5,6 +5,7 @@ import {
   aggregateSurfaceBreakdown,
   detectClimbs,
   getTrafficExposure,
+  normalizeSurfaceGroup,
   rankRouteProposals,
 } from './route-analytics'
 
@@ -30,25 +31,39 @@ const routeBase: Route = {
   ],
   climbs: [],
   surfaceBreakdown: [
-    { label: 'Asphalte', percentage: 70, distanceMeters: 21_000 },
-    { label: 'Gravier fin', percentage: 20, distanceMeters: 6_000 },
-    { label: 'Terre', percentage: 10, distanceMeters: 3_000 },
+    { code: 'asphalt', percentage: 70, distanceMeters: 21_000 },
+    { code: 'fineGravel', percentage: 20, distanceMeters: 6_000 },
+    { code: 'dirt', percentage: 10, distanceMeters: 3_000 },
   ],
   wayTypeBreakdown: [
-    { label: 'Route secondaire', percentage: 70, distanceMeters: 21_000 },
-    { label: 'Piste cyclable', percentage: 20, distanceMeters: 6_000 },
-    { label: 'Route principale', percentage: 10, distanceMeters: 3_000 },
+    { code: 'secondary', percentage: 70, distanceMeters: 21_000 },
+    { code: 'cycleway', percentage: 20, distanceMeters: 6_000 },
+    { code: 'primary', percentage: 10, distanceMeters: 3_000 },
   ],
   suitability: 88,
   trafficExposure: {
     score: 25,
     label: 'low',
-    rationale: 'Test',
+    rationaleCode: 'scored',
   },
   liveTraffic: [],
   trainingIntentFit: 90,
   provider: { name: 'mock', profile: 'test' },
 }
+
+describe('normalizeSurfaceGroup', () => {
+  it('does not call an unpaved surface paved', () => {
+    // The label-matching version looked for `revêt` and found it inside
+    // "non revêtue" — the word that says the opposite.
+    expect(normalizeSurfaceGroup('unpaved')).toBe('unknown')
+    expect(normalizeSurfaceGroup('paved')).toBe('paved')
+    expect(normalizeSurfaceGroup('dirt')).toBe('trail')
+  })
+
+  it('falls back to unknown for a code it has never heard of', () => {
+    expect(normalizeSurfaceGroup('snow-covered-mystery')).toBe('unknown')
+  })
+})
 
 describe('route analytics', () => {
   it('detects a climb only when length and gain thresholds are met', () => {
@@ -73,11 +88,11 @@ describe('route analytics', () => {
     ).toEqual([])
   })
 
-  it('aggregates source surfaces into user-facing groups with lengths', () => {
+  it('aggregates source surfaces into user-facing groups, by code', () => {
     expect(aggregateSurfaceBreakdown(routeBase.surfaceBreakdown)).toEqual([
-      { label: 'Asphalte / revêtu', percentage: 70, distanceMeters: 21_000 },
-      { label: 'Gravier', percentage: 20, distanceMeters: 6_000 },
-      { label: 'Terre / sentier', percentage: 10, distanceMeters: 3_000 },
+      { code: 'paved', percentage: 70, distanceMeters: 21_000 },
+      { code: 'gravel', percentage: 20, distanceMeters: 6_000 },
+      { code: 'trail', percentage: 10, distanceMeters: 3_000 },
     ])
   })
 
@@ -85,8 +100,8 @@ describe('route analytics', () => {
     const exposure = getTrafficExposure({
       suitability: 90,
       wayTypeBreakdown: [
-        { label: 'Piste cyclable', percentage: 80, distanceMeters: 24_000 },
-        { label: 'Route principale', percentage: 5, distanceMeters: 1_500 },
+        { code: 'cycleway', percentage: 80, distanceMeters: 24_000 },
+        { code: 'primary', percentage: 5, distanceMeters: 1_500 },
       ],
     })
 

@@ -58,7 +58,7 @@ lieu d'échouer.
 son seul domicile est les secrets Supabase. Tout ce qui est préfixé
 `EXPO_PUBLIC_` finit dans le bundle livré aux appareils.
 
-Le retour d'autorisation arrive par deep link (`mobile://strava/callback`).
+Le retour d'autorisation arrive par deep link (`gradnt://strava/callback`).
 `src/app/+native-intent.tsx` le réécrit vers la route `/strava-callback`, qui
 termine l'échange.
 

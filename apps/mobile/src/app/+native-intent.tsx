@@ -3,7 +3,7 @@ import { stashStravaCallbackUrl, toCallbackUrl } from '@/services/strava/oauth/s
 /**
  * Incoming native deep links are rewritten here before expo-router routes them.
  *
- * The Strava bridge redirects to `mobile://strava/callback?...`. That has host
+ * The Strava bridge redirects to `gradnt://strava/callback?...`. That has host
  * `strava` and path `callback`, which matches no route, so expo-router rendered
  * its "Unmatched Route" screen instead of returning to the app. Rewriting to
  * `/strava-callback` gives the callback somewhere to land.

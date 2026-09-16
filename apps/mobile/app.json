@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "GRADNT",
+    "slug": "gradnt",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "gradnt",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.altorru.mobile"
+      "bundleIdentifier": "com.altorru.gradnt"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.altorru.mobile"
+      "package": "com.altorru.gradnt"
     },
     "web": {
       "output": "static",
@@ -41,12 +41,24 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "GRADNT utilise ta position uniquement pour proposer un départ proche de toi."
+          "locationWhenInUsePermission": "GRADNT uses your location only to suggest a start point near you."
         }
       ],
-      "expo-font",
-      "expo-localization"
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "fr"],
+            "android": ["en", "fr"]
+          }
+        }
+      ],
+      "expo-font"
     ],
+    "locales": {
+      "en": "./locales/en.json",
+      "fr": "./locales/fr.json"
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

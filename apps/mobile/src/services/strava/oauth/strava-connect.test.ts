@@ -28,7 +28,7 @@ vi.mock('./strava-token.persistence', () => {
 })
 
 /** Custom scheme the OS hands back to the app. */
-const APP_CALLBACK = 'mobile://strava/callback'
+const APP_CALLBACK = 'gradnt://strava/callback'
 
 /** https endpoint Strava redirects to, which then bridges to APP_CALLBACK. */
 const BRIDGE_URL = 'https://project.supabase.co/functions/v1/strava-exchange'

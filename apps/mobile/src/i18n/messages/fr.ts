@@ -18,6 +18,9 @@ export const fr = {
     closePanel: 'Fermer le panneau',
     openMenu: 'Ouvrir {{label}}',
     continue: 'Continuer',
+    see: 'Voir',
+    seeMore: 'Voir plus',
+    loading: 'Chargement…',
     sync: 'Synchronisation…',
   },
 
@@ -46,6 +49,47 @@ export const fr = {
     goalTitle: 'Ton objectif',
     eventPlaceholder: 'Cyclosportive des Monts d’Or',
     datePlaceholder: '2027-06-13',
+    strava: {
+      connectedAccount: 'Compte connecté',
+      noAccount: 'Aucun compte connecté',
+      linkPrompt: 'Relie ton compte pour importer tes sorties.',
+      confirmDisconnect: 'Confirmer la déconnexion',
+      disconnect: 'Déconnecter Strava',
+      connect: 'Connecter Strava',
+      connectNote:
+        'GRADNT lit ton historique pour situer ton point de départ et adapter ce qu’il te propose.',
+    },
+
+    ftp: {
+      deduced: '{{value}} W déduits. Il reste à enregistrer.',
+      noPowerZones: 'Strava n’a pas de zones de puissance pour toi.',
+      unexpected: 'Réponse inattendue de Strava ({{summary}}).',
+      readFailed: 'La lecture de tes zones a échoué.',
+      invalidWatts: 'Indique une valeur en watts.',
+      history: 'Historique de la FTP',
+      noValue: 'Aucune valeur enregistrée : ton objectif FTP ne peut pas être suivi.',
+      fromZones: 'déduite de tes zones Strava',
+      enteredByYou: 'saisie par toi',
+      fromStrava: 'Déduite de Strava',
+      entered: 'Saisie',
+      readingZones: 'Lecture des zones…',
+      deduce: 'Déduire de mes zones Strava',
+      editing: 'Correction d’un relevé existant',
+      cancelEditing: 'Annuler la correction',
+    },
+
+    privacy: {
+      retained: 'Ce qui est conservé',
+      retainedNote:
+        'Tes jetons d’accès Strava sont chiffrés dans le trousseau de cet appareil, avec ton profil et ton objectif saisis à l’inscription. GRADNT ne conserve rien sur ses serveurs : la fonction qui échange le code d’autorisation est sans état et n’écrit aucune donnée.',
+      disconnectNote:
+        'Déconnecter Strava efface les jetons et les sorties importées de cet appareil. Les activités elles-mêmes restent chez Strava, où tu gardes la main dessus.',
+    },
+
+    importedRides: {
+      one: '{{count}} sortie importée',
+      other: '{{count}} sorties importées',
+    },
   },
 
   /**
@@ -61,6 +105,35 @@ export const fr = {
   },
 
   plan: {
+    title: 'Ton plan',
+    description:
+      'Les séances qui te rapprochent de ton objectif, avec de la marge pour la vraie vie.',
+    unavailable: 'Le plan est momentanément indisponible.',
+    thisWeek: 'Cette semaine',
+    nonePlanned: 'Aucune séance planifiée',
+    progress: 'Avancement du plan',
+    tracked: '{{tracked}}/{{total}} suivies',
+    remaining: '{{hours}} h encore prévues',
+    weekTracked: 'Semaine suivie',
+    emptyTitle: 'Ton plan est vide',
+    emptyNote:
+      'Termine l’onboarding avec au moins un jour disponible pour générer ta première semaine.',
+    skip: 'Sauter',
+    moveOneDay: 'Décaler d’un jour',
+    status: {
+      planned: 'À venir',
+      completed: 'Terminée',
+      skipped: 'Sautée',
+      moved: 'Déplacée',
+    },
+    workout: {
+      notFoundTitle: 'Séance introuvable',
+      notFound: 'Cette séance n’est plus disponible dans ton plan local.',
+      durationAndIntensity: 'Durée et intensité',
+      whyThisSession: 'Pourquoi cette séance ?',
+      markCompleted: 'Marquer comme terminée',
+      skip: 'Sauter cette séance',
+    },
     /**
      * A plural pair, not a sentence with an `s` glued on.
      *
@@ -76,10 +149,66 @@ export const fr = {
   },
 
   progress: {
+    title: 'Ta progression',
+    description: 'Les tendances utiles pour comprendre où tu en es, sans bruit inutile.',
+    unavailable: 'Certaines données de progression sont momentanément indisponibles.',
+    mainGoal: 'Objectif principal',
+    targetToSet: 'Cible à préciser',
+    fromYourRides: 'Valeur issue de tes sorties',
+    toSetAfterFirstRides: 'À préciser après tes premières sorties',
+    lastSevenDays: '7 derniers jours',
+    recentVolume: 'Volume récent',
+    regularity: 'Régularité',
+    ridesUnit: 'sorties',
+    observedData: '{{hours}} h de données observées',
+    profileData: '{{hours}} h de données basées sur ton profil ({{band}})',
+    morePreciseLater: 'Elle sera plus précise après tes premières sorties',
+    takeaway: 'À retenir',
     ridesThisWeek: {
       one: '{{count}} sortie cette semaine',
       other: '{{count}} sorties cette semaine',
     },
+  },
+
+  header: {
+    notifications: 'Ouvrir les notifications',
+    settings: 'Ouvrir les réglages',
+  },
+
+  home: {
+    title: 'Ton prochain pas',
+    subtitle: 'Une vue claire de ta progression et de ce qui vient ensuite.',
+    unavailable: 'Les données de progression sont momentanément indisponibles.',
+    status: {
+      startingPoint: 'POINT DE DÉPART',
+      onTrack: 'EN BONNE VOIE',
+    },
+    ftpSince: '{{delta}} W depuis le dernier relevé',
+    afterFirstRides: 'Après tes premières sorties',
+    observedProgress: 'Progression observée',
+    nextStep: 'Prochaine étape',
+    yourState: 'Ton état',
+    tiles: {
+      volume: 'Volume 7 j',
+      rides: 'Sorties 7 j',
+      distance: 'Distance 7 j',
+    },
+    intensities: 'Intensités',
+    basedOnProfile: 'Basé sur ton profil déclaré',
+    basedOnActivities: 'Basé sur des activités observées',
+  },
+
+  garage: {
+    description: 'Garde une trace de ton matériel et de ce qui mérite ton attention.',
+    mainBike: 'Ton vélo principal',
+    noBike: 'Aucun vélo ajouté pour le moment',
+    addBike: 'Ajouter un vélo',
+    maintenance: 'Maintenance',
+    maintenanceNote:
+      'Associe ton matériel à tes sorties et note les entretiens importants quand le Garage sera activé.',
+    why: 'Pourquoi un Garage ?',
+    whyNote:
+      'Pour mieux comprendre ton équipement sans détourner GRADNT de l’essentiel : ta progression.',
   },
 
   onboarding: {
@@ -338,8 +467,45 @@ export const fr = {
       exposureCaveat:
         'Ce score décrit l’exposition des voies à partir des caractéristiques disponibles ; ce n’est ni du trafic live, ni un score de sécurité.',
       sessionFit: 'Compatibilité avec la séance',
+      elevationProfile: 'Profil d’altitude',
+      elevationLegend: 'Orange = montée détectée',
+      exposureRationale: {
+        scored:
+          'Exposition routière calculée à partir des données OSM HeiGIT. Score basé sur la compatibilité cyclable et les types de voies disponibles.',
+        partial:
+          'Exposition routière calculée à partir des données OSM HeiGIT. Score prudent : la compatibilité cyclable des voies est partielle.',
+      },
       climbRange: 'km {{start}} à {{end}} · difficulté {{score}}/100',
       climbGradients: '{{average}} % moy. · {{maximum}} % max.',
+    },
+
+    /**
+     * The words for the codes the routing engine emits.
+     *
+     * The engine and the exposure score both work in codes — the words live
+     * here, because a label in the domain is a label something will end up
+     * comparing as identity.
+     */
+    surfaceGroups: {
+      paved: 'Asphalte / revêtu',
+      compacted: 'Compacté',
+      gravel: 'Gravel',
+      trail: 'Terre / sentier',
+      unknown: 'Inconnu',
+    },
+
+    wayTypes: {
+      unknown: 'Voie inconnue',
+      primary: 'Route principale',
+      secondary: 'Route secondaire',
+      street: 'Rue',
+      path: 'Chemin',
+      track: 'Piste',
+      cycleway: 'Piste cyclable',
+      footway: 'Voie piétonne',
+      steps: 'Escaliers',
+      ferry: 'Ferry',
+      construction: 'Travaux',
     },
 
     exposureLevels: { low: 'faible', moderate: 'modérée', high: 'élevée' },

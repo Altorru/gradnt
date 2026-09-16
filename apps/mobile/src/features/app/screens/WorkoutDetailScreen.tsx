@@ -1,4 +1,5 @@
 import { ArrowLeft, CheckCircle2, Clock3, SkipForward } from '@tamagui/lucide-icons-2'
+import { format as formatDate } from 'date-fns'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
@@ -12,20 +13,26 @@ import {
   GradntScrollView,
   GradntText,
 } from '@/design-system'
+import { useDateLocale, useTranslation, type Translate } from '@/i18n'
 import {
   useCompleteWorkoutMutation,
   useSkipWorkoutMutation,
   useUpcomingWorkoutsQuery,
 } from '@/hooks/use-gradnt-data'
 
-const statusLabels = {
-  planned: 'À venir',
-  completed: 'Terminée',
-  skipped: 'Sautée',
-  moved: 'Déplacée',
-} as const
+/** What a workout's state is called, per language. */
+function statusLabels(t: Translate) {
+  return {
+    planned: t('plan.status.planned'),
+    completed: t('plan.status.completed'),
+    skipped: t('plan.status.skipped'),
+    moved: t('plan.status.moved'),
+  }
+}
 
 export function WorkoutDetailScreen() {
+  const { t } = useTranslation()
+  const dateLocale = useDateLocale()
   const router = useRouter()
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>()
   const workoutsQuery = useUpcomingWorkoutsQuery()
@@ -40,8 +47,8 @@ export function WorkoutDetailScreen() {
           <GradntIconButton onPress={() => router.back()}>
             <ArrowLeft size={18} />
           </GradntIconButton>
-          <GradntHeading>Séance introuvable</GradntHeading>
-          <GradntText muted>Cette séance n’est plus disponible dans ton plan local.</GradntText>
+          <GradntHeading>{t('plan.workout.notFoundTitle')}</GradntHeading>
+          <GradntText muted>{t('plan.workout.notFound')}</GradntText>
         </YStack>
       </GradntScreen>
     )
@@ -59,11 +66,7 @@ export function WorkoutDetailScreen() {
 
           <YStack gap="$2">
             <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-              {new Date(workout.date).toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
+              {formatDate(new Date(workout.date), 'EEEE d MMMM', { locale: dateLocale })}
             </GradntText>
             <XStack alignItems="center" justifyContent="space-between" gap="$3">
               <GradntHeading>{workout.title}</GradntHeading>
@@ -76,7 +79,7 @@ export function WorkoutDetailScreen() {
                       : 'neutral'
                 }
               >
-                {statusLabels[workout.status]}
+                {statusLabels(t)[workout.status]}
               </GradntBadge>
             </XStack>
           </YStack>
@@ -85,7 +88,7 @@ export function WorkoutDetailScreen() {
             <XStack alignItems="center" gap="$3">
               <Clock3 size={20} color="$accentInk" />
               <YStack gap="$1">
-                <GradntText weight="semibold">Durée et intensité</GradntText>
+                <GradntText weight="semibold">{t('plan.workout.durationAndIntensity')}</GradntText>
                 <GradntText muted fontSize={13}>
                   {workout.durationMinutes} min · {workout.intensityTarget}
                 </GradntText>
@@ -95,7 +98,7 @@ export function WorkoutDetailScreen() {
           </GradntCard>
 
           <GradntCard gap="$3">
-            <GradntText weight="semibold">Pourquoi cette séance ?</GradntText>
+            <GradntText weight="semibold">{t('plan.workout.whyThisSession')}</GradntText>
             <GradntText muted lineHeight={21}>
               {workout.reason}
             </GradntText>
@@ -112,7 +115,7 @@ export function WorkoutDetailScreen() {
                   })
                 }}
               >
-                Marquer comme terminée
+                {t('plan.workout.markCompleted')}
               </GradntButton>
               <GradntButton
                 tone="ghost"
@@ -124,7 +127,7 @@ export function WorkoutDetailScreen() {
                   })
                 }}
               >
-                Sauter cette séance
+                {t('plan.workout.skip')}
               </GradntButton>
             </YStack>
           ) : null}

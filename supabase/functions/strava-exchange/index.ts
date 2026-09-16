@@ -26,7 +26,7 @@ const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
  *
  * Must match the `scheme` in apps/mobile/app.json.
  */
-const APP_CALLBACK_URI = 'mobile://strava/callback'
+const APP_CALLBACK_URI = 'gradnt://strava/callback'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

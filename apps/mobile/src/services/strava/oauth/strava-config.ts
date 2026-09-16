@@ -17,7 +17,7 @@ export const stravaAuthorizationEndpoint = 'https://www.strava.com/oauth/authori
  *
  * Must match the `scheme` in apps/mobile/app.json.
  */
-export const stravaAppCallbackUri = 'mobile://strava/callback'
+export const stravaAppCallbackUri = 'gradnt://strava/callback'
 
 /**
  * Builds the Strava authorization URL for the OAuth redirect flow.

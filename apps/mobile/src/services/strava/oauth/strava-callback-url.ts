@@ -5,7 +5,7 @@ import { stravaAppCallbackUri } from './strava-config'
  *
  * Only the query is taken from the link and re-based on the app's known
  * callback URI, so the result parses regardless of whether expo-router hands
- * over a full `mobile://strava/callback?…` URL or just a path. It also avoids
+ * over a full `gradnt://strava/callback?…` URL or just a path. It also avoids
  * round-tripping `code` and `state` through route-param decoding and
  * re-encoding, which is where a mismatch would surface as a bogus
  * `invalidState`.

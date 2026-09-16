@@ -3,8 +3,10 @@ import { useRouter } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
 import { GradntIconButton, GradntText, SCREEN_GUTTER } from '@/design-system'
+import { useTranslation } from '@/i18n'
 
 export function AppBrandHeader() {
+  const { t } = useTranslation()
   const router = useRouter()
 
   return (
@@ -24,7 +26,7 @@ export function AppBrandHeader() {
       </XStack>
 
       <XStack marginLeft="auto" gap="$2">
-        <GradntIconButton accessibilityLabel="Ouvrir les notifications">
+        <GradntIconButton accessibilityLabel={t('header.notifications')}>
           <Bell size={18} color="$textPrimary" />
         </GradntIconButton>
         {/*
@@ -32,7 +34,7 @@ export function AppBrandHeader() {
           Android, and the app already has five.
         */}
         <GradntIconButton
-          accessibilityLabel="Ouvrir les réglages"
+          accessibilityLabel={t('header.settings')}
           onPress={() => router.push('/settings')}
         >
           <Settings size={18} color="$textPrimary" />

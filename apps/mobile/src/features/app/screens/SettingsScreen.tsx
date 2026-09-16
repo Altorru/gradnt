@@ -11,7 +11,6 @@ import {
 } from '@tamagui/lucide-icons-2'
 import { useQueryClient } from '@tanstack/react-query'
 import { format as formatDate, formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { Pressable } from 'react-native'
@@ -30,7 +29,7 @@ import {
   GradntStravaConnectBlock,
   GradntText,
 } from '@/design-system'
-import { useTranslation } from '@/i18n'
+import { useDateLocale, useTranslation } from '@/i18n'
 import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { usePreferencesStore } from '@/features/app/store/preferences.store'
 import { stravaService } from '@/features/onboarding/services/strava.service'
@@ -165,7 +164,8 @@ function SettingsRow({
 export function SettingsScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { t } = useTranslation()
+  const { t, plural } = useTranslation()
+  const dateLocale = useDateLocale()
   const language = usePreferencesStore((state) => state.language)
   const appearance = usePreferencesStore((state) => state.appearance)
   const setLanguage = usePreferencesStore((state) => state.setLanguage)
@@ -248,19 +248,19 @@ export function SettingsScreen() {
       // number every other figure is measured against.
       setDraftFtp(String(result.value))
       setDraftedSource('strava')
-      setFtpFeedback({ tone: 'ok', text: `${result.value} W déduits. Il reste à enregistrer.` })
+      setFtpFeedback({ tone: 'ok', text: t('settings.ftp.deduced', { value: result.value }) })
     } else if (result.status === 'noPowerZones') {
       // The common case, not a failure: most riders have never set an FTP in
       // Strava, and there is an obvious thing for them to do about it.
-      setFtpFeedback({ tone: 'error', text: 'Strava n’a pas de zones de puissance pour toi.' })
+      setFtpFeedback({ tone: 'error', text: t('settings.ftp.noPowerZones') })
     } else if (result.status === 'unrecognized') {
       // Not the rider's problem, and not something to describe as one.
       setFtpFeedback({
         tone: 'error',
-        text: `Réponse inattendue de Strava (${result.summary}).`,
+        text: t('settings.ftp.unexpected', { summary: result.summary }),
       })
     } else {
-      setFtpFeedback({ tone: 'error', text: 'La lecture de tes zones a échoué.' })
+      setFtpFeedback({ tone: 'error', text: t('settings.ftp.readFailed') })
     }
 
     setIsReadingZones(false)
@@ -302,7 +302,7 @@ export function SettingsScreen() {
     const parsed = Math.round(Number(draftFtp))
 
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setFtpFeedback({ tone: 'error', text: 'Indique une valeur en watts.' })
+      setFtpFeedback({ tone: 'error', text: t('settings.ftp.invalidWatts') })
       return
     }
 
@@ -361,7 +361,7 @@ export function SettingsScreen() {
       setError(describeActivityFailure(activities.error))
     } else {
       const count = queryClient.getQueryData<Activity[]>(['activities'])?.length ?? 0
-      setSyncReport(`${count} sortie${count > 1 ? 's' : ''} importée${count > 1 ? 's' : ''}`)
+      setSyncReport(plural('settings.importedRides', count))
     }
 
     setIsSyncing(false)
@@ -450,10 +450,12 @@ export function SettingsScreen() {
             <GradntCard gap="$4" padding="$4">
               <YStack gap="$1">
                 <GradntText weight="semibold">
-                  {connected ? 'Compte connecté' : 'Aucun compte connecté'}
+                  {connected
+                    ? t('settings.strava.connectedAccount')
+                    : t('settings.strava.noAccount')}
                 </GradntText>
                 <GradntText muted fontSize={13}>
-                  {connection?.athleteName ?? 'Relie ton compte pour importer tes sorties.'}
+                  {connection?.athleteName ?? t('settings.strava.linkPrompt')}
                 </GradntText>
               </YStack>
 
@@ -475,7 +477,9 @@ export function SettingsScreen() {
                     iconAfter={<Unlink size={17} color="$textPrimary" />}
                     onPress={() => void disconnect()}
                   >
-                    {confirmingDisconnect ? 'Confirmer la déconnexion' : 'Déconnecter Strava'}
+                    {confirmingDisconnect
+                      ? t('settings.strava.confirmDisconnect')
+                      : t('settings.strava.disconnect')}
                   </GradntButton>
 
                   {confirmingDisconnect ? (
@@ -490,8 +494,8 @@ export function SettingsScreen() {
                 // screen: that one is step 5 of 6 and would walk a rider who
                 // has already signed up back through the review flow.
                 <GradntStravaConnectBlock
-                  title="Connecter Strava"
-                  description="GRADNT lit ton historique pour situer ton point de départ et adapter ce qu’il te propose."
+                  title={t('settings.strava.connect')}
+                  description={t('settings.strava.connectNote')}
                   onConnect={() => void connect()}
                   isConnecting={isConnecting}
                   errorMessage={error}
@@ -531,7 +535,7 @@ export function SettingsScreen() {
                   its own would be a second thing to aim at. */}
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Historique de la FTP"
+                accessibilityLabel={t('settings.ftp.history')}
                 accessibilityState={{ expanded: isHistoryOpen }}
                 disabled={ftpHistory.length === 0}
                 onPress={() => setIsHistoryOpen((open) => !open)}
@@ -548,14 +552,14 @@ export function SettingsScreen() {
                       <GradntText weight="semibold">FTP</GradntText>
                       <GradntText muted fontSize={13} lineHeight={18}>
                         {latestFtp === null
-                          ? 'Aucune valeur enregistrée : ton objectif FTP ne peut pas être suivi.'
+                          ? t('settings.ftp.noValue')
                           : `${latestFtp.value} W — ${
                               latestFtp.source === 'strava'
-                                ? 'déduite de tes zones Strava'
-                                : 'saisie par toi'
+                                ? t('settings.ftp.fromZones')
+                                : t('settings.ftp.enteredByYou')
                             }, ${formatDistanceToNow(Date.parse(latestFtp.recordedAt), {
                               addSuffix: true,
-                              locale: fr,
+                              locale: dateLocale,
                             })}.`}
                       </GradntText>
                     </YStack>
@@ -605,9 +609,12 @@ export function SettingsScreen() {
                             <YStack flex={1} gap="$1">
                               <GradntText weight="semibold">{entry.value} W</GradntText>
                               <GradntText muted fontSize={12}>
-                                {entry.source === 'strava' ? 'Déduite de Strava' : 'Saisie'} ·{' '}
+                                {entry.source === 'strava'
+                                  ? t('settings.ftp.fromStrava')
+                                  : t('settings.ftp.entered')}{' '}
+                                ·{' '}
                                 {formatDate(Date.parse(entry.recordedAt), 'd MMM yyyy', {
-                                  locale: fr,
+                                  locale: dateLocale,
                                 })}
                               </GradntText>
                             </YStack>
@@ -639,24 +646,24 @@ export function SettingsScreen() {
                 iconAfter={<Download size={17} color="$textPrimary" />}
                 onPress={() => void deduceFtp()}
               >
-                {isReadingZones ? 'Lecture des zones…' : 'Déduire de mes zones Strava'}
+                {isReadingZones ? t('settings.ftp.readingZones') : t('settings.ftp.deduce')}
               </GradntButton>
 
               {editingRecordedAt !== null ? (
                 <XStack alignItems="center" justifyContent="space-between" gap="$3">
                   <GradntText color="$accentInk" weight="semibold" fontSize={12}>
-                    Correction d’un relevé existant
+                    {t('settings.ftp.editing')}
                   </GradntText>
 
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Annuler la correction"
+                    accessibilityLabel={t('settings.ftp.cancelEditing')}
                     onPress={cancelEditing}
                     hitSlop={8}
                   >
                     {({ pressed }) => (
                       <GradntText muted fontSize={12} opacity={pressed ? 0.6 : 1}>
-                        Annuler
+                        {t('common.cancel')}
                       </GradntText>
                     )}
                   </Pressable>
@@ -702,19 +709,15 @@ export function SettingsScreen() {
             <GradntCard gap="$3" padding="$4">
               <XStack alignItems="center" gap="$3">
                 <ShieldCheck size={19} color="$recovery" />
-                <GradntText weight="semibold">Ce qui est conservé</GradntText>
+                <GradntText weight="semibold">{t('settings.privacy.retained')}</GradntText>
               </XStack>
 
               <GradntText muted fontSize={13} lineHeight={19}>
-                Tes jetons d’accès Strava sont chiffrés dans le trousseau de cet appareil, avec ton
-                profil et ton objectif saisis à l’inscription. GRADNT ne conserve rien sur ses
-                serveurs : la fonction qui échange le code d’autorisation est sans état et n’écrit
-                aucune donnée.
+                {t('settings.privacy.retainedNote')}
               </GradntText>
 
               <GradntText muted fontSize={13} lineHeight={19}>
-                Déconnecter Strava efface les jetons et les sorties importées de cet appareil. Les
-                activités elles-mêmes restent chez Strava, où tu gardes la main dessus.
+                {t('settings.privacy.disconnectNote')}
               </GradntText>
             </GradntCard>
           </YStack>

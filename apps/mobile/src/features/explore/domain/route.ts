@@ -24,8 +24,68 @@ export const climbSchema = z.object({
   difficultyScore: z.number().min(0).max(100),
 })
 
+/**
+ * What a surface is, as a value rather than as words.
+ *
+ * The breakdown used to carry French labels, and the scoring read them back by
+ * comparing the text — `label === 'Piste cyclable'`. Translating those labels
+ * would have made every comparison fail in silence, which `?? 0` then turned
+ * into a zero traffic-exposure score. The vocabulary is codes now, and the
+ * words live in the catalogue where the rest of the copy already was.
+ */
+export const surfaceCodes = [
+  'unknown',
+  'paved',
+  'unpaved',
+  'asphalt',
+  'concrete',
+  'pavingStones',
+  'metal',
+  'wood',
+  'compactedGravel',
+  'fineGravel',
+  'gravel',
+  'dirt',
+  'ground',
+  'ice',
+  'concretePlates',
+  'sand',
+  'woodchips',
+  'grass',
+  'grassPaver',
+] as const
+
+export const wayTypeCodes = [
+  'unknown',
+  'primary',
+  'secondary',
+  'street',
+  'path',
+  'track',
+  'cycleway',
+  'footway',
+  'steps',
+  'ferry',
+  'construction',
+] as const
+
+/**
+ * The handful of surfaces a rider is actually shown.
+ *
+ * `unpaved` groups under `unknown` rather than under a guess: it means the
+ * source did not say, and calling it trail would be inventing a fact. It used
+ * to group under *paved*, because the old substring match looked for `revêt`
+ * and found it inside "non revêtue".
+ */
+export const surfaceGroupCodes = ['paved', 'compacted', 'gravel', 'trail', 'unknown'] as const
+
+export type SurfaceCode = (typeof surfaceCodes)[number]
+export type WayTypeCode = (typeof wayTypeCodes)[number]
+export type SurfaceGroupCode = (typeof surfaceGroupCodes)[number]
+export type BreakdownCode = SurfaceCode | WayTypeCode | SurfaceGroupCode
+
 export const breakdownItemSchema = z.object({
-  label: z.string().min(1),
+  code: z.string().min(1),
   percentage: z.number().min(0).max(100),
   distanceMeters: z.number().nonnegative(),
 })
@@ -33,13 +93,19 @@ export const breakdownItemSchema = z.object({
 export const trafficExposureSchema = z.object({
   score: z.number().min(0).max(100),
   label: z.enum(['low', 'moderate', 'high', 'unknown']),
-  rationale: z.string().min(1),
+  /**
+   * Why the score is what it is, as a code rather than a sentence: this schema
+   * is parsed in the adapter, which has no translator.
+   */
+  rationaleCode: z.enum(['scored', 'partial']),
 })
 
 export const liveTrafficSegmentSchema = z.object({
   startIndex: z.number().int().nonnegative(),
   endIndex: z.number().int().nonnegative(),
-  congestion: z.enum(['低', 'modérée', 'élevée', 'inconnue']),
+  // Was `['低', 'modérée', 'élevée', 'inconnue']` — a Chinese character where
+  // "faible" belongs, in an enum nothing could ever match.
+  congestion: z.enum(['low', 'moderate', 'high', 'unknown']),
 })
 
 export const routeSchema = z.object({

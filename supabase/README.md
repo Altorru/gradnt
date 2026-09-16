@@ -14,7 +14,7 @@ directory here.
 
 Strava's application settings accept only a bare callback **domain** — no
 scheme, no slash, no path. A native custom scheme such as
-`mobile://strava/callback` therefore cannot be registered there.
+`gradnt://strava/callback` therefore cannot be registered there.
 
 So Strava redirects over https to this function, and its `GET` handler forwards
 that redirect to the app's own scheme:
@@ -24,7 +24,7 @@ Strava  --302-->  https://<ref>.supabase.co/functions/v1/strava-exchange?code=..
                             |
                             |  GET: fixed 302, forwards the query
                             v
-                  mobile://strava/callback?code=..&state=..
+                  gradnt://strava/callback?code=..&state=..
                             |
                             |  delivered as a deep link and rewritten by
                             |  src/app/+native-intent.tsx to /strava-callback
@@ -107,7 +107,7 @@ instead of failing.
 
 ## Request / response contract
 
-`GET` (the OAuth redirect) forwards to `mobile://strava/callback` preserving the
+`GET` (the OAuth redirect) forwards to `gradnt://strava/callback` preserving the
 query. It answers `400` when neither `code` nor `error` is present.
 
 `POST /strava-refresh` with `{ "refreshToken": "..." }` returns the same

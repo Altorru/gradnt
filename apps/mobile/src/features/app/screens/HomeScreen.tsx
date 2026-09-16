@@ -129,17 +129,15 @@ export function HomeScreen() {
             "Progression" section further down — which halved the impact of both.
           */}
           <YStack gap="$1">
-            <GradntHeading>Ton prochain pas</GradntHeading>
-            <GradntText muted>
-              Une vue claire de ta progression et de ce qui vient ensuite.
-            </GradntText>
+            <GradntHeading>{t('home.title')}</GradntHeading>
+            <GradntText muted>{t('home.subtitle')}</GradntText>
           </YStack>
 
           {hasError ? (
             <GradntText color="$danger" fontSize={13}>
               {activitiesQuery.isError
                 ? describeActivityFailure(activitiesQuery.error)
-                : 'Les données de progression sont momentanément indisponibles.'}
+                : t('home.unavailable')}
             </GradntText>
           ) : null}
 
@@ -147,20 +145,24 @@ export function HomeScreen() {
             goal={goal ?? undefined}
             currentValue={currentGoalValue ?? undefined}
             progressPercentage={progressPercentage || undefined}
-            statusLabel={currentGoalValue === null ? 'POINT DE DÉPART' : 'EN BONNE VOIE'}
+            statusLabel={
+              currentGoalValue === null ? t('home.status.startingPoint') : t('home.status.onTrack')
+            }
             changeLabel={
               goal?.type === 'ftp' && ftpDelta !== null
-                ? `${ftpDelta >= 0 ? '+' : ''}${ftpDelta} W depuis le dernier relevé`
+                ? t('home.ftpSince', {
+                    delta: `${ftpDelta >= 0 ? '+' : ''}${ftpDelta}`,
+                  })
                 : currentGoalValue === null
-                  ? 'Après tes premières sorties'
-                  : 'Progression observée'
+                  ? t('home.afterFirstRides')
+                  : t('home.observedProgress')
             }
           />
 
           <YStack gap="$4">
             <GradntSectionHeader
-              title="Prochaine étape"
-              action="Voir"
+              title={t('home.nextStep')}
+              action={t('common.see')}
               onPress={() => openTab('/plan')}
             />
             <GradntWorkoutCard workout={nextWorkout ?? undefined} />
@@ -174,8 +176,8 @@ export function HomeScreen() {
           {connected ? (
             <YStack gap="$4">
               <GradntSectionHeader
-                title="Ton état"
-                action="Voir plus"
+                title={t('home.yourState')}
+                action={t('common.seeMore')}
                 onPress={() => openTab('/progress')}
               />
 
@@ -184,14 +186,14 @@ export function HomeScreen() {
               <YStack gap="$3">
                 <XStack gap="$3">
                   <GradntStatTile
-                    label="Volume 7 j"
+                    label={t('home.tiles.volume')}
                     value={volumeDelta ? String(volumeDelta.current) : '—'}
                     unit="h"
                     delta={volumeDelta?.delta ?? null}
                   />
 
                   <GradntStatTile
-                    label="Sorties 7 j"
+                    label={t('home.tiles.rides')}
                     value={rideDelta ? String(rideDelta.current) : '—'}
                     delta={rideDelta?.delta ?? null}
                   />
@@ -199,7 +201,7 @@ export function HomeScreen() {
 
                 <XStack gap="$3">
                   <GradntStatTile
-                    label="Distance 7 j"
+                    label={t('home.tiles.distance')}
                     value={distanceDelta ? String(distanceDelta.current) : '—'}
                     unit="km"
                     delta={distanceDelta?.delta ?? null}
@@ -235,7 +237,7 @@ export function HomeScreen() {
             <YStack gap="$4">
               {/* No destination exists for this section, so it carries no action
                   rather than a chevron that goes nowhere. */}
-              <GradntSectionHeader title="Intensités" />
+              <GradntSectionHeader title={t('home.intensities')} />
               <GradntIntensityBreakdown distribution={intensity} />
             </YStack>
           ) : null}
@@ -246,9 +248,7 @@ export function HomeScreen() {
               {insight.message}
             </GradntText>
             <GradntText muted fontSize={11}>
-              {activityState === 'none'
-                ? 'Basé sur ton profil déclaré'
-                : 'Basé sur des activités observées'}
+              {activityState === 'none' ? t('home.basedOnProfile') : t('home.basedOnActivities')}
             </GradntText>
           </GradntCard>
         </YStack>

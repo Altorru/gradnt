@@ -15,7 +15,7 @@ import { colors } from '@/design-system/tokens'
 import { useTranslation, type MessageKey } from '@/i18n'
 
 import { RouteMap } from './RouteMap'
-import type { RouteWithScore } from '../domain'
+import type { RouteWithScore, SurfaceGroupCode, WayTypeCode } from '../domain'
 
 /** Where each exposure level's word lives. */
 const EXPOSURE_KEYS: Record<RouteWithScore['trafficExposure']['label'], MessageKey> = {
@@ -117,22 +117,57 @@ function ElevationProfile({ route }: { route: RouteWithScore }) {
   )
 }
 
+/**
+ * Where each way type's word lives.
+ *
+ * The engine and the exposure score both work in codes and the words are looked
+ * up here, at the edge, where the translator is — a label in the domain is a
+ * label something will eventually compare as identity.
+ */
+const WAY_TYPE_KEYS: Record<WayTypeCode, MessageKey> = {
+  unknown: 'explore.wayTypes.unknown',
+  primary: 'explore.wayTypes.primary',
+  secondary: 'explore.wayTypes.secondary',
+  street: 'explore.wayTypes.street',
+  path: 'explore.wayTypes.path',
+  track: 'explore.wayTypes.track',
+  cycleway: 'explore.wayTypes.cycleway',
+  footway: 'explore.wayTypes.footway',
+  steps: 'explore.wayTypes.steps',
+  ferry: 'explore.wayTypes.ferry',
+  construction: 'explore.wayTypes.construction',
+}
+
+/** And each surface group's. */
+const SURFACE_GROUP_KEYS: Record<SurfaceGroupCode, MessageKey> = {
+  paved: 'explore.surfaceGroups.paved',
+  compacted: 'explore.surfaceGroups.compacted',
+  gravel: 'explore.surfaceGroups.gravel',
+  trail: 'explore.surfaceGroups.trail',
+  unknown: 'explore.surfaceGroups.unknown',
+}
+
 function BreakdownList({
   title,
   items,
+  keys,
 }: {
   title: string
   items: RouteWithScore['surfaceBreakdown']
+  /** The vocabulary these items are drawn from: `unknown` is a different word in each. */
+  keys: Record<string, MessageKey>
 }) {
+  const { t } = useTranslation()
+
   return (
     <YStack gap="$3">
       <GradntText weight="semibold" fontSize={13}>
         {title}
       </GradntText>
       {items.map((item) => (
-        <YStack key={`${title}-${item.label}`} gap="$1">
+        <YStack key={`${title}-${item.code}`} gap="$1">
           <XStack justifyContent="space-between" gap="$2">
-            <GradntText fontSize={13}>{item.label}</GradntText>
+            <GradntText fontSize={13}>{t(keys[item.code] ?? keys.unknown)}</GradntText>
             <GradntText muted fontSize={12}>
               {item.percentage}% · {formatDistance(item.distanceMeters)}
             </GradntText>
@@ -227,8 +262,16 @@ export function RouteDetailPanel({
         )}
       </YStack>
 
-      <BreakdownList title={t('explore.detail.surfaces')} items={route.surfaceBreakdown} />
-      <BreakdownList title={t('explore.detail.wayTypes')} items={route.wayTypeBreakdown} />
+      <BreakdownList
+        title={t('explore.detail.surfaces')}
+        items={route.surfaceBreakdown}
+        keys={SURFACE_GROUP_KEYS}
+      />
+      <BreakdownList
+        title={t('explore.detail.wayTypes')}
+        items={route.wayTypeBreakdown}
+        keys={WAY_TYPE_KEYS}
+      />
 
       <GradntCard padding="$3" backgroundColor="$backgroundSubtle" gap="$2">
         <XStack alignItems="center" gap="$2">
@@ -238,7 +281,8 @@ export function RouteDetailPanel({
           </GradntText>
         </XStack>
         <GradntText muted fontSize={13} lineHeight={19}>
-          {route.trafficExposure.rationale} {t('explore.detail.exposureCaveat')}
+          {t(`explore.detail.exposureRationale.${route.trafficExposure.rationaleCode}`)}{' '}
+          {t('explore.detail.exposureCaveat')}
         </GradntText>
       </GradntCard>
 

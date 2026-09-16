@@ -16,6 +16,9 @@ export const en = {
     closePanel: 'Close the panel',
     openMenu: 'Open {{label}}',
     continue: 'Continue',
+    see: 'See',
+    seeMore: 'See more',
+    loading: 'Loading…',
     sync: 'Syncing…',
   },
 
@@ -42,6 +45,47 @@ export const en = {
     goalTitle: 'Your goal',
     eventPlaceholder: 'Monts d’Or sportive',
     datePlaceholder: '2027-06-13',
+    strava: {
+      connectedAccount: 'Account connected',
+      noAccount: 'No account connected',
+      linkPrompt: 'Link your account to import your rides.',
+      confirmDisconnect: 'Confirm disconnection',
+      disconnect: 'Disconnect Strava',
+      connect: 'Connect Strava',
+      connectNote:
+        'GRADNT reads your history to place your starting point and shape what it suggests.',
+    },
+
+    ftp: {
+      deduced: '{{value}} W deduced. You still need to save it.',
+      noPowerZones: 'Strava has no power zones for you.',
+      unexpected: 'Unexpected answer from Strava ({{summary}}).',
+      readFailed: 'Reading your zones failed.',
+      invalidWatts: 'Enter a value in watts.',
+      history: 'FTP history',
+      noValue: 'No value recorded: your FTP goal cannot be tracked.',
+      fromZones: 'deduced from your Strava zones',
+      enteredByYou: 'entered by you',
+      fromStrava: 'Deduced from Strava',
+      entered: 'Entered',
+      readingZones: 'Reading zones…',
+      deduce: 'Deduce from my Strava zones',
+      editing: 'Correcting a recorded value',
+      cancelEditing: 'Cancel the correction',
+    },
+
+    privacy: {
+      retained: 'What is kept',
+      retainedNote:
+        'Your Strava access tokens are encrypted in this device’s keychain, along with the profile and goal you entered during onboarding. GRADNT keeps nothing on its servers: the function that exchanges the authorisation code is stateless and writes no data.',
+      disconnectNote:
+        'Disconnecting Strava erases the tokens and the imported rides from this device. The activities themselves stay with Strava, where you keep control of them.',
+    },
+
+    importedRides: {
+      one: '{{count}} ride imported',
+      other: '{{count}} rides imported',
+    },
   },
 
   languages: {
@@ -50,6 +94,33 @@ export const en = {
   },
 
   plan: {
+    title: 'Your plan',
+    description: 'The sessions that move you towards your goal, with room for real life.',
+    unavailable: 'The plan is temporarily unavailable.',
+    thisWeek: 'This week',
+    nonePlanned: 'No session planned',
+    progress: 'Plan progress',
+    tracked: '{{tracked}}/{{total}} tracked',
+    remaining: '{{hours}} h still planned',
+    weekTracked: 'Week tracked',
+    emptyTitle: 'Your plan is empty',
+    emptyNote: 'Finish onboarding with at least one available day to generate your first week.',
+    skip: 'Skip',
+    moveOneDay: 'Move by a day',
+    status: {
+      planned: 'Upcoming',
+      completed: 'Done',
+      skipped: 'Skipped',
+      moved: 'Moved',
+    },
+    workout: {
+      notFoundTitle: 'Session not found',
+      notFound: 'This session is no longer in your local plan.',
+      durationAndIntensity: 'Duration and intensity',
+      whyThisSession: 'Why this session?',
+      markCompleted: 'Mark as done',
+      skip: 'Skip this session',
+    },
     completed: {
       one: '{{count}} completed',
       other: '{{count}} completed',
@@ -58,10 +129,66 @@ export const en = {
   },
 
   progress: {
+    title: 'Your progress',
+    description: 'The trends worth knowing about where you stand, without the noise.',
+    unavailable: 'Some progress data is temporarily unavailable.',
+    mainGoal: 'Main goal',
+    targetToSet: 'Target to set',
+    fromYourRides: 'Taken from your rides',
+    toSetAfterFirstRides: 'To set after your first rides',
+    lastSevenDays: 'Last 7 days',
+    recentVolume: 'Recent volume',
+    regularity: 'Consistency',
+    ridesUnit: 'rides',
+    observedData: '{{hours}} h of observed data',
+    profileData: '{{hours}} h of data based on your profile ({{band}})',
+    morePreciseLater: 'It will sharpen after your first rides',
+    takeaway: 'Worth noting',
     ridesThisWeek: {
       one: '{{count}} ride this week',
       other: '{{count}} rides this week',
     },
+  },
+
+  header: {
+    notifications: 'Open notifications',
+    settings: 'Open settings',
+  },
+
+  home: {
+    title: 'Your next step',
+    subtitle: 'A clear view of your progress and of what comes next.',
+    unavailable: 'Progress data is temporarily unavailable.',
+    status: {
+      startingPoint: 'STARTING POINT',
+      onTrack: 'ON TRACK',
+    },
+    ftpSince: '{{delta}} W since the last reading',
+    afterFirstRides: 'After your first rides',
+    observedProgress: 'Progress observed',
+    nextStep: 'Next step',
+    yourState: 'Your form',
+    tiles: {
+      volume: '7-day volume',
+      rides: '7-day rides',
+      distance: '7-day distance',
+    },
+    intensities: 'Intensities',
+    basedOnProfile: 'Based on the profile you declared',
+    basedOnActivities: 'Based on observed activities',
+  },
+
+  garage: {
+    description: 'Keep track of your kit and of what deserves your attention.',
+    mainBike: 'Your main bike',
+    noBike: 'No bike added yet',
+    addBike: 'Add a bike',
+    maintenance: 'Maintenance',
+    maintenanceNote:
+      'Link your kit to your rides and note the services that matter once the Garage is switched on.',
+    why: 'Why a Garage?',
+    whyNote:
+      'To understand your equipment better without pulling GRADNT away from what matters: your progress.',
   },
 
   onboarding: {
@@ -314,8 +441,39 @@ export const en = {
       exposureCaveat:
         'This score describes how exposed the roads are from the data available; it is neither live traffic nor a safety score.',
       sessionFit: 'Fit with the session',
+      elevationProfile: 'Elevation profile',
+      elevationLegend: 'Orange = detected climb',
+      exposureRationale: {
+        scored:
+          'Road exposure calculated from HeiGIT OSM data. The score is based on cycle suitability and the way types present.',
+        partial:
+          'Road exposure calculated from HeiGIT OSM data. A cautious score: the cycle suitability of these ways is only partly known.',
+      },
       climbRange: 'km {{start}} to {{end}} · difficulty {{score}}/100',
       climbGradients: '{{average}}% avg · {{maximum}}% max',
+    },
+
+    /** The words for the codes the routing engine emits. */
+    surfaceGroups: {
+      paved: 'Asphalt / paved',
+      compacted: 'Compacted',
+      gravel: 'Gravel',
+      trail: 'Dirt / trail',
+      unknown: 'Unknown',
+    },
+
+    wayTypes: {
+      unknown: 'Unknown way',
+      primary: 'Main road',
+      secondary: 'Secondary road',
+      street: 'Street',
+      path: 'Path',
+      track: 'Track',
+      cycleway: 'Cycleway',
+      footway: 'Footway',
+      steps: 'Steps',
+      ferry: 'Ferry',
+      construction: 'Roadworks',
     },
 
     exposureLevels: { low: 'low', moderate: 'moderate', high: 'high' },
