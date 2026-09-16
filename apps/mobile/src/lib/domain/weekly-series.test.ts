@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { getWeekWindow, getWeeklyRideCountSeries, getWeeklyVolumeSeries } from './selectors'
+import {
+  getWeekWindow,
+  getWeeklyDistanceSeries,
+  getWeeklyRideCountSeries,
+  getWeeklyVolumeSeries,
+  getWindowDelta,
+} from './selectors'
 import type { Activity } from './schemas'
 
 const DAY = 24 * 60 * 60 * 1000
@@ -76,6 +82,42 @@ describe('getWeeklyRideCountSeries', () => {
     for (const value of series) {
       expect(Number.isInteger(value)).toBe(true)
     }
+  })
+})
+
+describe('getWeeklyDistanceSeries', () => {
+  it('sums kilometres into the week each ride belongs to', () => {
+    const series = getWeeklyDistanceSeries([activity(1, 2), activity(2, 1)], 8)
+
+    // Both stub rides are 30 km, so the current window holds 60.
+    expect(series.at(-1)).toBe(60)
+  })
+})
+
+describe('getWindowDelta', () => {
+  it('compares the newest window with the one before it', () => {
+    const delta = getWindowDelta([1, 2, 3, 8])
+
+    expect(delta).toEqual({ current: 8, previous: 3, delta: 5 })
+  })
+
+  it('keeps the sign, so a fall is distinguishable from a rise', () => {
+    expect(getWindowDelta([9, 4])?.delta).toBe(-5)
+  })
+
+  it('reports no change as zero rather than as nothing', () => {
+    expect(getWindowDelta([4, 4])?.delta).toBe(0)
+  })
+
+  it('has nothing to compare with a single window', () => {
+    // A rider's first week has no previous one, and inventing a comparison
+    // against zero would show a triumphant rise out of nothing.
+    expect(getWindowDelta([4])).toBeNull()
+    expect(getWindowDelta([])).toBeNull()
+  })
+
+  it('rounds to one decimal, like the series it reads', () => {
+    expect(getWindowDelta([1.04, 1.09])?.delta).toBe(0.1)
   })
 })
 

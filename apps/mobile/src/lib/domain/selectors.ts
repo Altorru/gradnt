@@ -232,6 +232,38 @@ export function getWeeklyRideCountSeries(activities: Activity[], weeks = 8): num
   return bucketActivitiesByWeek(activities, weeks, () => 1)
 }
 
+/** Kilometres ridden per week, to one decimal. */
+export function getWeeklyDistanceSeries(activities: Activity[], weeks = 8): number[] {
+  return bucketActivitiesByWeek(
+    activities,
+    weeks,
+    (activity) => activity.distanceMeters / 1000,
+  ).map((km) => Math.round(km * 10) / 10)
+}
+
+/**
+ * The newest window against the one before it.
+ *
+ * Both cover exactly seven days, so they are directly comparable. A calendar
+ * week would not be: comparing "this week so far" with "last week" makes every
+ * Monday morning look like a collapse, which is why the series are rolling
+ * windows in the first place.
+ *
+ * Null when there is nothing to compare — a first week has no previous.
+ */
+export function getWindowDelta(
+  series: number[],
+): { current: number; previous: number; delta: number } | null {
+  if (series.length < 2) {
+    return null
+  }
+
+  const current = series.at(-1) ?? 0
+  const previous = series.at(-2) ?? 0
+
+  return { current, previous, delta: Math.round((current - previous) * 10) / 10 }
+}
+
 /**
  * The seven days a point in either series covers.
  *

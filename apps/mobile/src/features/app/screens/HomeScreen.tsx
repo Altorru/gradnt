@@ -5,9 +5,8 @@ import {
   GradntChip,
   GradntGoalCard,
   GradntHeading,
-  GradntMiniBars,
   GradntSectionHeader,
-  GradntStatusCard,
+  GradntStatTile,
   GradntStravaConnectBlock,
   GradntText,
   GradntWorkoutCard,
@@ -25,7 +24,10 @@ import {
   getDeterministicTrainingInsight,
   getGoalProgressPercentage,
   getNextWorkout,
+  getWeeklyDistanceSeries,
+  getWeeklyRideCountSeries,
   getWeeklyVolumeSeries,
+  getWindowDelta,
 } from '@/lib/domain'
 import { XStack, YStack } from 'tamagui'
 
@@ -55,7 +57,13 @@ export function HomeScreen() {
   const activities = activitiesQuery.data ?? []
   const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
   const activityState = getActivityDataState(activities)
-  const volumeSeries = getWeeklyVolumeSeries(activities)
+
+  // Every tile compares the last seven days with the seven before, so the change
+  // it shows is between two spans of equal length.
+  const volumeDelta = getWindowDelta(getWeeklyVolumeSeries(activities))
+  const rideDelta = getWindowDelta(getWeeklyRideCountSeries(activities))
+  const distanceDelta = getWindowDelta(getWeeklyDistanceSeries(activities))
+
   const insight = getDeterministicTrainingInsight(
     activities,
     athleteQuery.data?.weeklyVolumeBand ?? '3to6',
@@ -66,22 +74,17 @@ export function HomeScreen() {
     goalQuery.isError ||
     currentValueQuery.isError ||
     workoutsQuery.isError
-  const isLoading = goalQuery.isPending || currentValueQuery.isPending || workoutsQuery.isPending
 
-  // The FTP is the one goal whose movement is worth stating: it is recorded as
-  // a dated history precisely so the change between two readings is visible.
-  const isFtpGoal = goal?.type === 'ftp'
-
+  // Loaded whatever the goal is: the FTP tile belongs on the dashboard whenever
+  // a figure is on record, not only to riders who made it their objective.
   useEffect(() => {
-    if (isFtpGoal) {
-      void loadFtpHistory().then(setFtpHistory)
-    }
-  }, [isFtpGoal])
+    void loadFtpHistory().then(setFtpHistory)
+  }, [])
 
+  const latestFtp = ftpHistory.at(-1) ?? null
+  const previousFtp = ftpHistory.at(-2) ?? null
   const ftpDelta =
-    ftpHistory.length >= 2
-      ? ftpHistory[ftpHistory.length - 1]!.value - ftpHistory[ftpHistory.length - 2]!.value
-      : null
+    latestFtp !== null && previousFtp !== null ? latestFtp.value - previousFtp.value : null
 
   // `navigate` rather than `push`: these targets are tabs, so they should be
   // switched to, not stacked on top of the current one.
@@ -138,7 +141,7 @@ export function HomeScreen() {
             progressPercentage={progressPercentage || undefined}
             statusLabel={currentGoalValue === null ? 'POINT DE DÉPART' : 'EN BONNE VOIE'}
             changeLabel={
-              isFtpGoal && ftpDelta !== null
+              goal?.type === 'ftp' && ftpDelta !== null
                 ? `${ftpDelta >= 0 ? '+' : ''}${ftpDelta} W depuis le dernier relevé`
                 : currentGoalValue === null
                   ? 'Après tes premières sorties'
@@ -168,20 +171,44 @@ export function HomeScreen() {
                 onPress={() => openTab('/progress')}
               />
 
-              <XStack gap="$3">
-                <GradntStatusCard
-                  label="Forme"
-                  value={isLoading ? '—' : 'Profil'}
-                  detail={isLoading ? 'Chargement' : 'Déclaré'}
-                />
-                <GradntStatusCard
-                  label="Historique"
-                  value={activityState === 'observed' ? 'Importé' : 'À venir'}
-                  valueSize={21}
-                  detail={activityState === 'observed' ? 'Strava' : 'Plus précis après tes sorties'}
-                  visual={<GradntMiniBars data={volumeSeries} activeIndices={[]} />}
-                />
-              </XStack>
+              {/* Two columns, so a tile keeps a readable width and the grid
+                  stays even whether the FTP tile is there or not. */}
+              <YStack gap="$3">
+                <XStack gap="$3">
+                  <GradntStatTile
+                    label="Volume 7 j"
+                    value={volumeDelta ? String(volumeDelta.current) : '—'}
+                    unit="h"
+                    delta={volumeDelta?.delta ?? null}
+                  />
+
+                  <GradntStatTile
+                    label="Sorties 7 j"
+                    value={rideDelta ? String(rideDelta.current) : '—'}
+                    delta={rideDelta?.delta ?? null}
+                  />
+                </XStack>
+
+                <XStack gap="$3">
+                  <GradntStatTile
+                    label="Distance 7 j"
+                    value={distanceDelta ? String(distanceDelta.current) : '—'}
+                    unit="km"
+                    delta={distanceDelta?.delta ?? null}
+                  />
+
+                  {/* Only where a figure is on record: an empty FTP tile would
+                      be a permanent hole for a rider who has never set one. */}
+                  {latestFtp !== null ? (
+                    <GradntStatTile
+                      label="FTP"
+                      value={String(latestFtp.value)}
+                      unit="W"
+                      delta={ftpDelta}
+                    />
+                  ) : null}
+                </XStack>
+              </YStack>
             </YStack>
           ) : (
             <GradntStravaConnectBlock

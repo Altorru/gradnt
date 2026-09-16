@@ -7,13 +7,11 @@ import {
   GradntGoalCard,
   GradntHeading,
   GradntIconButton,
-  GradntMiniBars,
   GradntProgressRing,
   GradntScreen,
   GradntScrollView,
   GradntSectionHeader,
-  GradntSparkline,
-  GradntStatusCard,
+  GradntStatTile,
   GradntText,
   GradntWorkoutCard,
 } from '@/design-system'
@@ -58,20 +56,15 @@ export function GradntHomePreview() {
               <GradntSectionHeader title="Ton état" action="Voir plus" />
 
               <XStack gap="$3">
-                <GradntStatusCard
-                  label="Forme"
-                  value="78 ↗"
-                  detail="Bonne"
-                  visual={<GradntSparkline data={[46, 54, 67, 59, 72, 78, 73, 86]} />}
-                />
+                <GradntStatTile label="Volume 7 j" value="8.4" unit="h" delta={2.1} />
 
-                <GradntStatusCard
-                  label="Charge"
-                  value="Modérée"
-                  valueSize={21}
-                  detail="Stable"
-                  visual={<GradntMiniBars data={[18, 32, 52, 38, 29]} activeIndices={[0, 1, 2]} />}
-                />
+                <GradntStatTile label="Sorties 7 j" value="4" delta={-1} />
+              </XStack>
+
+              <XStack gap="$3">
+                <GradntStatTile label="Distance 7 j" value="312" unit="km" delta={48} />
+
+                <GradntStatTile label="FTP" value="185" unit="W" delta={5} />
               </XStack>
             </YStack>
 
