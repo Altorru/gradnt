@@ -77,4 +77,37 @@ describe('HeiGIT route normalization', () => {
     })
     expect(route.suitability).toBe(80)
   })
+
+  it('reads the climb from properties, where the service actually reports it', () => {
+    // Copied from a live response. The shape above — `ascent` as a number on
+    // `summary` — is one the service never sends, which is why the suite passed
+    // while every real route arrived with no elevation at all.
+    const route = normalizeHeigitFeature(
+      {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [4.835, 45.764, 170],
+            [4.85, 45.78, 610],
+          ],
+        },
+        properties: {
+          ascent: 499.1,
+          descent: 499.1,
+          summary: {
+            distance: 51_199,
+            duration: 7_688.2,
+            // The service sends null here even though it knows the figure.
+            ascent: null,
+            descent: null,
+          },
+        },
+      },
+      request,
+    )
+
+    expect(route.elevationGainMeters).toBe(499.1)
+    expect(route.elevationLossMeters).toBe(499.1)
+  })
 })

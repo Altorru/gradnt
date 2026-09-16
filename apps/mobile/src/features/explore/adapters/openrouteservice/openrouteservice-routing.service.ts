@@ -42,10 +42,16 @@ const heigitFeatureSchema = z
           .object({
             distance: z.number().nonnegative(),
             duration: z.number().nonnegative(),
-            ascent: z.number().nonnegative().optional(),
-            descent: z.number().nonnegative().optional(),
+            // The service answers with `null` here even when it has a figure,
+            // and `.optional()` accepts `undefined` but not `null` — so every
+            // real response failed to parse. The values that are actually
+            // populated sit on `properties`, read below.
+            ascent: z.number().nonnegative().nullable().optional(),
+            descent: z.number().nonnegative().nullable().optional(),
           })
           .optional(),
+        ascent: z.number().nonnegative().nullable().optional(),
+        descent: z.number().nonnegative().nullable().optional(),
         extras: z
           .object({
             surface: extraInfoSchema.optional(),
@@ -214,8 +220,10 @@ function normalizeFeature(feature: HeigitFeature, request: RouteRequest, index: 
     geometry,
     distanceMeters,
     durationSeconds: Math.round(summary?.duration ?? 0),
-    elevationGainMeters: summary?.ascent ?? 0,
-    elevationLossMeters: summary?.descent ?? 0,
+    // `summary` first for completeness, but it is `null` in practice: the
+    // service reports the climb on `properties`.
+    elevationGainMeters: summary?.ascent ?? feature.properties.ascent ?? 0,
+    elevationLossMeters: summary?.descent ?? feature.properties.descent ?? 0,
     elevationProfile: usableProfile,
     climbs: detectClimbs(usableProfile),
     surfaceBreakdown: aggregateSurfaceBreakdown(
