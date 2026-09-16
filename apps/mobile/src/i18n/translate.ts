@@ -63,26 +63,34 @@ export function translate(language: Language, key: MessageKey, params?: Translat
   return typeof message === 'string' ? interpolate(message, params) : key
 }
 
-const pluralRules = new Map<Language, Intl.PluralRules>()
-
-function rulesFor(language: Language): Intl.PluralRules {
-  const cached = pluralRules.get(language)
-
-  if (cached) {
-    return cached
+/**
+ * The plural category a count falls into, for the two languages we translate.
+ *
+ * Hand-written because Hermes does not implement `Intl.PluralRules`. Asking it
+ * for one throws "undefined cannot be used as a constructor" — and only on the
+ * device: Node has the constructor, so the tests stayed green while every
+ * screen calling `plural` died on Android.
+ *
+ * Both languages are simple on integer counts, which is all this app passes:
+ * English singles out 1, and French singles out 0 and 1 — "0 sortie".
+ *
+ * ponytail: hard-coded to fr/en. A language with real plural rules (Polish,
+ * Arabic) means swapping in the `@formatjs/intl-pluralrules` polyfill instead.
+ */
+function pluralCategory(language: Language, count: number): 'one' | 'other' {
+  if (count === 1) {
+    return 'one'
   }
 
-  const rules = new Intl.PluralRules(language)
-  pluralRules.set(language, rules)
-  return rules
+  return language === 'fr' && count === 0 ? 'one' : 'other'
 }
 
 /**
  * The sentence for a count.
  *
- * `Intl.PluralRules` rather than `count > 1 ? 's' : ''`, because the two
- * languages do not agree on where the plural starts: French counts zero as
- * singular — "0 sortie" — and a rule read off English would get that wrong.
+ * A rule per language rather than `count > 1 ? 's' : ''`, because the two do
+ * not agree on where the plural starts: French counts zero as singular —
+ * "0 sortie" — and a rule read off English would get that wrong.
  */
 export function translatePlural(
   language: Language,
@@ -97,7 +105,7 @@ export function translatePlural(
   }
 
   const forms = message as Record<string, string>
-  const form = forms[rulesFor(language).select(count)] ?? forms.other ?? String(count)
+  const form = forms[pluralCategory(language, count)] ?? forms.other ?? String(count)
 
   return interpolate(form, { ...params, count })
 }
