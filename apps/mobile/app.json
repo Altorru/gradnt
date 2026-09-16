@@ -44,7 +44,8 @@
           "locationWhenInUsePermission": "GRADNT utilise ta position uniquement pour proposer un départ proche de toi."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

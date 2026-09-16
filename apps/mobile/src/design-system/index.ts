@@ -1,5 +1,6 @@
 export * from './components'
 export * from './constants'
+export * from './hooks/scheme'
 export * from './hooks/useThemeColor'
 export * from './providers/GradntThemeProvider'
 export * from './themes'

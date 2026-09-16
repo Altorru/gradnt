@@ -21,6 +21,7 @@ import { XStack, YStack } from 'tamagui'
 import {
   GradntButton,
   GradntCard,
+  GradntChip,
   GradntHeading,
   GradntIconButton,
   GradntInput,
@@ -29,6 +30,8 @@ import {
   GradntStravaConnectBlock,
   GradntText,
 } from '@/design-system'
+import { useTranslation } from '@/i18n'
+import { usePreferencesStore } from '@/features/app/store/preferences.store'
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { goalTypeLabels } from '@/features/onboarding/domain/goal.options'
 import { describeProfile } from '@/features/onboarding/domain/profile.options'
@@ -87,6 +90,44 @@ function RefreshGlyph({ spinning }: { spinning: boolean }) {
   )
 }
 
+/**
+ * A labelled row of choices.
+ *
+ * Chips rather than the option list used elsewhere: these are three short words
+ * a rider flips between, and a column of three rows twice over would push the
+ * rest of the screen below the fold for two settings.
+ */
+function SettingsChoice<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string
+  options: readonly { value: T; label: string }[]
+  value: T
+  onChange: (value: T) => void
+}) {
+  return (
+    <YStack gap="$2">
+      <GradntText muted fontSize={13} weight="semibold">
+        {label}
+      </GradntText>
+
+      <XStack gap="$2" flexWrap="wrap">
+        {options.map((option) => (
+          <GradntChip
+            key={option.value}
+            label={option.label}
+            selected={option.value === value}
+            onPress={() => onChange(option.value)}
+          />
+        ))}
+      </XStack>
+    </YStack>
+  )
+}
+
 /** A tappable settings entry: what it is, its current value, and where it goes. */
 function SettingsRow({
   label,
@@ -123,6 +164,11 @@ function SettingsRow({
 export function SettingsScreen() {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const { t } = useTranslation()
+  const language = usePreferencesStore((state) => state.language)
+  const appearance = usePreferencesStore((state) => state.appearance)
+  const setLanguage = usePreferencesStore((state) => state.setLanguage)
+  const setAppearance = usePreferencesStore((state) => state.setAppearance)
   const connection = useOnboardingStore((state) => state.strava)
   const storedGoal = useOnboardingStore((state) => state.goal)
   const storedProfile = useOnboardingStore((state) => state.profile)
@@ -344,10 +390,10 @@ export function SettingsScreen() {
       <GradntScrollView>
         <YStack gap="$6">
           <XStack alignItems="center" gap="$3">
-            <GradntIconButton accessibilityLabel="Revenir en arrière" onPress={() => router.back()}>
+            <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color="$textPrimary" />
             </GradntIconButton>
-            <GradntHeading>Réglages</GradntHeading>
+            <GradntHeading>{t('settings.title')}</GradntHeading>
           </XStack>
 
           {error ? (
@@ -361,6 +407,39 @@ export function SettingsScreen() {
               {syncReport}
             </GradntText>
           ) : null}
+
+          {/* First, because it is about the app rather than about the rider's
+              data — and because it is what someone hunts for when the screen
+              is in a language they did not choose. */}
+          <YStack gap="$4">
+            <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+              {t('settings.appearanceAndLanguage')}
+            </GradntText>
+
+            <GradntCard gap="$4" padding="$4">
+              <SettingsChoice
+                label={t('settings.theme')}
+                value={appearance}
+                onChange={setAppearance}
+                options={[
+                  { value: 'system', label: t('settings.themeSystem') },
+                  { value: 'light', label: t('settings.themeLight') },
+                  { value: 'dark', label: t('settings.themeDark') },
+                ]}
+              />
+
+              <SettingsChoice
+                label={t('settings.language')}
+                value={language}
+                onChange={setLanguage}
+                options={[
+                  { value: 'system', label: t('settings.languageSystem') },
+                  { value: 'fr', label: t('languages.fr') },
+                  { value: 'en', label: t('languages.en') },
+                ]}
+              />
+            </GradntCard>
+          </YStack>
 
           <YStack gap="$4">
             <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>

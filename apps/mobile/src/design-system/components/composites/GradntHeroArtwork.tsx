@@ -1,8 +1,9 @@
 import type { ImageSource } from 'expo-image'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
-import { StyleSheet, useColorScheme, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
+import { useGradntScheme } from '../../hooks/scheme'
 import { useThemeColor } from '../../hooks/useThemeColor'
 import { withAlpha } from '../../tokens'
 
@@ -20,7 +21,7 @@ type GradntHeroArtworkProps = {
  */
 export function GradntHeroArtwork({ source }: GradntHeroArtworkProps) {
   const themeColor = useThemeColor()
-  const scheme = useColorScheme()
+  const scheme = useGradntScheme()
   const backdrop = themeColor('backgroundElevated')
 
   /**

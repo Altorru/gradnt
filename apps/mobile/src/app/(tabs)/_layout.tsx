@@ -1,8 +1,9 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs'
-import { Platform, useColorScheme } from 'react-native'
+import { Platform } from 'react-native'
 import { useTheme } from 'tamagui'
 
-import { withAlpha } from '@/design-system'
+import { useGradntScheme, withAlpha } from '@/design-system'
+import { useTranslation } from '@/i18n'
 
 /**
  * The app's five destinations.
@@ -17,8 +18,11 @@ import { withAlpha } from '@/design-system'
  * `unstable-native-tabs`; the stable `native-tabs` path arrives in SDK 58.
  */
 export default function TabsLayout() {
+  const { t } = useTranslation()
   const theme = useTheme()
-  const scheme = useColorScheme()
+  // The chosen appearance, not the phone's: this bar draws its own colours on
+  // Android and has to agree with the theme around it.
+  const scheme = useGradntScheme()
 
   /**
    * Reads a role from the active theme.
@@ -91,17 +95,17 @@ export default function TabsLayout() {
   return (
     <NativeTabs labelVisibilityMode="labeled" {...androidColors}>
       <NativeTabs.Trigger name="home">
-        <NativeTabs.Trigger.Label>Accueil</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="plan">
-        <NativeTabs.Trigger.Label>Plan</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('tabs.plan')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="progress">
-        <NativeTabs.Trigger.Label>Progrès</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('tabs.progress')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }}
           md="bar_chart"
@@ -109,12 +113,12 @@ export default function TabsLayout() {
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explorer</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('tabs.explore')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'map', selected: 'map.fill' }} md="map" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="garage">
-        <NativeTabs.Trigger.Label>Garage</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>{t('tabs.garage')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="bicycle" md="directions_bike" />
       </NativeTabs.Trigger>
     </NativeTabs>

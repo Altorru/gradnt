@@ -33,41 +33,6 @@ export function openFreeMapStyleUrl(scheme: ColorSchemeName): string {
 }
 
 /**
- * The device's language, as the runtime reports it.
- *
- * `Intl` is the system's own answer, needs no permission and no native module.
- * Guarded because it is not guaranteed on every engine — and a map in the
- * style's own language is a far smaller failure than a map that does not draw.
- */
-export function systemLocale(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().locale
-  } catch {
-    return 'en'
-  }
-}
-
-/**
- * The languages to prefer for labels, most specific first.
- *
- * A script subtag is kept when the locale carries one, because `name:zh-Hant`
- * and `name:zh` are different words for the same city and the tiles hold both.
- * Two letters is a language; four in title case is a script.
- */
-export function mapLanguageCandidates(locale: string): string[] {
-  const [language, ...rest] = locale.split('-').filter(Boolean)
-
-  if (!language) {
-    return []
-  }
-
-  const primary = language.toLowerCase()
-  const script = rest.find((part) => /^[A-Z][a-z]{3}$/.test(part))
-
-  return script ? [`${primary}-${script}`, primary] : [primary]
-}
-
-/**
  * Wraps one label expression so it prefers the rider's language.
  *
  * The style's own expression stays the innermost fallback, so a label with no
@@ -111,12 +76,17 @@ function localizeNode(node: unknown, languages: string[]): unknown {
 }
 
 /**
- * Rewrites every label in a style into the rider's language.
+ * Rewrites every label in a style into the given languages, most specific first.
  *
  * The tiles carry the whole language set — `name:fr`, `name:ja`, `name:zh-Hant`
  * and eighty more — but the style only ever reads `name:latin` or `name:en`, so
  * a French map calls München "Munich". The names were always there; nothing was
  * asking for them.
+ *
+ * A list rather than one language, because a locale can be more specific than
+ * its language: `zh-Hant` and `zh` are different words for the same city and
+ * the tiles hold both. The app passes one today, and the chaining already
+ * works.
  */
 export function localizeMapStyle(
   style: StyleSpecification,

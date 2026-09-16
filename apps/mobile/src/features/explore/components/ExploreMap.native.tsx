@@ -1,6 +1,5 @@
 import { Camera, GeoJSONSource, Layer, Map, UserLocation } from '@maplibre/maplibre-react-native'
 import type { FeatureCollection, LineString, Point } from 'geojson'
-import { useColorScheme } from 'react-native'
 
 import { useThemeColor } from '@/design-system'
 import { colors } from '@/design-system/tokens'
@@ -98,8 +97,7 @@ export function ExploreMap({
   followUser = false,
 }: ExploreMapProps) {
   const selectedRoute = routes.find((route) => route.id === selectedRouteId)
-  const scheme = useColorScheme()
-  const mapStyle = useMapStyle(scheme)
+  const mapStyle = useMapStyle()
   // The ring around the start marker has to read against the tiles, and the
   // tiles now change colour with the app. A graphite ring is invisible on the
   // dark style, so the ring is the theme background instead.

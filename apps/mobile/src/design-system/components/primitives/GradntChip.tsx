@@ -9,9 +9,21 @@ type GradntChipProps = {
   onPress?: () => void
 }
 
+/**
+ * One value among a small set, chosen by touch.
+ *
+ * A radio rather than a button: it is only ever one of a group, and "button,
+ * selected" makes a screen reader say the same thing twice where "radio" gives
+ * the role and the state in one.
+ */
 export function GradntChip({ label, selected = false, onPress }: GradntChipProps) {
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}
+      onPress={onPress}
+    >
       {({ hovered, pressed }) => (
         <XStack
           paddingHorizontal="$4"

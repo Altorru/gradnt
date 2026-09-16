@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { localizeMapStyle, mapLanguageCandidates } from './map-config'
+import { localizeMapStyle } from './map-config'
 
 const label = ['coalesce', ['get', 'name:en'], ['get', 'name']]
 
@@ -11,22 +11,6 @@ function styleWith(textField: unknown) {
     layers: [{ id: 'place', type: 'symbol', 'text-field': textField }],
   }
 }
-
-describe('mapLanguageCandidates', () => {
-  it('keeps the language alone when the locale carries no script', () => {
-    expect(mapLanguageCandidates('fr-FR')).toEqual(['fr'])
-    expect(mapLanguageCandidates('en')).toEqual(['en'])
-  })
-
-  it('keeps the script first, because it is the more specific name', () => {
-    // `name:zh-Hant` and `name:zh` are different words for the same city.
-    expect(mapLanguageCandidates('zh-Hant-TW')).toEqual(['zh-Hant', 'zh'])
-  })
-
-  it('has nothing to prefer when the locale is empty', () => {
-    expect(mapLanguageCandidates('')).toEqual([])
-  })
-})
 
 describe('localizeMapStyle', () => {
   it('prefers the language and keeps the style expression as the fallback', () => {

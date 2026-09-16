@@ -1,16 +1,10 @@
 import type { StyleSpecification } from '@maplibre/maplibre-react-native'
 import { useQuery } from '@tanstack/react-query'
-import type { ColorSchemeName } from 'react-native'
 
-import {
-  localizeMapStyle,
-  mapLanguageCandidates,
-  openFreeMapStyleUrl,
-  systemLocale,
-} from '../services'
+import { useGradntScheme } from '@/design-system'
+import { useAppLanguage } from '@/i18n'
 
-/** Read once: the device's language does not change under a running app. */
-const LANGUAGES = mapLanguageCandidates(systemLocale())
+import { localizeMapStyle, openFreeMapStyleUrl } from '../services'
 
 /**
  * The style the map draws with: the right appearance, in the rider's language.
@@ -21,15 +15,20 @@ const LANGUAGES = mapLanguageCandidates(systemLocale())
  * rewritten, and the object handed over instead of the URL. It is 43 KB, and
  * TanStack Query keeps it for the life of the app.
  *
+ * The language follows the app's, not the phone's: a rider who forced English
+ * does not want a French map under an English screen.
+ *
  * A failure is deliberately not fatal: until the style arrives, and if it never
  * does, the map draws from the URL with the labels the style ships. A blank map
  * is a poor trade for a translated one.
  */
-export function useMapStyle(scheme: ColorSchemeName): string | StyleSpecification {
+export function useMapStyle(): string | StyleSpecification {
+  const scheme = useGradntScheme()
+  const language = useAppLanguage()
   const url = openFreeMapStyleUrl(scheme)
 
   const { data } = useQuery({
-    queryKey: ['map-style', url, LANGUAGES],
+    queryKey: ['map-style', url, language],
     queryFn: async () => {
       const response = await fetch(url)
 
@@ -37,7 +36,7 @@ export function useMapStyle(scheme: ColorSchemeName): string | StyleSpecificatio
         throw new Error(`Map style ${response.status}`)
       }
 
-      return localizeMapStyle((await response.json()) as StyleSpecification, LANGUAGES)
+      return localizeMapStyle((await response.json()) as StyleSpecification, [language])
     },
     staleTime: Infinity,
     gcTime: Infinity,

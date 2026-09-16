@@ -1,26 +1,34 @@
 import type { PropsWithChildren } from 'react'
-import { useColorScheme } from 'react-native'
 import { TamaguiProvider } from 'tamagui'
 
 import tamaguiConfig from '../../../tamagui.config'
+import { GradntSchemeContext, type ColorScheme } from '../hooks/scheme'
 
 /**
- * Follows the system appearance, as `userInterfaceStyle: "automatic"` in
- * app.json declares.
+ * Publishes the appearance the app is rendering in.
  *
- * This used to be hardcoded to `"dark"`, which meant the app could never render
- * light — while the native tab bar, which follows the system on its own, went
- * light anyway. The two disagreed on any light-mode device.
+ * The scheme arrives as a prop rather than being read here, because the choice
+ * belongs to the app, not to the design system: a rider can force light or dark
+ * regardless of the phone, and only the app knows which one they picked.
  *
- * Components must take their colours from theme roles (`$textPrimary`, or
- * `useThemeColor`) rather than from the raw palette, or they will not follow.
+ * Tamagui is told through `defaultTheme`, which it recomputes on every render
+ * of this provider — so passing a different value from state is what switches
+ * the theme. There is no `setTheme` to call.
+ *
+ * The same value goes into a context of our own, because Tamagui's theme is
+ * read as styles rather than as an answer: a component that has to choose an
+ * asset or a map style needs to know *which* appearance is on, not what colour
+ * a token resolves to.
  */
-export function GradntThemeProvider({ children }: PropsWithChildren) {
-  const scheme = useColorScheme()
-
+export function GradntThemeProvider({
+  scheme,
+  children,
+}: PropsWithChildren<{ scheme: ColorScheme }>) {
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme={scheme === 'light' ? 'light' : 'dark'}>
-      {children}
-    </TamaguiProvider>
+    <GradntSchemeContext.Provider value={scheme}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme={scheme}>
+        {children}
+      </TamaguiProvider>
+    </GradntSchemeContext.Provider>
   )
 }

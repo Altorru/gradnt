@@ -1,6 +1,5 @@
 import { Camera, GeoJSONSource, Layer, Map } from '@maplibre/maplibre-react-native'
 import type { FeatureCollection, LineString, Point } from 'geojson'
-import { useColorScheme } from 'react-native'
 import { YStack } from 'tamagui'
 
 import { GradntText, useThemeColor } from '@/design-system'
@@ -63,8 +62,7 @@ export function MapLibreRouteMap({ route }: RouteMapProps) {
   ]
   const routeData = toRouteFeatureCollection(route)
   const startData = toStartFeatureCollection(route)
-  const scheme = useColorScheme()
-  const mapStyle = useMapStyle(scheme)
+  const mapStyle = useMapStyle()
   // As on the Explore map: the ring has to read against tiles that change
   // colour with the app, so it follows the theme rather than being graphite.
   const markerRing = useThemeColor()('background')
