@@ -24,10 +24,11 @@ type ExploreMapProps = {
 /**
  * Room for the controls that float over the map.
  *
- * The bottom is the largest: the result strip sits there, and a route fitted
- * flush to the bottom edge would be hidden behind it.
+ * The top clears the status bar and the filter bar over it; the bottom clears
+ * the result strip. A route fitted flush to either edge would be hidden behind
+ * the chrome that floats there.
  */
-const VIEWPORT_PADDING = { top: 96, right: 48, bottom: 260, left: 48 }
+const VIEWPORT_PADDING = { top: 132, right: 48, bottom: 260, left: 48 }
 
 /** Sources are named per route, so several can share one map. */
 function routeSourceId(routeId: string) {

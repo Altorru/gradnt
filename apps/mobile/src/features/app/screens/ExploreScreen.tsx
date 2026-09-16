@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { XStack, YStack } from 'tamagui'
 
-import { GradntButton, GradntCard, GradntText, SCREEN_GUTTER } from '@/design-system'
+import { GradntButton, GradntCard, GradntScreen, GradntText, SCREEN_GUTTER } from '@/design-system'
 import { defaultRoutePreferences, type RoutePreferences } from '@/features/explore/domain'
 import { RouteDetailPanel } from '@/features/explore/components'
 import { ExploreMap } from '@/features/explore/components/ExploreMap'
@@ -17,8 +17,6 @@ import {
 } from '@/features/explore/hooks'
 
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
-
-import { AppShell } from '../components/AppShell'
 
 /** A panel that rises from the foot of the screen, above the tab bar. */
 function PanelFrame({ children }: { children: React.ReactNode }) {
@@ -75,7 +73,10 @@ export function ExploreScreen() {
   }
 
   return (
-    <AppShell>
+    /* No safe-area edge at the top: the map runs under the status bar, which
+       is the difference between a screen with a map on it and a screen that
+       is a map. The controls inset themselves instead. */
+    <GradntScreen padded={false} edges={[]}>
       <YStack flex={1}>
         <ExploreMap
           routes={proposals}
@@ -86,7 +87,15 @@ export function ExploreScreen() {
 
         {/* Floating over the map, so the map is the screen rather than a block
             in a column. */}
-        <YStack position="absolute" top={0} left={0} right={0} gap="$2" pointerEvents="box-none">
+        <YStack
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          gap="$2"
+          style={{ paddingTop: insets.top + 12 }}
+          pointerEvents="box-none"
+        >
           <FilterBar preferences={preferences} onOpen={() => setIsFiltersOpen(true)} />
 
           <YStack paddingHorizontal="$3" gap="$2">
@@ -219,6 +228,6 @@ export function ExploreScreen() {
           ) : null}
         </YStack>
       </YStack>
-    </AppShell>
+    </GradntScreen>
   )
 }
