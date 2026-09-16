@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getWeeklyRideCountSeries, getWeeklyVolumeSeries } from './selectors'
+import { getWeekWindow, getWeeklyRideCountSeries, getWeeklyVolumeSeries } from './selectors'
 import type { Activity } from './schemas'
 
 const DAY = 24 * 60 * 60 * 1000
@@ -76,5 +76,35 @@ describe('getWeeklyRideCountSeries', () => {
     for (const value of series) {
       expect(Number.isInteger(value)).toBe(true)
     }
+  })
+})
+
+describe('getWeekWindow', () => {
+  const now = new Date('2026-09-16T12:00:00.000Z')
+
+  it('ends the newest window at now', () => {
+    // The last bucket is the week in progress, so its window closes on today.
+    const window = getWeekWindow(7, 8, now)
+
+    expect(window.end.toISOString()).toBe(now.toISOString())
+    expect(window.start.toISOString()).toBe(new Date(now.getTime() - 7 * DAY).toISOString())
+  })
+
+  it('walks back a week at a time', () => {
+    const newest = getWeekWindow(7, 8, now)
+    const previous = getWeekWindow(6, 8, now)
+
+    // Contiguous: one window ends exactly where the next begins, or a ride
+    // could fall between two of them.
+    expect(previous.end.toISOString()).toBe(newest.start.toISOString())
+  })
+
+  it('spans exactly the window the series covers', () => {
+    // Eight points, so the oldest window opens eight weeks back and the newest
+    // closes today. Anything narrower would leave rides outside the series.
+    const oldest = getWeekWindow(0, 8, now)
+
+    expect(oldest.start.toISOString()).toBe(new Date(now.getTime() - 8 * 7 * DAY).toISOString())
+    expect(oldest.end.toISOString()).toBe(new Date(now.getTime() - 7 * 7 * DAY).toISOString())
   })
 })

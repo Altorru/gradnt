@@ -1,4 +1,6 @@
 import { ArrowUpRight, CalendarDays } from '@tamagui/lucide-icons-2'
+import { format as formatDate } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import { useState } from 'react'
 import { XStack, YStack } from 'tamagui'
 
@@ -24,6 +26,7 @@ import {
   getGoalProgressPercentage,
   getRecentTrainingVolumeHours,
   getWeeklyRideCount,
+  getWeekWindow,
   getWeeklyRideCountSeries,
   getWeeklyVolumeSeries,
 } from '@/lib/domain'
@@ -70,6 +73,23 @@ export function ProgressScreen() {
   const activityState = getActivityDataState(activities)
   const volumeSeries = getWeeklyVolumeSeries(activities)
   const rideSeries = getWeeklyRideCountSeries(activities)
+
+  /**
+   * Names the seven days a point covers.
+   *
+   * The buckets are rolling windows counted back from now, not calendar weeks,
+   * so this says the dates rather than naming a week — which would claim an
+   * alignment the data does not have.
+   */
+  const windowLabel = (index: number) => {
+    if (index === volumeSeries.length - 1) {
+      return '7 derniers jours'
+    }
+
+    const { start, end } = getWeekWindow(index, volumeSeries.length)
+
+    return `${formatDate(start, 'd MMM', { locale: fr })} – ${formatDate(end, 'd MMM', { locale: fr })}`
+  }
   const declaredVolume = athleteQuery.data?.weeklyVolumeBand ?? '3to6'
   const insight = getDeterministicTrainingInsight(activities, declaredVolume)
   const goal = goalQuery.data
@@ -175,6 +195,8 @@ export function ProgressScreen() {
               title="Volume récent"
               unit="h"
               data={volumeSeries}
+              secondary={{ data: rideSeries, unit: 'sorties' }}
+              windowLabel={windowLabel}
               description={
                 metricsQuery.isPending
                   ? 'Chargement…'
@@ -190,6 +212,8 @@ export function ProgressScreen() {
               unit="sorties"
               variant="line"
               data={rideSeries}
+              secondary={{ data: volumeSeries, unit: 'h' }}
+              windowLabel={windowLabel}
               description={
                 activitiesQuery.isPending
                   ? 'Chargement…'

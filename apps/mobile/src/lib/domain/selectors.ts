@@ -232,6 +232,24 @@ export function getWeeklyRideCountSeries(activities: Activity[], weeks = 8): num
   return bucketActivitiesByWeek(activities, weeks, () => 1)
 }
 
+/**
+ * The seven days a point in either series covers.
+ *
+ * These are rolling windows counted back from now, not calendar weeks — so the
+ * label has to say "du 12 au 18 août" rather than name a week number, which
+ * would claim an alignment the data does not have.
+ */
+export function getWeekWindow(
+  index: number,
+  weeks: number,
+  now: Date = new Date(),
+): { start: Date; end: Date } {
+  const weeksBeforeEnd = weeks - index - 1
+  const end = new Date(now.getTime() - weeksBeforeEnd * WEEK_MS)
+
+  return { start: new Date(end.getTime() - WEEK_MS), end }
+}
+
 export function getDeterministicTrainingInsight(
   activities: Activity[],
   declaredWeeklyVolumeBand: 'lt3' | '3to6' | '6to10' | 'gt10',
