@@ -3,14 +3,13 @@ import { z } from 'zod'
 /**
  * Reading the athlete's power zones, without assuming a single response shape.
  *
- * Twice this expected the wrong one — first an object keyed by `power`, then an
- * array of entries carrying a `type` — and both times the mistake survived
- * testing, because the fixtures were written from the same assumption as the
- * code. So this accepts either, and when it recognises neither it says what
- * arrived instead of reporting the same "no zones" as a rider who has none.
- *
- * Strava documents the endpoint loosely enough to support both readings, and
- * only a real response settles it.
+ * Three attempts at this were wrong, and each was tested against a fixture
+ * written from the same assumption as the code, so no test could have caught
+ * it. The reader now accepts every shape actually observed — an object keyed by
+ * metric or an array of typed entries, with the buckets under either documented
+ * key — and when it recognises none of them it reports what arrived rather than
+ * reporting "no zones", which is what made a parsing fault look like a fact
+ * about the rider's Strava account.
  */
 const zoneBucketSchema = z.object({
   min: z.number(),
@@ -38,6 +37,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * The key holding a metric's buckets.
+ *
+ * Strava uses `zones` on the athlete endpoint and `distribution_buckets` on the
+ * activity one, and its reference page documents the latter under a heading that
+ * reads like the former. Both are accepted rather than betting on one: the
+ * first attempt here read `distribution_buckets` and reported "no zones" for
+ * every rider, because the athlete payload does not have it.
+ */
+const BUCKET_KEYS = ['zones', 'distribution_buckets'] as const
+
+function readBuckets(zone: unknown): unknown {
+  if (!isRecord(zone)) {
+    return null
+  }
+
+  for (const key of BUCKET_KEYS) {
+    const value = zone[key]
+
+    if (Array.isArray(value)) {
+      return value
+    }
+  }
+
+  return null
+}
+
+/**
  * Locates the power buckets, and says whether the container was understood.
  *
  * The two questions are separate on purpose. A rider with heart-rate zones and
@@ -55,23 +81,19 @@ function locatePowerBuckets(payload: unknown): { recognized: boolean; buckets: u
 
     const power = entries.find((entry) => entry.type === 'power')
 
-    return { recognized: true, buckets: isRecord(power) ? power.distribution_buckets : null }
+    return { recognized: true, buckets: readBuckets(power) }
   }
 
   if (isRecord(payload)) {
-    // An object is a zones container when its values look like zones, rather
-    // than because it happens to carry a key we guessed at.
-    const zoneValues = Object.values(payload).filter(
-      (value) => isRecord(value) && 'distribution_buckets' in value,
-    )
+    // An object is a zones container when its values carry buckets, rather than
+    // because it happens to hold a key we guessed at.
+    const recognized = Object.values(payload).some((value) => readBuckets(value) !== null)
 
-    if (zoneValues.length === 0) {
+    if (!recognized) {
       return { recognized: false, buckets: null }
     }
 
-    const power = payload.power
-
-    return { recognized: true, buckets: isRecord(power) ? power.distribution_buckets : null }
+    return { recognized: true, buckets: readBuckets(payload.power) }
   }
 
   return { recognized: false, buckets: null }

@@ -14,15 +14,26 @@ function buckets(thresholdFloor: number) {
   ]
 }
 
-/** An object keyed by metric — one of the two shapes Strava is documented with. */
+/**
+ * The shape the athlete endpoint actually returns.
+ *
+ * Confirmed against a live response: an object keyed by metric, whose values
+ * hold their buckets under `zones`. Strava's reference page documents
+ * `distribution_buckets` instead, which is the key the *activity* zones
+ * endpoint uses — reading the docs rather than the payload sent every rider
+ * down the "no power zones" path.
+ */
 function objectShape(thresholdFloor: number) {
   return {
-    heart_rate: { custom_zones: true, distribution_buckets: [{ min: 0, max: 110 }] },
-    power: { custom_zones: true, distribution_buckets: buckets(thresholdFloor) },
+    heart_rate: { custom_zones: true, zones: [{ min: 0, max: 110 }] },
+    power: { custom_zones: true, zones: buckets(thresholdFloor) },
   }
 }
 
-/** An array of entries carrying their own `type` — the other. */
+/**
+ * The other documented arrangement, kept because nothing guarantees a single
+ * one: an array of entries carrying their own `type`, with the other key.
+ */
 function arrayShape(thresholdFloor: number) {
   return [
     { type: 'heartrate', resource_state: 3, distribution_buckets: [{ min: 0, max: 110 }] },
@@ -59,6 +70,17 @@ describe('readPowerZones', () => {
       kind: 'unrecognized',
       summary: 'objet avec les clés : watts',
     })
+  })
+
+  it('recognises a container whose buckets sit under either key', () => {
+    // The live payload uses `zones`; the activity endpoint uses
+    // `distribution_buckets`. Reading only one reported "no zones" for every
+    // rider on the endpoint that uses the other.
+    const withZones = { power: { zones: buckets(250) } }
+    const withDistribution = { power: { distribution_buckets: buckets(250) } }
+
+    expect(readPowerZones(withZones).kind).toBe('buckets')
+    expect(readPowerZones(withDistribution).kind).toBe('buckets')
   })
 
   it.each([
