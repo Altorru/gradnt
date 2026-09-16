@@ -17,6 +17,8 @@ export const fr = {
     back: 'Revenir en arrière',
     closePanel: 'Fermer le panneau',
     openMenu: 'Ouvrir {{label}}',
+    continue: 'Continuer',
+    sync: 'Synchronisation…',
   },
 
   tabs: {
@@ -37,6 +39,13 @@ export const fr = {
     themeDark: 'Sombre',
     language: 'Langue',
     languageSystem: 'Système',
+    /** Shown where an onboarding answer has not been given yet. */
+    notSet: 'À définir',
+    save: 'Enregistrer',
+    profileTitle: 'Ton profil',
+    goalTitle: 'Ton objectif',
+    eventPlaceholder: 'Cyclosportive des Monts d’Or',
+    datePlaceholder: '2027-06-13',
   },
 
   /**
@@ -70,6 +79,291 @@ export const fr = {
     ridesThisWeek: {
       one: '{{count}} sortie cette semaine',
       other: '{{count}} sorties cette semaine',
+    },
+  },
+
+  onboarding: {
+    welcome: {
+      subtitle:
+        'Transforme tes sorties vélo en une progression claire, personnelle et réellement actionnable.',
+      benefits: {
+        goal: {
+          title: 'Un objectif clair',
+          description: 'GRADNT suit ta progression et te montre où tu en es réellement.',
+        },
+        plan: {
+          title: 'Un plan qui s’adapte',
+          description: 'Tes séances évoluent avec tes sorties, ta disponibilité et ta forme.',
+        },
+        next: {
+          title: 'Toujours la prochaine étape',
+          description: 'Une recommandation concrète plutôt qu’un tableau rempli de chiffres.',
+        },
+      },
+      start: 'Commencer',
+      resume: 'Reprendre',
+      footnote: 'Environ 3 minutes · tu pourras tout modifier ensuite',
+    },
+
+    profile: {
+      title: 'Ton profil cycliste',
+      subtitle:
+        'Donne-nous juste assez de contexte pour adapter les recommandations à ta pratique.',
+      discipline: 'Ta pratique principale',
+      experience: 'Ton expérience',
+      volume: 'Volume hebdomadaire actuel',
+    },
+
+    disciplines: {
+      road: { title: 'Route', description: 'Performance, endurance et sorties sur route.' },
+      gravel: { title: 'Gravel', description: 'Route et chemins, avec plus de liberté.' },
+      mtb: { title: 'VTT', description: 'Sentiers, technique et dénivelé.' },
+    },
+
+    experiences: { beginner: 'Débutant', regular: 'Régulier', advanced: 'Avancé' },
+
+    volumes: { lt3: '< 3 h', threeToSix: '3–6 h', sixToTen: '6–10 h', gt10: '10 h+' },
+
+    goal: {
+      title: 'Qu’est-ce qui te motive ?',
+      subtitle:
+        'Choisis ton objectif principal. GRADNT adaptera ensuite ton plan autour de cette priorité.',
+      eventLabel: 'Ton événement',
+      eventPlaceholder: 'Ex. Étape du Tour',
+      fitnessNote:
+        'Aucun chiffre obligatoire. GRADNT privilégiera la régularité, la forme et une progression équilibrée.',
+      errors: {
+        eventName: 'Indique le nom de ton événement.',
+        targetValue: 'Indique un objectif valide.',
+      },
+    },
+
+    goals: {
+      ftp: {
+        title: 'Améliorer ma FTP',
+        description: 'Développer ta puissance durable et suivre ta progression en watts.',
+      },
+      distance: {
+        title: 'Rouler plus loin',
+        description: 'Préparer une distance cible et améliorer ton endurance.',
+      },
+      event: {
+        title: 'Préparer un événement',
+        description: 'Construire ta progression autour d’une cyclosportive, course ou sortie.',
+      },
+      climbing: {
+        title: 'Mieux grimper',
+        description: 'Progresser dans les ascensions et accumuler davantage de dénivelé.',
+      },
+      fitness: {
+        title: 'Progresser globalement',
+        description: 'Rouler régulièrement et améliorer ta forme sans objectif chiffré précis.',
+      },
+    },
+
+    goalLabels: {
+      ftp: 'Objectif FTP',
+      distance: 'Objectif distance',
+      event: 'Objectif événement',
+      climbing: 'Objectif dénivelé',
+      fitness: 'Objectif forme',
+    },
+
+    measures: {
+      cumulative: {
+        label: 'Cumulé',
+        description: 'Le total de tes sorties sur la période analysée.',
+      },
+      best: {
+        label: 'En une sortie',
+        description: 'Ta meilleure sortie, réussie d’un seul tenant.',
+      },
+    },
+
+    target: {
+      ftp: { label: 'FTP cible', unit: 'W' },
+      distance: { label: 'Distance cible', unit: 'km' },
+      climbing: { label: 'Dénivelé cible', unit: 'm D+' },
+    },
+
+    availability: {
+      title: 'Quand peux-tu rouler ?',
+      subtitle:
+        'Indique tes créneaux habituels. On gardera de la flexibilité pour les imprévus et la récupération.',
+      available: 'Disponible pour une séance',
+      rest: 'Jour de repos',
+      errors: {
+        noDay: 'Sélectionne au moins un jour disponible.',
+        noDuration: 'Choisis une durée approximative.',
+      },
+    },
+
+    weekdays: {
+      monday: 'Lundi',
+      tuesday: 'Mardi',
+      wednesday: 'Mercredi',
+      thursday: 'Jeudi',
+      friday: 'Vendredi',
+      saturday: 'Samedi',
+      sunday: 'Dimanche',
+    },
+
+    durations: {
+      min45: '45 min',
+      hour: '1 h',
+      hour30: '1 h 30',
+      hours2: '2 h',
+      hours2plus: '2 h+',
+    },
+
+    strava: {
+      title: 'Relie tes sorties',
+      subtitle:
+        'Avec ton historique Strava, GRADNT pourra mieux comprendre ton point de départ et rendre la suite plus pertinente.',
+      connected: 'Strava est connecté',
+      notConnected: 'Strava n’est pas connecté',
+      noAccount: 'Aucun compte lié pour le moment',
+      badgeConnected: 'Connecté',
+      reassurance:
+        'Tu contrôles la connexion. GRADNT utilisera uniquement les activités nécessaires pour personnaliser ton expérience.',
+      recommendation:
+        'Connecter Strava est vivement recommandé : ton historique permet de mieux estimer ton point de départ et d’éviter un plan générique. Tu peux toutefois commencer sans connexion et la faire plus tard.',
+      errorTitle: 'Connexion indisponible',
+      connect: 'Connecter Strava',
+      connecting: 'Vérification…',
+      accountConnected: 'Compte connecté',
+      defer: 'Continuer sans connecter',
+      errors: {
+        notConfigured: 'La connexion Strava sera activée dès que le compte GRADNT sera configuré.',
+        cancelled: 'Connexion annulée.',
+        unknown: 'La connexion à Strava a échoué. Réessaie dans un instant.',
+        ignored: 'Aucune connexion en cours.',
+        readFailed: 'La réponse de Strava n’a pas pu être lue.',
+        interruptedTitle: 'Connexion interrompue',
+        backToStrava: 'Retour',
+        connecting: 'Connexion à Strava…',
+        sessionExpired: 'La session d’autorisation a expiré. Relance la connexion.',
+        missingCode: 'Strava n’a pas renvoyé de code d’autorisation. Relance la connexion.',
+        insufficientScopes: 'Autorisations insuffisantes : {{scopes}}.',
+        oauthError: 'Strava a refusé la demande ({{error}}).',
+        interrupted: 'La connexion à Strava a été interrompue.',
+      },
+    },
+
+    review: {
+      title: 'Ton point de départ',
+      subtitle:
+        'Voici le contexte que GRADNT utilisera pour construire une première base cohérente.',
+      ready: 'Prêt',
+      profileCard: 'Profil cycliste',
+      profileEmpty: 'Profil non renseigné.',
+      practice: 'Pratique',
+      experience: 'Expérience',
+      volume: 'Volume actuel',
+      goalCard: 'Objectif principal',
+      goal: 'Objectif',
+      goalEmpty: 'À compléter',
+      availabilityCard: 'Disponibilités',
+      noDay: 'Aucun jour sélectionné',
+      stravaCard: 'Historique Strava',
+      stravaDeferred: 'À connecter plus tard',
+      stravaMissing: 'Pas encore connecté',
+      footnote:
+        'GRADNT est prêt à construire ton point de départ. Aucune analyse automatique n’a été lancée pour le moment.',
+      start: 'Entrer dans GRADNT',
+      restart: 'Recommencer l’onboarding',
+    },
+  },
+
+  explore: {
+    filters: {
+      distance: 'Distance',
+      elevation: 'Dénivelé',
+      distanceRange: 'Fourchette de distance en kilomètres',
+      elevationRange: 'Fourchette de dénivelé en mètres',
+      surface: 'Surface',
+      intent: 'Intention',
+      noPreference: 'Sans préférence',
+      loop: 'Boucle',
+      oneWay: 'Aller simple',
+      anyRoad: 'Peu importe',
+      quieter: 'Plus calmes',
+      quietRoads: 'Voies calmes',
+      allRoads: 'Toutes voies',
+    },
+
+    surfaces: { paved: 'Asphalte', mixed: 'Mixte', gravel: 'Gravier', trail: 'Sentier' },
+    intents: {
+      endurance: 'Endurance',
+      recovery: 'Récupération',
+      climbing: 'Dénivelé',
+      tempo: 'Tempo',
+    },
+
+    notConfigured:
+      'Le calcul d’itinéraire n’est pas configuré : GRADNT n’affiche rien plutôt que des parcours inventés.',
+    findingPosition: 'Recherche de ta position…',
+    routesFailed: 'Impossible de charger les parcours.',
+    findingRoutes: 'Recherche de parcours…',
+    noMatchTitle: 'Aucun parcours ne correspond',
+    noMatchBody:
+      'Rien dans ce que le moteur a proposé ne tient dans tes fourchettes. Élargis la distance ou le dénivelé pour voir plus de parcours.',
+    widenDistance: 'Élargir la distance',
+
+    location: {
+      openSettings: 'Ouvrir les réglages',
+      refresh: 'Actualiser ma position',
+      errors: {
+        unsupported: 'La position est disponible dans la development build native.',
+        disabled: 'La localisation est désactivée sur ton téléphone.',
+        denied: 'La localisation est refusée. Autorise-la dans les réglages.',
+        notGranted: 'Autorise la localisation pour que GRADNT propose un départ près de chez toi.',
+        unavailable: 'Ta position n’a pas pu être obtenue. Réessaie dans un instant.',
+      },
+    },
+
+    detail: {
+      title: 'Détail du parcours',
+      geometry: 'Géométrie et données normalisées par GRADNT.',
+      climbs: {
+        one: '{{count}} montée',
+        other: '{{count}} montées',
+      },
+      exposure: 'Exposition {{level}}',
+      detectedClimbs: 'Montées détectées',
+      noClimbs: 'Aucune montée répondant aux seuils GRADNT n’a été détectée.',
+      surfaces: 'Surfaces',
+      wayTypes: 'Types de voies',
+      roadEnvironment: 'Environnement routier',
+      exposureCaveat:
+        'Ce score décrit l’exposition des voies à partir des caractéristiques disponibles ; ce n’est ni du trafic live, ni un score de sécurité.',
+      sessionFit: 'Compatibilité avec la séance',
+      climbRange: 'km {{start}} à {{end}} · difficulté {{score}}/100',
+      climbGradients: '{{average}} % moy. · {{maximum}} % max.',
+    },
+
+    exposureLevels: { low: 'faible', moderate: 'modérée', high: 'élevée' },
+    strip: {
+      seeDetail: 'Voir le détail du parcours',
+    },
+
+    map: {
+      tapRoute: 'Touche un parcours pour en voir le tracé.',
+      nativeOnly: 'La carte nécessite la version native de l’application.',
+      schematic: 'Aperçu web schématique. La carte réelle s’affiche sur iOS et Android.',
+    },
+
+    recommendation: {
+      recommended: 'Recommandée',
+      quieter: 'Plus calme',
+      training: 'Plus entraînante',
+      alternative: 'Alternative',
+    },
+
+    fit: {
+      great: 'Très adaptée',
+      good: 'Adaptée',
+      adjust: 'À ajuster',
     },
   },
 }

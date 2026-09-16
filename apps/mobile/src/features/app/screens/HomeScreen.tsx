@@ -34,12 +34,15 @@ import { XStack, YStack } from 'tamagui'
 
 import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
+import { useTranslation } from '@/i18n'
+import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import type { FtpEntry } from '@/services/ftp/ftp.persistence'
 import { loadFtpHistory } from '@/services/ftp/ftp.service'
 
 export function HomeScreen() {
+  const { t } = useTranslation()
   const router = useRouter()
   const setStrava = useOnboardingStore((state) => state.setStrava)
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
@@ -109,7 +112,7 @@ export function HomeScreen() {
       // stale the moment the connection lands.
       await activitiesQuery.refetch()
     } else {
-      setConnectError(result.error.message)
+      setConnectError(t(STRAVA_ERROR_KEYS[result.error.code], result.error.params))
     }
 
     setIsConnecting(false)

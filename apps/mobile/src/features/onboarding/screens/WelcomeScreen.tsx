@@ -11,29 +11,34 @@ import {
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
+import { useTranslation, type Translate } from '@/i18n'
+
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { getOnboardingResumeRoute, useOnboardingStore } from '../store/onboarding.store'
 
-const benefits = [
-  {
-    icon: Target,
-    title: 'Un objectif clair',
-    description: 'GRADNT suit ta progression et te montre où tu en es réellement.',
-  },
-  {
-    icon: Brain,
-    title: 'Un plan qui s’adapte',
-    description: 'Tes séances évoluent avec tes sorties, ta disponibilité et ta forme.',
-  },
-  {
-    icon: Route,
-    title: 'Toujours la prochaine étape',
-    description: 'Une recommandation concrète plutôt qu’un tableau rempli de chiffres.',
-  },
-]
+function benefits(t: Translate) {
+  return [
+    {
+      icon: Target,
+      title: t('onboarding.welcome.benefits.goal.title'),
+      description: t('onboarding.welcome.benefits.goal.description'),
+    },
+    {
+      icon: Brain,
+      title: t('onboarding.welcome.benefits.plan.title'),
+      description: t('onboarding.welcome.benefits.plan.description'),
+    },
+    {
+      icon: Route,
+      title: t('onboarding.welcome.benefits.next.title'),
+      description: t('onboarding.welcome.benefits.next.description'),
+    },
+  ]
+}
 
 export function WelcomeScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
   const currentStep = useOnboardingStore((state) => state.currentStep)
 
   /**
@@ -76,13 +81,12 @@ export function WelcomeScreen() {
               </GradntHeading>
 
               <GradntText muted fontSize={17} lineHeight={25}>
-                Transforme tes sorties vélo en une progression claire, personnelle et réellement
-                actionnable.
+                {t('onboarding.welcome.subtitle')}
               </GradntText>
             </YStack>
 
             <YStack gap="$5" paddingTop="$3">
-              {benefits.map((benefit) => {
+              {benefits(t).map((benefit) => {
                 const Icon = benefit.icon
 
                 return (
@@ -122,11 +126,11 @@ export function WelcomeScreen() {
                 router.push(resumeRoute)
               }}
             >
-              {currentStep > 1 ? 'Reprendre' : 'Commencer'}
+              {currentStep > 1 ? t('onboarding.welcome.resume') : t('onboarding.welcome.start')}
             </GradntButton>
 
             <GradntText muted textAlign="center" fontSize={12} lineHeight={17}>
-              Environ 3 minutes · tu pourras tout modifier ensuite
+              {t('onboarding.welcome.footnote')}
             </GradntText>
           </YStack>
         </YStack>

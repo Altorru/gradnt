@@ -17,6 +17,7 @@ import {
   GradntScrollView,
   GradntText,
 } from '@/design-system'
+import { useTranslation } from '@/i18n'
 import { disciplines, experiences, volumes } from '@/features/onboarding/domain/profile.options'
 import { cyclistProfileSchema } from '@/features/onboarding/domain/profile.schema'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
@@ -30,6 +31,7 @@ import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store
  */
 export function ProfileSettingsScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const storedProfile = useOnboardingStore((state) => state.profile)
   const setProfile = useOnboardingStore((state) => state.setProfile)
@@ -60,10 +62,10 @@ export function ProfileSettingsScreen() {
       <GradntScrollView>
         <YStack gap="$6">
           <XStack alignItems="center" gap="$3">
-            <GradntIconButton accessibilityLabel="Revenir en arrière" onPress={() => router.back()}>
+            <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color="$textPrimary" />
             </GradntIconButton>
-            <GradntHeading>Ton profil</GradntHeading>
+            <GradntHeading>{t('settings.profileTitle')}</GradntHeading>
           </XStack>
 
           <Controller
@@ -75,7 +77,7 @@ export function ProfileSettingsScreen() {
                   DISCIPLINE
                 </GradntText>
 
-                {disciplines.map((discipline) => (
+                {disciplines(t).map((discipline) => (
                   <GradntChoiceCard
                     key={discipline.value}
                     title={discipline.title}
@@ -99,7 +101,7 @@ export function ProfileSettingsScreen() {
                 </GradntText>
 
                 <XStack gap="$2" flexWrap="wrap">
-                  {experiences.map((experience) => (
+                  {experiences(t).map((experience) => (
                     <GradntChip
                       key={experience.value}
                       label={experience.label}
@@ -122,7 +124,7 @@ export function ProfileSettingsScreen() {
                 </GradntText>
 
                 <XStack gap="$2" flexWrap="wrap">
-                  {volumes.map((volume) => (
+                  {volumes(t).map((volume) => (
                     <GradntChip
                       key={volume.value}
                       label={volume.label}
@@ -135,7 +137,7 @@ export function ProfileSettingsScreen() {
             )}
           />
 
-          <GradntButton onPress={() => void save()}>Enregistrer</GradntButton>
+          <GradntButton onPress={() => void save()}>{t('settings.save')}</GradntButton>
         </YStack>
       </GradntScrollView>
     </GradntScreen>

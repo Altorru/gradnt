@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import type { Translate } from '@/i18n'
+
 export const weekdays = [
   'monday',
   'tuesday',
@@ -27,7 +29,10 @@ export const weeklyAvailabilitySchema = z
     if (availableSlots.length === 0) {
       context.addIssue({
         code: 'custom',
-        message: 'Sélectionne au moins un jour disponible.',
+        // A catalogue key, not a sentence: nothing user-facing lives outside
+        // the catalogue. No screen renders this one today — the step checks
+        // the same rule to enable its button — but a code cannot go stale.
+        message: 'onboarding.availability.errors.noDay',
       })
     }
 
@@ -38,7 +43,7 @@ export const weeklyAvailabilitySchema = z
         context.addIssue({
           code: 'custom',
           path: [index, 'durationMinutes'],
-          message: 'Choisis une durée approximative.',
+          message: 'onboarding.availability.errors.noDuration',
         })
       }
     })
@@ -62,20 +67,27 @@ export const defaultWeeklyAvailability: WeeklyAvailabilityForm = [
   { day: 'sunday', available: false, durationMinutes: null },
 ]
 
-export const weekdayLabels: Record<Weekday, string> = {
-  monday: 'Lundi',
-  tuesday: 'Mardi',
-  wednesday: 'Mercredi',
-  thursday: 'Jeudi',
-  friday: 'Vendredi',
-  saturday: 'Samedi',
-  sunday: 'Dimanche',
+/** The day names, in the rider's language. A function of `t`: no hook here. */
+export function weekdayLabels(t: Translate): Record<Weekday, string> {
+  return {
+    monday: t('onboarding.weekdays.monday'),
+    tuesday: t('onboarding.weekdays.tuesday'),
+    wednesday: t('onboarding.weekdays.wednesday'),
+    thursday: t('onboarding.weekdays.thursday'),
+    friday: t('onboarding.weekdays.friday'),
+    saturday: t('onboarding.weekdays.saturday'),
+    sunday: t('onboarding.weekdays.sunday'),
+  }
 }
 
-export const durationLabels: Record<(typeof availabilityDurationMinutes)[number], string> = {
-  45: '45 min',
-  60: '1 h',
-  90: '1 h 30',
-  120: '2 h',
-  150: '2 h+',
+export function durationLabels(
+  t: Translate,
+): Record<(typeof availabilityDurationMinutes)[number], string> {
+  return {
+    45: t('onboarding.durations.min45'),
+    60: t('onboarding.durations.hour'),
+    90: t('onboarding.durations.hour30'),
+    120: t('onboarding.durations.hours2'),
+    150: t('onboarding.durations.hours2plus'),
+  }
 }

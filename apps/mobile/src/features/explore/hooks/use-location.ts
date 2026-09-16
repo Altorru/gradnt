@@ -41,11 +41,19 @@ export type LocationStatus =
  * device — can only be changed in Settings. Asking again in the last case does
  * nothing at all, which is what made the old flow feel broken.
  */
+/**
+ * Why asking for the position did not work.
+ *
+ * A code rather than a sentence: this hook runs before any UI exists, and the
+ * screen that shows the failure is the one that knows the language.
+ */
+export type LocationErrorCode = 'unsupported' | 'disabled' | 'denied' | 'notGranted' | 'unavailable'
+
 export function useCurrentRouteStart() {
   const [start, setStart] = useState<RoutePoint | null>(null)
   const [isRequesting, setIsRequesting] = useState(false)
   const [status, setStatus] = useState<LocationStatus>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<LocationErrorCode | null>(null)
 
   // Guards the mount effect against React 19's double invocation in
   // development, which would ask for the position twice.
@@ -53,7 +61,7 @@ export function useCurrentRouteStart() {
 
   const requestCurrentLocation = useCallback(async () => {
     if (Platform.OS === 'web') {
-      setError('La position est disponible dans la development build native.')
+      setError('unsupported')
       return null
     }
 
@@ -64,7 +72,7 @@ export function useCurrentRouteStart() {
       // Off at the device level: no permission dialog would even appear.
       if (!(await Location.hasServicesEnabledAsync())) {
         setStatus('blocked')
-        setError('La localisation est désactivée sur ton téléphone.')
+        setError('disabled')
         return null
       }
 
@@ -74,7 +82,7 @@ export function useCurrentRouteStart() {
       // so the only way forward is Settings.
       if (!existing.granted && !existing.canAskAgain) {
         setStatus('blocked')
-        setError('La localisation est refusée. Autorise-la dans les réglages.')
+        setError('denied')
         return null
       }
 
@@ -84,7 +92,7 @@ export function useCurrentRouteStart() {
 
       if (!permission.granted) {
         setStatus(permission.canAskAgain ? 'refused' : 'blocked')
-        setError('Autorise la localisation pour que GRADNT propose un départ près de chez toi.')
+        setError('notGranted')
         return null
       }
 
@@ -105,7 +113,7 @@ export function useCurrentRouteStart() {
       setStart(nextStart)
       return nextStart
     } catch {
-      setError("Ta position n'a pas pu être obtenue. Réessaie dans un instant.")
+      setError('unavailable')
       return null
     } finally {
       setIsRequesting(false)

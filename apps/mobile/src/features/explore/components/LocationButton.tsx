@@ -2,6 +2,7 @@ import { LocateFixed, LocateOff } from '@tamagui/lucide-icons-2'
 import { ActivityIndicator } from 'react-native'
 
 import { GradntGlassSurface } from '@/design-system'
+import { useTranslation } from '@/i18n'
 
 type LocationButtonProps = {
   isRequesting: boolean
@@ -29,6 +30,8 @@ const SIZE = 44
  * the control rather than being hidden behind an opaque disc.
  */
 export function LocationButton({ isRequesting, needsSettings, onPress }: LocationButtonProps) {
+  const { t } = useTranslation()
+
   return (
     <GradntGlassSurface
       borderRadius={SIZE / 2}
@@ -36,7 +39,9 @@ export function LocationButton({ isRequesting, needsSettings, onPress }: Locatio
       // this is what the fallback platform needs.
       style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}
       onPress={onPress}
-      accessibilityLabel={needsSettings ? 'Ouvrir les réglages' : 'Actualiser ma position'}
+      accessibilityLabel={
+        needsSettings ? t('explore.location.openSettings') : t('explore.location.refresh')
+      }
       accessibilityState={{ busy: isRequesting }}
       disabled={isRequesting}
     >

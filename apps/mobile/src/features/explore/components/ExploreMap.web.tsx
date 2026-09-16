@@ -1,6 +1,7 @@
 import { YStack } from 'tamagui'
 
 import { GradntText } from '@/design-system'
+import { useTranslation } from '@/i18n'
 
 import type { Route, RoutePoint } from '../domain'
 import { RouteMap } from './RouteMap'
@@ -26,6 +27,7 @@ type ExploreMapProps = {
  * contract, so the screen does not have to care which one it is rendering.
  */
 export function ExploreMap({ routes, selectedRouteId }: ExploreMapProps) {
+  const { t } = useTranslation()
   const selectedRoute = routes.find((route) => route.id === selectedRouteId)
 
   return (
@@ -34,14 +36,12 @@ export function ExploreMap({ routes, selectedRouteId }: ExploreMapProps) {
         <RouteMap route={selectedRoute} />
       ) : (
         <GradntText muted textAlign="center" fontSize={13} lineHeight={19}>
-          {routes.length > 0
-            ? 'Touche un parcours pour en voir le tracé.'
-            : 'La carte nécessite la version native de l’application.'}
+          {routes.length > 0 ? t('explore.map.tapRoute') : t('explore.map.nativeOnly')}
         </GradntText>
       )}
 
       <GradntText muted textAlign="center" fontSize={11} lineHeight={16}>
-        Aperçu web schématique. La carte réelle s’affiche sur iOS et Android.
+        {t('explore.map.schematic')}
       </GradntText>
     </YStack>
   )

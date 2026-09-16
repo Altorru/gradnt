@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { XStack, YStack } from 'tamagui'
 
 import { GradntButton, GradntCard, GradntScreen, GradntText, SCREEN_GUTTER } from '@/design-system'
+import { useTranslation, type MessageKey } from '@/i18n'
 import { defaultRoutePreferences, type RoutePreferences } from '@/features/explore/domain'
 import { FilterBar, RouteDetailPanel, type ExploreFilterKey } from '@/features/explore/components'
 import { ExploreMap } from '@/features/explore/components/ExploreMap'
@@ -16,6 +17,16 @@ import {
 } from '@/features/explore/hooks'
 
 import { useDebouncedValue } from '@/hooks/use-debounced-value'
+import type { LocationErrorCode } from '@/features/explore/hooks/use-location'
+
+/** Where each reason the position failed lives in the catalogue. */
+const LOCATION_ERROR_KEYS: Record<LocationErrorCode, MessageKey> = {
+  unsupported: 'explore.location.errors.unsupported',
+  disabled: 'explore.location.errors.disabled',
+  denied: 'explore.location.errors.denied',
+  notGranted: 'explore.location.errors.notGranted',
+  unavailable: 'explore.location.errors.unavailable',
+}
 
 /** A panel that rises from the foot of the screen, above the tab bar. */
 function PanelFrame({ children }: { children: React.ReactNode }) {
@@ -34,6 +45,7 @@ function PanelFrame({ children }: { children: React.ReactNode }) {
 }
 
 export function ExploreScreen() {
+  const { t } = useTranslation()
   const insets = useSafeAreaInsets()
   const [preferences, setPreferences] = useState<RoutePreferences>(defaultRoutePreferences)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
@@ -112,8 +124,7 @@ export function ExploreScreen() {
             {!routingConfigured ? (
               <GradntCard padding="$3">
                 <GradntText muted fontSize={12} lineHeight={18}>
-                  Le calcul d’itinéraire n’est pas configuré : GRADNT n’affiche rien plutôt que des
-                  parcours inventés.
+                  {t('explore.notConfigured')}
                 </GradntText>
               </GradntCard>
             ) : null}
@@ -121,7 +132,9 @@ export function ExploreScreen() {
             {routingConfigured && !routeStart.hasStart ? (
               <GradntCard padding="$3">
                 <GradntText muted fontSize={12} lineHeight={18}>
-                  {routeStart.error ?? 'Recherche de ta position…'}
+                  {routeStart.error
+                    ? t(LOCATION_ERROR_KEYS[routeStart.error])
+                    : t('explore.findingPosition')}
                 </GradntText>
               </GradntCard>
             ) : null}
@@ -129,10 +142,10 @@ export function ExploreScreen() {
             {proposalsQuery.isError ? (
               <GradntCard padding="$3" gap="$2">
                 <GradntText color="$danger" fontSize={12} lineHeight={18}>
-                  Impossible de charger les parcours.
+                  {t('explore.routesFailed')}
                 </GradntText>
                 <GradntButton tone="secondary" onPress={() => void proposalsQuery.refetch()}>
-                  Réessayer
+                  {t('common.retry')}
                 </GradntButton>
               </GradntCard>
             ) : null}
@@ -142,7 +155,7 @@ export function ExploreScreen() {
         {/* Tapping anywhere else closes the detail. */}
         {isDetailOpen ? (
           <Pressable
-            accessibilityLabel="Fermer le panneau"
+            accessibilityLabel={t('common.closePanel')}
             onPress={() => setIsDetailOpen(false)}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           />
@@ -196,15 +209,14 @@ export function ExploreScreen() {
                Saying so, and offering the way to widen them, beats showing
                routes that answer a question they did not ask. */
             <GradntCard padding="$4" gap="$3">
-              <GradntText weight="semibold">Aucun parcours ne correspond</GradntText>
+              <GradntText weight="semibold">{t('explore.noMatchTitle')}</GradntText>
 
               <GradntText muted fontSize={13} lineHeight={19}>
-                Rien dans ce que le moteur a proposé ne tient dans tes fourchettes. Élargis la
-                distance ou le dénivelé pour voir plus de parcours.
+                {t('explore.noMatchBody')}
               </GradntText>
 
               <GradntButton tone="secondary" onPress={() => setOpenFilter('distance')}>
-                Élargir la distance
+                {t('explore.widenDistance')}
               </GradntButton>
             </GradntCard>
           ) : selectedRoute ? (
@@ -227,7 +239,7 @@ export function ExploreScreen() {
           ) : proposalsQuery.isPending && routeStart.hasStart ? (
             <GradntCard padding="$4">
               <XStack alignItems="center" justifyContent="center">
-                <GradntText muted>Recherche de parcours…</GradntText>
+                <GradntText muted>{t('explore.findingRoutes')}</GradntText>
               </XStack>
             </GradntCard>
           ) : null}

@@ -18,6 +18,7 @@ import {
   GradntScrollView,
   GradntText,
 } from '@/design-system'
+import { useTranslation } from '@/i18n'
 import { getTargetMeta, goalMeasures, goalTypes } from '@/features/onboarding/domain/goal.options'
 import { cyclistGoalSchema } from '@/features/onboarding/domain/goal.schema'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
@@ -31,6 +32,7 @@ import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store
  */
 export function GoalSettingsScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const storedGoal = useOnboardingStore((state) => state.goal)
   const setGoal = useOnboardingStore((state) => state.setGoal)
@@ -41,7 +43,7 @@ export function GoalSettingsScreen() {
   })
 
   const type = useWatch({ control, name: 'type' })
-  const targetMeta = getTargetMeta(type)
+  const targetMeta = getTargetMeta(type, t)
 
   const save = handleSubmit(async (values) => {
     setGoal(values)
@@ -61,14 +63,14 @@ export function GoalSettingsScreen() {
       <GradntScrollView>
         <YStack gap="$6">
           <XStack alignItems="center" gap="$3">
-            <GradntIconButton accessibilityLabel="Revenir en arrière" onPress={() => router.back()}>
+            <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color="$textPrimary" />
             </GradntIconButton>
-            <GradntHeading>Ton objectif</GradntHeading>
+            <GradntHeading>{t('settings.goalTitle')}</GradntHeading>
           </XStack>
 
           <YStack gap="$3">
-            {goalTypes.map((goalType) => (
+            {goalTypes(t).map((goalType) => (
               <Controller
                 key={goalType.value}
                 control={control}
@@ -130,7 +132,7 @@ export function GoalSettingsScreen() {
                   <GradntInput
                     value={field.value}
                     onChangeText={field.onChange}
-                    placeholder="Cyclosportive des Monts d’Or"
+                    placeholder={t('settings.eventPlaceholder')}
                   />
 
                   {fieldState.error ? (
@@ -160,7 +162,7 @@ export function GoalSettingsScreen() {
                   <GradntInput
                     value={field.value ?? ''}
                     onChangeText={field.onChange}
-                    placeholder="2027-06-13"
+                    placeholder={t('settings.datePlaceholder')}
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
@@ -188,7 +190,7 @@ export function GoalSettingsScreen() {
                   </GradntText>
 
                   <XStack gap="$2" flexWrap="wrap">
-                    {goalMeasures.map((measure) => (
+                    {goalMeasures(t).map((measure) => (
                       <GradntChip
                         key={measure.value}
                         label={measure.label}
@@ -200,7 +202,7 @@ export function GoalSettingsScreen() {
 
                   <GradntText muted fontSize={12} lineHeight={18}>
                     {
-                      goalMeasures.find(
+                      goalMeasures(t).find(
                         (measure) => measure.value === (field.value ?? 'cumulative'),
                       )?.description
                     }
@@ -210,7 +212,7 @@ export function GoalSettingsScreen() {
             />
           ) : null}
 
-          <GradntButton onPress={() => void save()}>Enregistrer</GradntButton>
+          <GradntButton onPress={() => void save()}>{t('settings.save')}</GradntButton>
         </YStack>
       </GradntScrollView>
     </GradntScreen>

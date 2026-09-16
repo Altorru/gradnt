@@ -15,6 +15,7 @@ import {
   GradntText,
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
+import { useTranslation, type MessageKey } from '@/i18n'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { getTargetMeta, goalTypes } from '../domain/goal.options'
@@ -23,6 +24,7 @@ import { useOnboardingStore } from '../store/onboarding.store'
 
 export function GoalScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
 
   const storedGoal = useOnboardingStore((state) => state.goal)
 
@@ -48,7 +50,7 @@ export function GoalScreen() {
     name: 'type',
   })
 
-  const targetMeta = getTargetMeta(selectedType)
+  const targetMeta = getTargetMeta(selectedType, t)
 
   const selectGoal = (type: CyclistGoalForm['type']) => {
     setValue('type', type, {
@@ -91,12 +93,9 @@ export function GoalScreen() {
           <OnboardingProgress step={3} total={6} />
 
           <YStack gap="$2">
-            <GradntHeading>Qu&apos;est-ce qui te motive ?</GradntHeading>
+            <GradntHeading>{t('onboarding.goal.title')}</GradntHeading>
 
-            <GradntText muted>
-              Choisis ton objectif principal. GRADNT adaptera ensuite ton plan autour de cette
-              priorité.
-            </GradntText>
+            <GradntText muted>{t('onboarding.goal.subtitle')}</GradntText>
           </YStack>
 
           <Controller
@@ -104,7 +103,7 @@ export function GoalScreen() {
             name="type"
             render={({ field }) => (
               <YStack gap="$2">
-                {goalTypes.map((goal) => {
+                {goalTypes(t).map((goal) => {
                   const selected = field.value === goal.value
 
                   return (
@@ -163,7 +162,7 @@ export function GoalScreen() {
 
               {errors.targetValue ? (
                 <GradntText color="$danger" fontSize={12}>
-                  {errors.targetValue.message}
+                  {t(errors.targetValue.message as MessageKey)}
                 </GradntText>
               ) : null}
             </YStack>
@@ -171,7 +170,7 @@ export function GoalScreen() {
 
           {selectedType === 'event' ? (
             <YStack gap="$2">
-              <GradntText weight="semibold">Ton événement</GradntText>
+              <GradntText weight="semibold">{t('onboarding.goal.eventLabel')}</GradntText>
 
               <Controller
                 control={control}
@@ -180,14 +179,14 @@ export function GoalScreen() {
                   <GradntInput
                     value={field.value}
                     onChangeText={field.onChange}
-                    placeholder="Ex. Étape du Tour"
+                    placeholder={t('onboarding.goal.eventPlaceholder')}
                   />
                 )}
               />
 
               {errors.eventName ? (
                 <GradntText color="$danger" fontSize={12}>
-                  {errors.eventName.message}
+                  {t(errors.eventName.message as MessageKey)}
                 </GradntText>
               ) : null}
             </YStack>
@@ -202,8 +201,7 @@ export function GoalScreen() {
               backgroundColor="$backgroundElevated"
             >
               <GradntText muted fontSize={13} lineHeight={19}>
-                Aucun chiffre obligatoire. GRADNT privilégiera la régularité, la forme et une
-                progression équilibrée.
+                {t('onboarding.goal.fitnessNote')}
               </GradntText>
             </YStack>
           ) : null}
@@ -214,7 +212,7 @@ export function GoalScreen() {
             iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
             onPress={submit}
           >
-            Continuer
+            {t('common.continue')}
           </GradntButton>
         </YStack>
       </GradntScrollView>

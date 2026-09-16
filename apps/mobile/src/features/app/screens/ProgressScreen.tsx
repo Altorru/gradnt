@@ -11,6 +11,8 @@ import {
   GradntStravaConnectBlock,
   GradntText,
 } from '@/design-system'
+import { useTranslation } from '@/i18n'
+import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import {
@@ -59,6 +61,7 @@ const volumeLabels = {
 } as const
 
 export function ProgressScreen() {
+  const { t } = useTranslation()
   const setStrava = useOnboardingStore((state) => state.setStrava)
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
   const [isConnecting, setIsConnecting] = useState(false)
@@ -121,7 +124,7 @@ export function ProgressScreen() {
       setStrava(result.connection)
       await activitiesQuery.refetch()
     } else {
-      setConnectError(result.error.message)
+      setConnectError(t(STRAVA_ERROR_KEYS[result.error.code], result.error.params))
     }
 
     setIsConnecting(false)

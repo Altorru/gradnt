@@ -1,4 +1,8 @@
-import { defaultStravaConnection, type StravaConnection } from '../domain/strava.schema'
+import {
+  defaultStravaConnection,
+  type StravaConnection,
+  type StravaErrorCode,
+} from '../domain/strava.schema'
 import { useOnboardingStore } from '../store/onboarding.store'
 
 import type { StravaCallbackResult } from '@/services/strava/oauth/strava-callback'
@@ -25,8 +29,15 @@ export type StravaConnectionResult =
     }
 
 export type StravaServiceError = {
-  code: 'not_configured' | 'cancelled' | 'unknown' | 'ignored'
-  message: string
+  code: StravaErrorCode
+  /**
+   * What the sentence interpolates, for the codes that carry a detail.
+   *
+   * A code alone would lose "which scopes were missing"; a sentence here would
+   * be French in an English app. The values travel with the code and the
+   * sentence is built where it is read.
+   */
+  params?: Record<string, string>
 }
 
 export interface StravaService {
@@ -38,23 +49,19 @@ export interface StravaService {
 
 const notConfiguredError: StravaServiceError = {
   code: 'not_configured',
-  message: 'La connexion Strava sera activée dès que le compte GRADNT sera configuré.',
 }
 
 const cancelledError: StravaServiceError = {
   code: 'cancelled',
-  message: 'Connexion annulée.',
 }
 
 const unknownError: StravaServiceError = {
   code: 'unknown',
-  message: 'La connexion à Strava a échoué. Réessaie dans un instant.',
 }
 
 /** No attempt was in flight — a duplicate callback delivery, not a failure. */
 const ignoredError: StravaServiceError = {
   code: 'ignored',
-  message: 'Aucune connexion en cours.',
 }
 
 /**
@@ -144,7 +151,7 @@ export class LiveStravaService implements StravaService {
           error:
             outcome.callback.status === 'userDenied'
               ? cancelledError
-              : { code: 'unknown', message: describeRejection(outcome.callback) },
+              : rejectionError(outcome.callback),
         }
 
       case 'error':
@@ -153,19 +160,27 @@ export class LiveStravaService implements StravaService {
   }
 }
 
-function describeRejection(callback: StravaCallbackResult): string {
+/** The reason a rejection was rejected, as a code and the values it names. */
+function rejectionError(callback: StravaCallbackResult): StravaServiceError {
   switch (callback.status) {
     case 'invalidState':
-      return "La session d'autorisation a expiré. Relance la connexion."
+      return { code: 'sessionExpired' }
+
     case 'missingCode':
-      return "Strava n'a pas renvoyé de code d'autorisation. Relance la connexion."
+      return { code: 'missingCode' }
+
     case 'insufficientScopes':
-      return `Autorisations insuffisantes : ${callback.missingRequiredScopes.join(', ')}.`
+      return {
+        code: 'insufficientScopes',
+        params: { scopes: callback.missingRequiredScopes.join(', ') },
+      }
+
     case 'oauthError':
-      return `Strava a refusé la demande (${callback.error}).`
+      return { code: 'oauthError', params: { error: callback.error } }
+
     case 'userDenied':
     case 'success':
-      return 'La connexion à Strava a été interrompue.'
+      return { code: 'interrupted' }
   }
 }
 

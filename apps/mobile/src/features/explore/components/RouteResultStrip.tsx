@@ -5,6 +5,8 @@ import { GradntBadge, GradntCard, GradntChip, GradntIconButton, GradntText } fro
 
 import type { RouteWithScore } from '../domain'
 
+import { useTranslation } from '@/i18n'
+
 import { formatDistance, formatElevation, recommendationLabels } from './route-format'
 
 type RouteResultStripProps = {
@@ -31,6 +33,8 @@ export function RouteResultStrip({
   onSelect,
   onOpenDetail,
 }: RouteResultStripProps) {
+  const { t } = useTranslation()
+
   return (
     <GradntCard accent padding="$4" gap="$3">
       <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
@@ -39,7 +43,7 @@ export function RouteResultStrip({
             <GradntBadge
               tone={route.recommendationLabel === 'recommended' ? 'positive' : 'neutral'}
             >
-              {recommendationLabels[route.recommendationLabel]}
+              {recommendationLabels(t)[route.recommendationLabel]}
             </GradntBadge>
           </XStack>
 
@@ -53,7 +57,7 @@ export function RouteResultStrip({
           </GradntText>
         </YStack>
 
-        <GradntIconButton accessibilityLabel="Voir le détail du parcours" onPress={onOpenDetail}>
+        <GradntIconButton accessibilityLabel={t('explore.strip.seeDetail')} onPress={onOpenDetail}>
           <ChevronUp size={18} color="$textPrimary" />
         </GradntIconButton>
       </XStack>

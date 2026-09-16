@@ -11,6 +11,8 @@ import {
   useThemeColor,
 } from '@/design-system'
 
+import { useTranslation, type Translate } from '@/i18n'
+
 import {
   defaultRoutePreferences,
   routeModeSchema,
@@ -29,21 +31,39 @@ import {
 const DISTANCE_KM = { bounds: { min: 20, max: 180 }, step: 10 }
 const ELEVATION_M = { bounds: { min: 0, max: 2000 }, step: 100 }
 
-const MODE_LABELS = { road: 'Route', gravel: 'Gravel', mtb: 'VTT' } as const
-const SURFACE_LABELS = {
-  none: 'Sans préférence',
-  paved: 'Asphalte',
-  mixed: 'Mixte',
-  gravel: 'Gravier',
-  trail: 'Sentier',
-} as const
-const INTENT_LABELS = {
-  none: 'Sans préférence',
-  endurance: 'Endurance',
-  recovery: 'Récupération',
-  climbing: 'Dénivelé',
-  tempo: 'Tempo',
-} as const
+/**
+ * The words for each choice, built from `t`.
+ *
+ * The three discipline names are the onboarding ones: it is the same question,
+ * and a rider who chose "Route" there should not meet a different word here.
+ */
+function modeLabels(t: Translate) {
+  return {
+    road: t('onboarding.disciplines.road.title'),
+    gravel: t('onboarding.disciplines.gravel.title'),
+    mtb: t('onboarding.disciplines.mtb.title'),
+  }
+}
+
+function surfaceLabels(t: Translate) {
+  return {
+    none: t('explore.filters.noPreference'),
+    paved: t('explore.surfaces.paved'),
+    mixed: t('explore.surfaces.mixed'),
+    gravel: t('explore.surfaces.gravel'),
+    trail: t('explore.surfaces.trail'),
+  }
+}
+
+function intentLabels(t: Translate) {
+  return {
+    none: t('explore.filters.noPreference'),
+    endurance: t('explore.intents.endurance'),
+    recovery: t('explore.intents.recovery'),
+    climbing: t('explore.intents.climbing'),
+    tempo: t('explore.intents.tempo'),
+  }
+}
 
 /** The filters, in the order the bar shows them. */
 const FILTERS = [
@@ -58,15 +78,19 @@ const FILTERS = [
 
 export type ExploreFilterKey = (typeof FILTERS)[number]
 
-const ROUTE_TYPE_OPTIONS = [
-  { value: 'loop', label: 'Boucle' },
-  { value: 'oneWay', label: 'Aller simple' },
-] as const
+function routeTypeOptions(t: Translate) {
+  return [
+    { value: 'loop' as const, label: t('explore.filters.loop') },
+    { value: 'oneWay' as const, label: t('explore.filters.oneWay') },
+  ]
+}
 
-const TRAFFIC_OPTIONS = [
-  { value: 'any', label: 'Peu importe' },
-  { value: 'quiet', label: 'Plus calmes' },
-] as const
+function trafficOptions(t: Translate) {
+  return [
+    { value: 'any' as const, label: t('explore.filters.anyRoad') },
+    { value: 'quiet' as const, label: t('explore.filters.quieter') },
+  ]
+}
 
 /**
  * What the bar says for a filter, and whether that value is still the one
@@ -77,13 +101,13 @@ const TRAFFIC_OPTIONS = [
  * is the pill — a bar of values reads as a summary of the ride, which is the
  * whole point of it.
  */
-function summaryOf(filter: ExploreFilterKey, preferences: RoutePreferences) {
+function summaryOf(filter: ExploreFilterKey, preferences: RoutePreferences, t: Translate) {
   const fallback = defaultRoutePreferences
 
   switch (filter) {
     case 'mode':
       return {
-        label: MODE_LABELS[preferences.mode],
+        label: modeLabels(t)[preferences.mode],
         isDefault: preferences.mode === fallback.mode,
       }
     case 'distance': {
@@ -104,21 +128,21 @@ function summaryOf(filter: ExploreFilterKey, preferences: RoutePreferences) {
     }
     case 'routeType':
       return {
-        label: preferences.loop ? 'Boucle' : 'Aller simple',
+        label: preferences.loop ? t('explore.filters.loop') : t('explore.filters.oneWay'),
         isDefault: preferences.loop === fallback.loop,
       }
     case 'surface':
       return preferences.surfacePreference === 'none'
-        ? { label: 'Surface', isDefault: true }
-        : { label: SURFACE_LABELS[preferences.surfacePreference], isDefault: false }
+        ? { label: t('explore.filters.surface'), isDefault: true }
+        : { label: surfaceLabels(t)[preferences.surfacePreference], isDefault: false }
     case 'intent':
       return preferences.trainingIntent === 'none'
-        ? { label: 'Intention', isDefault: true }
-        : { label: INTENT_LABELS[preferences.trainingIntent], isDefault: false }
+        ? { label: t('explore.filters.intent'), isDefault: true }
+        : { label: intentLabels(t)[preferences.trainingIntent], isDefault: false }
     case 'traffic':
       return preferences.lowTraffic
-        ? { label: 'Voies calmes', isDefault: true }
-        : { label: 'Toutes voies', isDefault: false }
+        ? { label: t('explore.filters.quietRoads'), isDefault: true }
+        : { label: t('explore.filters.allRoads'), isDefault: false }
   }
 }
 
@@ -251,10 +275,12 @@ function FilterRow({
   filter,
   preferences,
   onChange,
+  t,
 }: {
   filter: ExploreFilterKey
   preferences: RoutePreferences
   onChange: (update: Partial<RoutePreferences>) => void
+  t: Translate
 }) {
   switch (filter) {
     case 'mode':
@@ -264,7 +290,7 @@ function FilterRow({
           onChange={(mode) => onChange({ mode })}
           options={routeModeSchema.options.map((mode) => ({
             value: mode,
-            label: MODE_LABELS[mode],
+            label: modeLabels(t)[mode],
           }))}
         />
       )
@@ -277,12 +303,12 @@ function FilterRow({
       return (
         <GradntGlassSurface borderRadius={radius[5]} style={{ padding: 16 }}>
           <GradntRangeSlider
-            label="Distance"
+            label={t('explore.filters.distance')}
             unit="km"
             value={preferences.distanceRangeKm}
             bounds={DISTANCE_KM.bounds}
             step={DISTANCE_KM.step}
-            accessibilityLabel="Fourchette de distance en kilomètres"
+            accessibilityLabel={t('explore.filters.distanceRange')}
             onValueChange={(distanceRangeKm) => onChange({ distanceRangeKm })}
           />
         </GradntGlassSurface>
@@ -291,12 +317,12 @@ function FilterRow({
       return (
         <GradntGlassSurface borderRadius={radius[5]} style={{ padding: 16 }}>
           <GradntRangeSlider
-            label="Dénivelé"
+            label={t('explore.filters.elevation')}
             unit="m"
             value={preferences.elevationRangeM}
             bounds={ELEVATION_M.bounds}
             step={ELEVATION_M.step}
-            accessibilityLabel="Fourchette de dénivelé en mètres"
+            accessibilityLabel={t('explore.filters.elevationRange')}
             onValueChange={(elevationRangeM) => onChange({ elevationRangeM })}
           />
         </GradntGlassSurface>
@@ -306,7 +332,7 @@ function FilterRow({
         <OptionRow
           value={preferences.loop ? 'loop' : 'oneWay'}
           onChange={(routeType) => onChange({ loop: routeType === 'loop' })}
-          options={ROUTE_TYPE_OPTIONS}
+          options={routeTypeOptions(t)}
         />
       )
     case 'surface':
@@ -316,7 +342,7 @@ function FilterRow({
           onChange={(surfacePreference) => onChange({ surfacePreference })}
           options={surfacePreferenceSchema.options.map((surface) => ({
             value: surface,
-            label: SURFACE_LABELS[surface],
+            label: surfaceLabels(t)[surface],
           }))}
         />
       )
@@ -327,7 +353,7 @@ function FilterRow({
           onChange={(trainingIntent) => onChange({ trainingIntent })}
           options={trainingIntentSchema.options.map((intent) => ({
             value: intent,
-            label: INTENT_LABELS[intent],
+            label: intentLabels(t)[intent],
           }))}
         />
       )
@@ -336,7 +362,7 @@ function FilterRow({
         <OptionRow
           value={preferences.lowTraffic ? 'quiet' : 'any'}
           onChange={(choice) => onChange({ lowTraffic: choice === 'quiet' })}
-          options={TRAFFIC_OPTIONS}
+          options={trafficOptions(t)}
         />
       )
   }
@@ -368,6 +394,8 @@ export function FilterBar({
   onToggleFilter: (filter: ExploreFilterKey) => void
   onChange: (update: Partial<RoutePreferences>) => void
 }) {
+  const { t } = useTranslation()
+
   return (
     <YStack>
       <ScrollView
@@ -376,7 +404,7 @@ export function FilterBar({
         contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
       >
         {FILTERS.map((filter) => {
-          const { label, isDefault } = summaryOf(filter, preferences)
+          const { label, isDefault } = summaryOf(filter, preferences, t)
 
           return (
             <FilterPill
@@ -392,7 +420,7 @@ export function FilterBar({
 
       {openFilter ? (
         <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
-          <FilterRow filter={openFilter} preferences={preferences} onChange={onChange} />
+          <FilterRow filter={openFilter} preferences={preferences} onChange={onChange} t={t} />
         </View>
       ) : null}
     </YStack>

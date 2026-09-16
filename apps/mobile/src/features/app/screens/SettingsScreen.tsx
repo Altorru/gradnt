@@ -31,6 +31,7 @@ import {
   GradntText,
 } from '@/design-system'
 import { useTranslation } from '@/i18n'
+import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { usePreferencesStore } from '@/features/app/store/preferences.store'
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { goalTypeLabels } from '@/features/onboarding/domain/goal.options'
@@ -338,7 +339,7 @@ export function SettingsScreen() {
         STRAVA_QUERY_KEYS.map((queryKey) => queryClient.refetchQueries({ queryKey })),
       )
     } else {
-      setError(result.error.message)
+      setError(t(STRAVA_ERROR_KEYS[result.error.code], result.error.params))
     }
 
     setIsConnecting(false)
@@ -507,13 +508,13 @@ export function SettingsScreen() {
             <GradntCard gap="$4" padding="$4">
               <SettingsRow
                 label="Profil cycliste"
-                value={describeProfile(storedProfile)}
+                value={describeProfile(storedProfile, t)}
                 onPress={() => router.push('/settings/profile')}
               />
 
               <SettingsRow
                 label="Objectif"
-                value={storedGoal ? goalTypeLabels[storedGoal.type] : 'À définir'}
+                value={storedGoal ? goalTypeLabels(t)[storedGoal.type] : t('settings.notSet')}
                 onPress={() => router.push('/settings/goal')}
               />
             </GradntCard>

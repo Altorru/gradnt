@@ -12,9 +12,18 @@ import {
   GradntText,
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
+import { useTranslation, type MessageKey } from '@/i18n'
 
 import { RouteMap } from './RouteMap'
 import type { RouteWithScore } from '../domain'
+
+/** Where each exposure level's word lives. */
+const EXPOSURE_KEYS: Record<RouteWithScore['trafficExposure']['label'], MessageKey> = {
+  low: 'explore.exposureLevels.low',
+  moderate: 'explore.exposureLevels.moderate',
+  high: 'explore.exposureLevels.high',
+  unknown: 'explore.exposureLevels.low',
+}
 
 function formatDistance(distanceMeters: number) {
   return `${(distanceMeters / 1000).toFixed(1).replace('.', ',')} km`
@@ -142,14 +151,15 @@ export function RouteDetailPanel({
   route: RouteWithScore
   onClose: () => void
 }) {
+  const { t, plural } = useTranslation()
   return (
     <GradntCard accent padding="$4" gap="$5">
       <XStack alignItems="center" gap="$3">
         <YStack flex={1} gap="$1">
-          <GradntBadge tone="positive">Détail du parcours</GradntBadge>
+          <GradntBadge tone="positive">{t('explore.detail.title')}</GradntBadge>
           <GradntHeading level={2}>{route.name}</GradntHeading>
           <GradntText muted fontSize={13}>
-            Géométrie et données normalisées par GRADNT.
+            {t('explore.detail.geometry')}
           </GradntText>
         </YStack>
         <ChevronUp size={20} color="$accentInk" />
@@ -167,13 +177,13 @@ export function RouteDetailPanel({
         <XStack alignItems="center" gap="$2">
           <Mountain size={16} color="$warning" />
           <GradntText muted fontSize={13}>
-            {route.climbs.length} montée{route.climbs.length > 1 ? 's' : ''}
+            {plural('explore.detail.climbs', route.climbs.length)}
           </GradntText>
         </XStack>
         <XStack alignItems="center" gap="$2">
           <Info size={16} color="$recovery" />
           <GradntText muted fontSize={13}>
-            Exposition {route.trafficExposure.label === 'low' ? 'faible' : 'à vérifier'}
+            {t('explore.detail.exposure', { level: t(EXPOSURE_KEYS[route.trafficExposure.label]) })}
           </GradntText>
         </XStack>
       </XStack>
@@ -184,7 +194,7 @@ export function RouteDetailPanel({
         <XStack alignItems="center" gap="$2">
           <Mountain size={17} color="$warning" />
           <GradntText weight="semibold" fontSize={13}>
-            Montées détectées
+            {t('explore.detail.detectedClimbs')}
           </GradntText>
         </XStack>
         {route.climbs.length ? (
@@ -195,42 +205,46 @@ export function RouteDetailPanel({
                   {formatDistance(climb.lengthMeters)} · +{climb.elevationGainMeters} m
                 </GradntText>
                 <GradntText muted fontSize={12}>
-                  km {(climb.startDistanceMeters / 1000).toFixed(1)} à{' '}
-                  {(climb.endDistanceMeters / 1000).toFixed(1)} · difficulté {climb.difficultyScore}
-                  /100
+                  {t('explore.detail.climbRange', {
+                    start: (climb.startDistanceMeters / 1000).toFixed(1),
+                    end: (climb.endDistanceMeters / 1000).toFixed(1),
+                    score: climb.difficultyScore,
+                  })}
                 </GradntText>
               </YStack>
               <GradntText color="$warning" fontSize={13} weight="semibold">
-                {climb.averageGradientPercent}% moy. · {climb.maximumGradientPercent}% max.
+                {t('explore.detail.climbGradients', {
+                  average: climb.averageGradientPercent,
+                  maximum: climb.maximumGradientPercent,
+                })}
               </GradntText>
             </XStack>
           ))
         ) : (
           <GradntText muted fontSize={13}>
-            Aucune montée répondant aux seuils GRADNT n&apos;a été détectée.
+            {t('explore.detail.noClimbs')}
           </GradntText>
         )}
       </YStack>
 
-      <BreakdownList title="Surfaces" items={route.surfaceBreakdown} />
-      <BreakdownList title="Types de voies" items={route.wayTypeBreakdown} />
+      <BreakdownList title={t('explore.detail.surfaces')} items={route.surfaceBreakdown} />
+      <BreakdownList title={t('explore.detail.wayTypes')} items={route.wayTypeBreakdown} />
 
       <GradntCard padding="$3" backgroundColor="$backgroundSubtle" gap="$2">
         <XStack alignItems="center" gap="$2">
           <RouteIcon size={17} color="$recovery" />
           <GradntText weight="semibold" fontSize={13}>
-            Environnement routier
+            {t('explore.detail.roadEnvironment')}
           </GradntText>
         </XStack>
         <GradntText muted fontSize={13} lineHeight={19}>
-          {route.trafficExposure.rationale} Ce score décrit l&apos;exposition des voies à partir des
-          caractéristiques disponibles ; ce n&apos;est ni du trafic live, ni un score de sécurité.
+          {route.trafficExposure.rationale} {t('explore.detail.exposureCaveat')}
         </GradntText>
       </GradntCard>
 
       <GradntCard padding="$3" backgroundColor="$backgroundSubtle" gap="$2">
         <GradntText weight="semibold" fontSize={13}>
-          Compatibilité avec la séance
+          {t('explore.detail.sessionFit')}
         </GradntText>
         <XStack justifyContent="space-between">
           <GradntText muted fontSize={13}>

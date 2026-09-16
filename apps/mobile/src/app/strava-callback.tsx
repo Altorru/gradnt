@@ -4,6 +4,8 @@ import { ActivityIndicator } from 'react-native'
 import { YStack } from 'tamagui'
 
 import { GradntButton, GradntScreen, GradntText } from '@/design-system'
+import { translateNow } from '@/i18n'
+import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { takeStravaCallbackUrl } from '@/services/strava/oauth/strava-callback-url'
 
 import { stravaService } from '../features/onboarding/services/strava.service'
@@ -39,7 +41,7 @@ export default function StravaCallbackScreen() {
       const callbackUrl = takeStravaCallbackUrl()
 
       if (!callbackUrl) {
-        setMessage("La réponse de Strava n'a pas pu être lue.")
+        setMessage(translateNow()('onboarding.strava.errors.readFailed'))
         return
       }
 
@@ -59,7 +61,7 @@ export default function StravaCallbackScreen() {
         return
       }
 
-      setMessage(result.error.message)
+      setMessage(translateNow()(STRAVA_ERROR_KEYS[result.error.code], result.error.params))
     })()
   }, [router, setStrava])
 
@@ -67,13 +69,17 @@ export default function StravaCallbackScreen() {
     return (
       <GradntScreen>
         <YStack flex={1} alignItems="center" justifyContent="center" gap="$4">
-          <GradntText weight="semibold">Connexion interrompue</GradntText>
+          <GradntText weight="semibold">
+            {translateNow()('onboarding.strava.errors.interruptedTitle')}
+          </GradntText>
 
           <GradntText muted textAlign="center">
             {message}
           </GradntText>
 
-          <GradntButton onPress={() => router.replace('/onboarding/strava')}>Retour</GradntButton>
+          <GradntButton onPress={() => router.replace('/onboarding/strava')}>
+            {translateNow()('onboarding.strava.errors.backToStrava')}
+          </GradntButton>
         </YStack>
       </GradntScreen>
     )
@@ -83,7 +89,7 @@ export default function StravaCallbackScreen() {
     <GradntScreen>
       <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
         <ActivityIndicator />
-        <GradntText muted>Connexion à Strava…</GradntText>
+        <GradntText muted>{translateNow()('onboarding.strava.errors.connecting')}</GradntText>
       </YStack>
     </GradntScreen>
   )

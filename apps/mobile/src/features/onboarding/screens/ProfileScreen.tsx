@@ -14,6 +14,7 @@ import {
   GradntText,
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
+import { useTranslation } from '@/i18n'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { useOnboardingStore } from '../store/onboarding.store'
@@ -22,6 +23,7 @@ import { cyclistProfileSchema, type CyclistProfileForm } from '../domain/profile
 
 export function ProfileScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
   const storedProfile = useOnboardingStore((state) => state.profile)
   const setProfile = useOnboardingStore((state) => state.setProfile)
 
@@ -61,22 +63,20 @@ export function ProfileScreen() {
           <OnboardingProgress step={2} total={6} />
 
           <YStack gap="$2">
-            <GradntHeading>Ton profil cycliste</GradntHeading>
+            <GradntHeading>{t('onboarding.profile.title')}</GradntHeading>
 
-            <GradntText muted>
-              Donne-nous juste assez de contexte pour adapter les recommandations à ta pratique.
-            </GradntText>
+            <GradntText muted>{t('onboarding.profile.subtitle')}</GradntText>
           </YStack>
 
           <YStack gap="$3">
-            <GradntText weight="semibold">Ta pratique principale</GradntText>
+            <GradntText weight="semibold">{t('onboarding.profile.discipline')}</GradntText>
 
             <Controller
               control={control}
               name="discipline"
               render={({ field }) => (
                 <YStack gap="$2">
-                  {disciplines.map((item) => {
+                  {disciplines(t).map((item) => {
                     const selected = field.value === item.value
 
                     return (
@@ -98,14 +98,14 @@ export function ProfileScreen() {
           </YStack>
 
           <YStack gap="$3">
-            <GradntText weight="semibold">Ton expérience</GradntText>
+            <GradntText weight="semibold">{t('onboarding.profile.experience')}</GradntText>
 
             <Controller
               control={control}
               name="experience"
               render={({ field }) => (
                 <XStack gap="$2">
-                  {experiences.map((item) => {
+                  {experiences(t).map((item) => {
                     const selected = field.value === item.value
 
                     return (
@@ -126,14 +126,14 @@ export function ProfileScreen() {
           </YStack>
 
           <YStack gap="$3">
-            <GradntText weight="semibold">Volume hebdomadaire actuel</GradntText>
+            <GradntText weight="semibold">{t('onboarding.profile.volume')}</GradntText>
 
             <Controller
               control={control}
               name="weeklyVolume"
               render={({ field }) => (
                 <XStack gap="$2" flexWrap="wrap">
-                  {volumes.map((item) => (
+                  {volumes(t).map((item) => (
                     <GradntButton
                       key={item.value}
                       tone={field.value === item.value ? 'primary' : 'secondary'}
@@ -156,7 +156,7 @@ export function ProfileScreen() {
             iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
             onPress={submit}
           >
-            Continuer
+            {t('common.continue')}
           </GradntButton>
         </YStack>
       </GradntScrollView>

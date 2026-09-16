@@ -14,6 +14,7 @@ import {
   GradntText,
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
+import { useTranslation } from '@/i18n'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import {
@@ -32,6 +33,7 @@ type AvailabilityFormValues = {
 
 export function AvailabilityScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
   const storedAvailability = useOnboardingStore((state) => state.availability)
   const setAvailability = useOnboardingStore((state) => state.setAvailability)
 
@@ -90,20 +92,21 @@ export function AvailabilityScreen() {
           <OnboardingProgress step={4} total={6} />
 
           <YStack gap="$2">
-            <GradntHeading>Quand peux-tu rouler ?</GradntHeading>
+            <GradntHeading>{t('onboarding.availability.title')}</GradntHeading>
 
-            <GradntText muted>
-              Indique tes créneaux habituels. On gardera de la flexibilité pour les imprévus et la
-              récupération.
-            </GradntText>
+            <GradntText muted>{t('onboarding.availability.subtitle')}</GradntText>
           </YStack>
 
           <YStack gap="$3">
             {visibleSlots.map((slot, index) => (
               <YStack key={slot.day} gap="$2">
                 <GradntChoiceCard
-                  title={weekdayLabels[slot.day]}
-                  description={slot.available ? 'Disponible pour une séance' : 'Jour de repos'}
+                  title={weekdayLabels(t)[slot.day]}
+                  description={
+                    slot.available
+                      ? t('onboarding.availability.available')
+                      : t('onboarding.availability.rest')
+                  }
                   selected={slot.available}
                   onPress={() => {
                     updateSlot(index, {
@@ -126,7 +129,7 @@ export function AvailabilityScreen() {
                           updateSlot(index, { durationMinutes: duration })
                         }}
                       >
-                        {durationLabels[duration]}
+                        {durationLabels(t)[duration]}
                       </GradntButton>
                     ))}
                   </XStack>
@@ -137,7 +140,7 @@ export function AvailabilityScreen() {
 
           {!hasAvailableDay ? (
             <GradntText color="$danger" fontSize={12}>
-              Sélectionne au moins un jour disponible.
+              {t('onboarding.availability.errors.noDay')}
             </GradntText>
           ) : null}
 
@@ -147,7 +150,7 @@ export function AvailabilityScreen() {
             iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
             onPress={submit}
           >
-            Continuer
+            {t('common.continue')}
           </GradntButton>
         </YStack>
       </GradntScrollView>

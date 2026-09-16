@@ -16,13 +16,20 @@ import {
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
+import { useTranslation } from '@/i18n'
+
 import { OnboardingProgress } from '../components/OnboardingProgress'
-import { defaultStravaConnection, deferredStravaConnection } from '../domain/strava.schema'
+import {
+  defaultStravaConnection,
+  deferredStravaConnection,
+  STRAVA_ERROR_KEYS,
+} from '../domain/strava.schema'
 import { useOnboardingStore } from '../store/onboarding.store'
 import { stravaService, type StravaServiceError } from '../services/strava.service'
 
 export function StravaScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
   const setStrava = useOnboardingStore((state) => state.setStrava)
   const storedStrava = useOnboardingStore((state) => state.strava)
   const hydrated = useOnboardingStore((state) => state.hydrated)
@@ -60,7 +67,7 @@ export function StravaScreen() {
       <GradntScrollView>
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
-            <GradntIconButton onPress={() => router.back()}>
+            <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
             </GradntIconButton>
 
@@ -72,12 +79,9 @@ export function StravaScreen() {
           <OnboardingProgress step={5} total={6} />
 
           <YStack gap="$2">
-            <GradntHeading>Relie tes sorties</GradntHeading>
+            <GradntHeading>{t('onboarding.strava.title')}</GradntHeading>
 
-            <GradntText muted>
-              Avec ton historique Strava, GRADNT pourra mieux comprendre ton point de départ et
-              rendre la suite plus pertinente.
-            </GradntText>
+            <GradntText muted>{t('onboarding.strava.subtitle')}</GradntText>
           </YStack>
 
           <GradntCard accent gap="$4">
@@ -99,14 +103,18 @@ export function StravaScreen() {
 
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">
-                  {connected ? 'Strava est connecté' : 'Strava n’est pas connecté'}
+                  {connected
+                    ? t('onboarding.strava.connected')
+                    : t('onboarding.strava.notConnected')}
                 </GradntText>
                 <GradntText muted fontSize={13}>
-                  {connection.athleteName ?? 'Aucun compte lié pour le moment'}
+                  {connection.athleteName ?? t('onboarding.strava.noAccount')}
                 </GradntText>
               </YStack>
 
-              {connected ? <GradntBadge tone="positive">Connecté</GradntBadge> : null}
+              {connected ? (
+                <GradntBadge tone="positive">{t('onboarding.strava.badgeConnected')}</GradntBadge>
+              ) : null}
             </XStack>
           </GradntCard>
 
@@ -114,25 +122,22 @@ export function StravaScreen() {
             <XStack gap="$3" alignItems="flex-start">
               <ShieldCheck size={19} color={'$recovery'} />
               <GradntText muted flex={1} fontSize={13} lineHeight={19}>
-                Tu contrôles la connexion. GRADNT utilisera uniquement les activités nécessaires
-                pour personnaliser ton expérience.
+                {t('onboarding.strava.reassurance')}
               </GradntText>
             </XStack>
 
             <GradntText muted fontSize={12} lineHeight={18}>
-              Connecter Strava est vivement recommandé : ton historique permet de mieux estimer ton
-              point de départ et d’éviter un plan générique. Tu peux toutefois commencer sans
-              connexion et la faire plus tard.
+              {t('onboarding.strava.recommendation')}
             </GradntText>
           </YStack>
 
           {error ? (
             <YStack gap="$2" padding="$4" borderRadius={16} backgroundColor="$backgroundSubtle">
               <GradntText color="$danger" weight="semibold" fontSize={13}>
-                Connexion indisponible
+                {t('onboarding.strava.errorTitle')}
               </GradntText>
               <GradntText muted fontSize={12} lineHeight={18}>
-                {error.message}
+                {t(STRAVA_ERROR_KEYS[error.code], error.params)}
               </GradntText>
             </YStack>
           ) : null}
@@ -152,7 +157,11 @@ export function StravaScreen() {
                 void connect()
               }}
             >
-              {isLoading ? 'Vérification…' : connected ? 'Compte connecté' : 'Connecter Strava'}
+              {isLoading
+                ? t('onboarding.strava.connecting')
+                : connected
+                  ? t('onboarding.strava.accountConnected')
+                  : t('onboarding.strava.connect')}
             </GradntButton>
 
             {connected ? (
@@ -163,11 +172,11 @@ export function StravaScreen() {
                   router.push('/onboarding/review')
                 }}
               >
-                Continuer
+                {t('common.continue')}
               </GradntButton>
             ) : (
               <GradntButton tone="ghost" onPress={deferConnection}>
-                Continuer sans connecter
+                {t('onboarding.strava.defer')}
               </GradntButton>
             )}
           </YStack>

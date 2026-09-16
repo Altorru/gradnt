@@ -4,7 +4,7 @@ import {
   formatDistance,
   formatDuration,
   formatElevation,
-  getTrainingFitLabel,
+  getTrainingFitKey,
   recommendationLabels,
 } from './route-format'
 
@@ -46,20 +46,23 @@ describe('formatDuration', () => {
   })
 })
 
-describe('getTrainingFitLabel', () => {
+describe('getTrainingFitKey', () => {
   it('has three bands, with the boundaries where they are stated', () => {
-    expect(getTrainingFitLabel(85)).toBe('Très adaptée')
-    expect(getTrainingFitLabel(84)).toBe('Adaptée')
-    expect(getTrainingFitLabel(70)).toBe('Adaptée')
-    expect(getTrainingFitLabel(69)).toBe('À ajuster')
+    expect(getTrainingFitKey(85)).toBe('explore.fit.great')
+    expect(getTrainingFitKey(84)).toBe('explore.fit.good')
+    expect(getTrainingFitKey(70)).toBe('explore.fit.good')
+    expect(getTrainingFitKey(69)).toBe('explore.fit.adjust')
   })
 })
 
 describe('recommendationLabels', () => {
   it('names every label the domain defines', () => {
     // Exhaustive by type: a new label in the domain would fail to compile here
-    // rather than rendering as an empty badge.
-    expect(Object.keys(recommendationLabels).sort()).toEqual([
+    // rather than rendering as an empty badge. The translator is a stub that
+    // echoes the key, so this asserts the shape and not the wording.
+    const labels = recommendationLabels(((key: string) => key) as never)
+
+    expect(Object.keys(labels).sort()).toEqual([
       'alternative',
       'quieter',
       'recommended',

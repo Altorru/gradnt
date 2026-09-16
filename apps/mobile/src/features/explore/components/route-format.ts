@@ -1,3 +1,5 @@
+import type { MessageKey, Translate } from '@/i18n'
+
 import type { RouteWithScore } from '../domain'
 
 /**
@@ -32,14 +34,23 @@ export function formatDuration(durationSeconds: number): string {
   return `${hours} h${remainingMinutes ? ` ${remainingMinutes} min` : ''}`
 }
 
-export const recommendationLabels: Record<RouteWithScore['recommendationLabel'], string> = {
-  recommended: 'Recommandée',
-  quieter: 'Plus calme',
-  training: 'Plus entraînante',
-  alternative: 'Alternative',
+export function recommendationLabels(
+  t: Translate,
+): Record<RouteWithScore['recommendationLabel'], string> {
+  return {
+    recommended: t('explore.recommendation.recommended'),
+    quieter: t('explore.recommendation.quieter'),
+    training: t('explore.recommendation.training'),
+    alternative: t('explore.recommendation.alternative'),
+  }
 }
 
-/** How well a route matches the session the rider asked for. */
-export function getTrainingFitLabel(score: number): string {
-  return score >= 85 ? 'Très adaptée' : score >= 70 ? 'Adaptée' : 'À ajuster'
+/**
+ * How well a route matches what the rider asked for, as a key.
+ *
+ * A key rather than a sentence: this is a domain-ish comparison, and the words
+ * belong to whoever renders them.
+ */
+export function getTrainingFitKey(score: number): MessageKey {
+  return score >= 85 ? 'explore.fit.great' : score >= 70 ? 'explore.fit.good' : 'explore.fit.adjust'
 }

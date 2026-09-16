@@ -14,36 +14,13 @@ import {
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
+import { useTranslation } from '@/i18n'
+
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { durationLabels, weekdayLabels } from '../domain/availability.schema'
+import { goalTypes } from '../domain/goal.options'
+import { disciplines, experiences, labelOf, volumes } from '../domain/profile.options'
 import { useOnboardingStore } from '../store/onboarding.store'
-
-const disciplineLabels = {
-  road: 'Route',
-  gravel: 'Gravel',
-  mtb: 'VTT',
-} as const
-
-const experienceLabels = {
-  beginner: 'Débutant',
-  regular: 'Régulier',
-  advanced: 'Avancé',
-} as const
-
-const volumeLabels = {
-  lt3: '< 3 h',
-  '3to6': '3–6 h',
-  '6to10': '6–10 h',
-  gt10: '10 h+',
-} as const
-
-const goalLabels = {
-  ftp: 'Améliorer ma FTP',
-  distance: 'Rouler plus loin',
-  event: 'Préparer un événement',
-  climbing: 'Mieux grimper',
-  fitness: 'Progresser globalement',
-} as const
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
@@ -60,6 +37,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 export function ReviewScreen() {
   const router = useRouter()
+  const { t } = useTranslation()
   const complete = useOnboardingStore((state) => state.complete)
   const reset = useOnboardingStore((state) => state.reset)
   const profile = useOnboardingStore((state) => state.profile)
@@ -73,27 +51,27 @@ export function ReviewScreen() {
       const duration = slot.durationMinutes
 
       if (duration === null) {
-        return weekdayLabels[slot.day]
+        return weekdayLabels(t)[slot.day]
       }
 
-      return `${weekdayLabels[slot.day]} · ${durationLabels[duration as keyof typeof durationLabels]}`
+      return `${weekdayLabels(t)[slot.day]} · ${durationLabels(t)[duration as keyof ReturnType<typeof durationLabels>]}`
     })
     .join(', ')
 
   const goalSummary = goal
     ? goal.type === 'event'
-      ? `${goalLabels[goal.type]} · ${goal.eventName}`
+      ? `${labelOf(goalTypes(t), goal.type)} · ${goal.eventName}`
       : goal.type === 'fitness'
-        ? goalLabels[goal.type]
-        : `${goalLabels[goal.type]} · ${goal.targetValue}`
-    : 'À compléter'
+        ? labelOf(goalTypes(t), goal.type)
+        : `${labelOf(goalTypes(t), goal.type)} · ${goal.targetValue}`
+    : t('onboarding.review.goalEmpty')
 
   return (
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$7">
           <XStack alignItems="center" justifyContent="space-between">
-            <GradntIconButton onPress={() => router.back()}>
+            <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
             </GradntIconButton>
 
@@ -105,47 +83,54 @@ export function ReviewScreen() {
           <OnboardingProgress step={6} total={6} />
 
           <YStack gap="$2">
-            <GradntHeading>Ton point de départ</GradntHeading>
+            <GradntHeading>{t('onboarding.review.title')}</GradntHeading>
 
-            <GradntText muted>
-              Voici le contexte que GRADNT utilisera pour construire une première base cohérente.
-            </GradntText>
+            <GradntText muted>{t('onboarding.review.subtitle')}</GradntText>
           </YStack>
 
           <GradntCard gap="$4">
             <XStack justifyContent="space-between" alignItems="center">
-              <GradntText weight="semibold">Profil cycliste</GradntText>
-              <GradntBadge tone="positive">Prêt</GradntBadge>
+              <GradntText weight="semibold">{t('onboarding.review.profileCard')}</GradntText>
+              <GradntBadge tone="positive">{t('onboarding.review.ready')}</GradntBadge>
             </XStack>
 
             {profile ? (
               <YStack gap="$3">
-                <SummaryRow label="Pratique" value={disciplineLabels[profile.discipline]} />
-                <SummaryRow label="Expérience" value={experienceLabels[profile.experience]} />
-                <SummaryRow label="Volume actuel" value={volumeLabels[profile.weeklyVolume]} />
+                <SummaryRow
+                  label={t('onboarding.review.practice')}
+                  value={labelOf(disciplines(t), profile.discipline)}
+                />
+                <SummaryRow
+                  label={t('onboarding.review.experience')}
+                  value={labelOf(experiences(t), profile.experience)}
+                />
+                <SummaryRow
+                  label={t('onboarding.review.volume')}
+                  value={labelOf(volumes(t), profile.weeklyVolume)}
+                />
               </YStack>
             ) : (
               <GradntText muted fontSize={13}>
-                Profil non renseigné.
+                {t('onboarding.review.profileEmpty')}
               </GradntText>
             )}
           </GradntCard>
 
           <GradntCard gap="$4">
             <XStack justifyContent="space-between" alignItems="center">
-              <GradntText weight="semibold">Objectif principal</GradntText>
-              <GradntBadge tone="positive">Prêt</GradntBadge>
+              <GradntText weight="semibold">{t('onboarding.review.goalCard')}</GradntText>
+              <GradntBadge tone="positive">{t('onboarding.review.ready')}</GradntBadge>
             </XStack>
-            <SummaryRow label="Objectif" value={goalSummary} />
+            <SummaryRow label={t('onboarding.review.goal')} value={goalSummary} />
           </GradntCard>
 
           <GradntCard gap="$4">
             <XStack justifyContent="space-between" alignItems="center">
-              <GradntText weight="semibold">Disponibilités</GradntText>
-              <GradntBadge tone="positive">Prêt</GradntBadge>
+              <GradntText weight="semibold">{t('onboarding.review.availabilityCard')}</GradntText>
+              <GradntBadge tone="positive">{t('onboarding.review.ready')}</GradntBadge>
             </XStack>
             <GradntText muted fontSize={13} lineHeight={20}>
-              {availabilitySummary || 'Aucun jour sélectionné'}
+              {availabilitySummary || t('onboarding.review.noDay')}
             </GradntText>
           </GradntCard>
 
@@ -165,13 +150,13 @@ export function ReviewScreen() {
                 />
               </YStack>
               <YStack flex={1} gap="$1">
-                <GradntText weight="semibold">Historique Strava</GradntText>
+                <GradntText weight="semibold">{t('onboarding.review.stravaCard')}</GradntText>
                 <GradntText muted fontSize={12}>
                   {strava?.status === 'connected'
-                    ? 'Connecté'
+                    ? t('onboarding.strava.badgeConnected')
                     : strava?.status === 'deferred'
-                      ? 'À connecter plus tard'
-                      : 'Pas encore connecté'}
+                      ? t('onboarding.review.stravaDeferred')
+                      : t('onboarding.review.stravaMissing')}
                 </GradntText>
               </YStack>
               <ChevronRight size={17} color={'$textSecondary'} />
@@ -180,8 +165,7 @@ export function ReviewScreen() {
 
           <YStack gap="$3">
             <GradntText muted textAlign="center" fontSize={13} lineHeight={20}>
-              GRADNT est prêt à construire ton point de départ. Aucune analyse automatique n’a été
-              lancée pour le moment.
+              {t('onboarding.review.footnote')}
             </GradntText>
 
             <GradntButton
@@ -191,7 +175,7 @@ export function ReviewScreen() {
                 router.replace('/home')
               }}
             >
-              Entrer dans GRADNT
+              {t('onboarding.review.start')}
             </GradntButton>
 
             <GradntButton
@@ -205,7 +189,7 @@ export function ReviewScreen() {
                 router.dismissTo('/onboarding')
               }}
             >
-              Recommencer l&apos;onboarding
+              {t('onboarding.review.restart')}
             </GradntButton>
           </YStack>
         </YStack>
