@@ -70,7 +70,9 @@ export function GradntOptionList<T extends string>({
                     {option.label}
                   </GradntText>
 
-                  {selected ? <Check size={18} color="$accentInk" /> : null}
+                  {/* A mark rather than ink, so the green holds on both themes
+                      while the label above stays legible. */}
+                  {selected ? <Check size={18} color="$accent" /> : null}
                 </XStack>
               )}
             </Pressable>

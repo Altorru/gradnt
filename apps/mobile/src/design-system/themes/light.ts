@@ -21,16 +21,23 @@ export const lightTheme = {
   borderColor: colors.bone300,
   borderColorHover: '#BFC0B7',
   borderColorPress: '#AAACA3',
-  borderColorFocus: colors.limeStrong,
+  borderColorFocus: colors.lime,
 
   border: colors.bone300,
   borderStrong: '#BFC0B7',
 
   placeholderColor: colors.stone500,
 
-  accent: colors.limeStrong,
-  accentInk: colors.limeInkLight,
-  accentHover: '#A6E20C',
+  /*
+   * The same brand green as dark — spent as a fill.
+   *
+   * #76B900 measures 2.1:1 against Bone, so it cannot be ink here: chart
+   * strokes, selected titles and thin borders stay the theme's neutral ink and
+   * the green goes where it can carry — buttons, progress, route lines, focus.
+   * That is a legibility split, not a second brand colour.
+   */
+  accent: colors.lime,
+  accentInk: colors.graphite900,
   onAccent: colors.graphite950,
 
   positive: '#4C9930',

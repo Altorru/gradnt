@@ -516,7 +516,7 @@ export function SettingsScreen() {
                             opacity={pressed ? 0.6 : 1}
                             borderWidth={1}
                             borderColor={
-                              editingRecordedAt === entry.recordedAt ? '$accentInk' : 'transparent'
+                              editingRecordedAt === entry.recordedAt ? '$accent' : 'transparent'
                             }
                             borderRadius={14}
                             paddingHorizontal="$2"

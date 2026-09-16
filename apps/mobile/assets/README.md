@@ -17,7 +17,7 @@ Primary colors:
 
 - Graphite #11130F
 - Bone #F4F1E8
-- Acid Lime #C8FF3D
+- GRADNT Green #76B900
 
 Semantic accents:
 

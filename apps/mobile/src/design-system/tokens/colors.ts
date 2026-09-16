@@ -1,19 +1,21 @@
 export const colors = {
-  // Brand
-  lime: '#C8FF3D',
-  limeStrong: '#B7F51F',
-  limeMuted: '#DDFE82',
   /**
-   * Deeper limes for the dark theme.
+   * GRADNT Green — the one brand colour, and the same in both themes.
    *
-   * `lime` is a very high-luminance green: ~16:1 against the dark background.
-   * That reads as glare rather than emphasis on thin strokes and small text.
+   * It replaces a vivid lime plus a second, darker green invented for light
+   * mode. That lime was a very high-luminance green: it read as glare on thin
+   * strokes over graphite, and went fluorescent on Bone where it measured
+   * 1.2:1 — invisible, which is why a second green had to exist.
+   *
+   * This one is deep enough to hold the Brand on a pale surface as a *fill*,
+   * and still reads as energy on graphite, at 7.9:1 against `graphite900`.
+   *
+   * It is not ink on light. Against `bone100` it measures 2.1:1, so on a pale
+   * surface the green fills — buttons, bars, route lines, chips — and the ink
+   * stays neutral. That split lives in the themes, not here: there is one
+   * green, and the roles decide where it is allowed.
    */
-  limeDeep: '#A4E600',
-  /** Accent as *ink* on the dark background: text, thin strokes. Calmer still. */
-  limeInkDark: '#79B81C',
-  /** Accent as *ink* on a light background, where a bright lime vanishes. */
-  limeInkLight: '#3F6B00',
+  lime: '#76B900',
 
   // Neutral dark
   graphite950: '#0C0E0B',

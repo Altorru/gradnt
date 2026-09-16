@@ -28,9 +28,14 @@ export const darkTheme = {
 
   placeholderColor: colors.stone500,
 
-  accent: colors.limeDeep,
-  accentInk: colors.limeInkDark,
-  accentHover: colors.limeStrong,
+  /*
+   * On graphite the brand green is legible as ink — 7.9:1 — so the accent and
+   * the accent ink are the same value here. There is no hover tint either: the
+   * button answers with opacity and scale, because a second green for hover is
+   * a second green.
+   */
+  accent: colors.lime,
+  accentInk: colors.lime,
   onAccent: colors.graphite950,
 
   positive: colors.success,

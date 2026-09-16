@@ -38,12 +38,15 @@ export default function TabsLayout() {
   }
 
   /**
-   * The active tab is green in both themes — but not the *same* green.
+   * A tab label is small text, and there is only one green — so the two themes
+   * answer differently, through the ink role rather than through a second
+   * brand colour.
    *
-   * On light the vivid accent is a near-white lime: measured against a pale bar
-   * it is 1.2:1, so it would read as no highlight at all. Light therefore takes
-   * the ink green (6:1); dark takes the brand accent, which has room to pop
-   * against the inactive grey.
+   * On graphite the green is ink at 7.9:1 and the active tab wears it. Against
+   * a pale bar the same green measures 2.3:1, which is not a highlight, it is a
+   * smudge: light takes the neutral ink, at 16:1, and the active tab is the
+   * dark one. `accentInk` is exactly that role — green where the surface can
+   * carry it, neutral where it cannot.
    */
   const selectedColor = scheme === 'light' ? color('accentInk') : color('accent')
 

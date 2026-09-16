@@ -42,9 +42,10 @@ export function GradntChoiceCard({
           alignItems="center"
           borderWidth={1}
           borderRadius={18}
-          // `accentInk`, not `accent`: a border and a title are ink on the card,
-          // and the fill green is far too pale to read against a light one.
-          borderColor={selected ? '$accentInk' : hovered || pressed ? '$borderStrong' : '$border'}
+          // A border is a mark, not text: it takes the brand green on both
+          // themes. Only the title inside is ink, and ink is what `accentInk`
+          // means — green on graphite, neutral on Bone.
+          borderColor={selected ? '$accent' : hovered || pressed ? '$borderStrong' : '$border'}
           backgroundColor={
             selected
               ? '$backgroundSubtle'
@@ -85,12 +86,12 @@ export function GradntChoiceCard({
             height={18}
             borderRadius="$pill"
             borderWidth={2}
-            borderColor={selected ? '$accentInk' : '$borderStrong'}
+            borderColor={selected ? '$accent' : '$borderStrong'}
             alignItems="center"
             justifyContent="center"
           >
             {selected ? (
-              <YStack width={8} height={8} borderRadius="$pill" backgroundColor="$accentInk" />
+              <YStack width={8} height={8} borderRadius="$pill" backgroundColor="$accent" />
             ) : null}
           </YStack>
         </XStack>

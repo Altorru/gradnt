@@ -43,7 +43,7 @@ Visual identity:
 - 70% low-poly topography,
 - 30% clay-style objects,
 - premium dark/light UI,
-- restrained acid-lime accent,
+- restrained green accent,
 - matte materials,
 - strong typography,
 - no generic SaaS aesthetic.
@@ -52,22 +52,34 @@ Primary colors:
 
 - Graphite `#11130F`
 - Bone `#F4F1E8`
-- Acid Lime `#C8FF3D` — the brand reference, not a value to use directly
+- GRADNT Green `#76B900` — one green, identical in dark and light
 
-The lime is consumed through two theme roles, because one value cannot do both
-jobs. A green light enough to carry dark text as a _fill_ is far too light to
-read as _ink_ on a pale surface: the brand lime measures 1.2:1 against the light
-background, which is invisible.
+It replaces an acid lime plus a second, darker green invented for light mode.
+The lime read as glare on thin strokes over graphite, and went fluorescent on
+Bone at 1.2:1 — invisible, which is why the second green existed at all. A
+deeper green does both jobs and there is no "accent light" / "accent dark".
 
-| Role        | Use                                    | Dark      | Light     |
-| ----------- | -------------------------------------- | --------- | --------- |
-| `accent`    | Fills — buttons, chips, the brand mark | `#A4E600` | `#B7F51F` |
-| `accentInk` | Ink — small text, icons, chart strokes | `#79B81C` | `#3F6B00` |
+The green is not ink on a pale surface: against Bone it measures 2.1:1, and no
+tuning fixes that, because the problem is the hue's luminance, not the shade.
+So the roles split by surface rather than by colour:
+
+| Role        | Use                                                                                 | Dark      | Light               |
+| ----------- | ----------------------------------------------------------------------------------- | --------- | ------------------- |
+| `accent`    | Fills and marks — buttons, bars, chips, route lines, selection borders, chart fills | `#76B900` | `#76B900`           |
+| `accentInk` | Ink — titles, small text, chart strokes                                             | `#76B900` | `#11130F` (neutral) |
+
+`accentInk` is a legibility role, not a second brand colour: it is the green
+where the surface can carry it and the theme's neutral ink where it cannot. A
+border or a dot is a mark, so it takes `accent`; a title or a stroke is ink, so
+it takes `accentInk`.
 
 Never hand a palette entry to an icon or chart `color`. Tamagui components take
 the theme token (`color="$accentInk"`); `react-native-svg` needs a real value,
 so it goes through `useThemeColor`. Hardcoding is how the charts ended up on a
 green the rest of the theme had already moved away from.
+
+Hover and press are never a second tint. The primary button answers with
+opacity and scale, so the brand stays one value in every state.
 
 Semantic accents:
 
