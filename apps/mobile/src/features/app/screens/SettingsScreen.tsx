@@ -156,7 +156,18 @@ export function SettingsScreen() {
   const [ftpError, setFtpError] = useState<string | null>(null)
 
   useEffect(() => {
-    void loadFtpHistory().then(setFtpHistory)
+    void loadFtpHistory().then((history) => {
+      setFtpHistory(history)
+
+      // An empty field beside a stated value reads as though nothing were
+      // saved. It starts from what is on record, ready to be corrected.
+      const latest = history.at(-1)
+
+      if (latest !== undefined) {
+        setDraftFtp(String(latest.value))
+        setDraftedSource(latest.source)
+      }
+    })
   }, [])
 
   const latestFtp = ftpHistory.at(-1) ?? null
@@ -195,10 +206,16 @@ export function SettingsScreen() {
       return
     }
 
+    // The field holds the recorded value, so saving it unchanged is a no-op
+    // rather than a second entry: the history is read as a progression, and
+    // repeated identical readings would flatten it.
+    if (latestFtp !== null && latestFtp.value === parsed && latestFtp.source === draftedSource) {
+      setFtpError(null)
+      return
+    }
+
     await saveFtpValue(parsed, draftedSource)
     setFtpHistory(await loadFtpHistory())
-    setDraftFtp('')
-    setDraftedSource('declared')
     setFtpError(null)
   }
 
