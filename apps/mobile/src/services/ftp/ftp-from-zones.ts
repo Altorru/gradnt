@@ -13,28 +13,52 @@ import { z } from 'zod'
  * being lactate threshold and starting at 91% of FTP. It is checked rather than
  * trusted — anything that does not look like that shape yields null, because a
  * wrong FTP would quietly distort every figure derived from it.
+ *
+ * The endpoint answers with an **array** of zone objects, one per metric, each
+ * carrying its own `type`. It is not an object keyed by `power` and
+ * `heart_rate`, which is what this read before and why a rider whose zones
+ * plainly exist was told they had none.
  */
 const zoneBucketSchema = z.object({
   min: z.number(),
   max: z.number(),
 })
 
-const powerZonesSchema = z.object({
-  distribution_buckets: z.array(zoneBucketSchema).min(4),
-})
+const stravaZonesSchema = z.array(
+  z.object({
+    type: z.string(),
+    // Deliberately unvalidated here: only the power entry's buckets are read,
+    // and demanding a shape of every metric would let a heart-rate entry with
+    // one bucket sink a perfectly good power reading.
+    distribution_buckets: z.array(z.unknown()),
+  }),
+)
+
+const powerBucketsSchema = z.array(zoneBucketSchema).min(4)
 
 const THRESHOLD_ZONE_INDEX = 3
 const THRESHOLD_ZONE_FLOOR = 0.91
 
 export function estimateFtpFromZones(payload: unknown): number | null {
-  const power = (payload as { power?: unknown } | null)?.power
-  const parsed = powerZonesSchema.safeParse(power)
+  const entries = stravaZonesSchema.safeParse(payload)
 
-  if (!parsed.success) {
+  if (!entries.success) {
     return null
   }
 
-  const thresholdFloor = parsed.data.distribution_buckets[THRESHOLD_ZONE_INDEX]?.min
+  const power = entries.data.find((zone) => zone.type === 'power')
+
+  if (power === undefined) {
+    return null
+  }
+
+  const buckets = powerBucketsSchema.safeParse(power.distribution_buckets)
+
+  if (!buckets.success) {
+    return null
+  }
+
+  const thresholdFloor = buckets.data[THRESHOLD_ZONE_INDEX]?.min
 
   // A zone starting at zero is not a threshold zone — the athlete has no power
   // zones configured, and dividing by 0.91 would invent a number from nothing.
