@@ -4,11 +4,13 @@ import { Pressable, ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
+  GradntGlassSurface,
   GradntHeading,
   GradntIconButton,
   GradntOptionList,
   GradntRangeSlider,
   GradntText,
+  radius,
 } from '@/design-system'
 
 import {
@@ -62,31 +64,15 @@ function FilterPill({
   onPress: () => void
 }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={6}>
-      {({ pressed }) => (
-        <XStack
-          alignItems="center"
-          gap="$1"
-          paddingHorizontal="$3"
-          paddingVertical="$2"
-          borderRadius="$pill"
-          borderWidth={1}
-          borderColor="$border"
-          backgroundColor="$backgroundElevated"
-          opacity={pressed ? 0.7 : 1}
-        >
-          <GradntText
-            color={isDefault ? '$textSecondary' : '$color'}
-            weight="semibold"
-            fontSize={13}
-          >
-            {label}
-          </GradntText>
+    <GradntGlassSurface borderRadius={radius.pill} onPress={onPress} accessibilityLabel={label}>
+      <XStack alignItems="center" gap="$1" paddingHorizontal="$3" paddingVertical="$2">
+        <GradntText color={isDefault ? '$textSecondary' : '$color'} weight="semibold" fontSize={13}>
+          {label}
+        </GradntText>
 
-          <ChevronDown size={14} color="$textSecondary" />
-        </XStack>
-      )}
-    </Pressable>
+        <ChevronDown size={14} color="$textSecondary" />
+      </XStack>
+    </GradntGlassSurface>
   )
 }
 

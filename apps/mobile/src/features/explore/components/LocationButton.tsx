@@ -1,6 +1,7 @@
-import { LocateFixed, Settings } from '@tamagui/lucide-icons-2'
-import { ActivityIndicator, Pressable } from 'react-native'
-import { YStack } from 'tamagui'
+import { LocateFixed, LocateOff } from '@tamagui/lucide-icons-2'
+import { ActivityIndicator } from 'react-native'
+
+import { GradntGlassSurface } from '@/design-system'
 
 type LocationButtonProps = {
   isRequesting: boolean
@@ -9,52 +10,43 @@ type LocationButtonProps = {
   onPress: () => void
 }
 
+const SIZE = 44
+
 /**
  * The conventional floating control for "where am I".
  *
- * A crosshair, in the corner it lives in on every map application — a rider
- * already knows what it does, which is the whole point of using the conventional
- * icon rather than an expressive one.
+ * A crosshair, in the corner every map application puts it — a rider already
+ * knows what it does, which is the whole point of using the conventional glyph
+ * rather than an expressive one.
  *
- * It changes to a settings glyph when a retry would be pointless: once the
- * permission is refused for good, or location is switched off for the device, a
- * location button that silently does nothing is worse than one that says where
- * to fix it.
+ * When a retry would be pointless it becomes `LocateOff` — still a location
+ * symbol, so the control keeps saying what it is about, with the slash saying
+ * the location is unavailable. It used to become a gear, which named the fix
+ * instead of the subject and read as a settings button that had wandered onto
+ * the map.
+ *
+ * The surface is Liquid Glass where the system has it, so the map shows through
+ * the control rather than being hidden behind an opaque disc.
  */
 export function LocationButton({ isRequesting, needsSettings, onPress }: LocationButtonProps) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={needsSettings ? 'Ouvrir les réglages' : 'Actualiser ma position'}
-      accessibilityState={{ busy: isRequesting }}
-      disabled={isRequesting}
+    <GradntGlassSurface
+      borderRadius={SIZE / 2}
+      // Lifts the control off the map. The glass carries its own depth on iOS;
+      // this is what the fallback platform needs.
+      style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}
       onPress={onPress}
+      accessibilityLabel={needsSettings ? 'Ouvrir les réglages' : 'Actualiser ma position'}
+      disabled={isRequesting}
+      busy={isRequesting}
     >
-      {({ pressed }) => (
-        <YStack
-          width={44}
-          height={44}
-          borderRadius="$pill"
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="$backgroundElevated"
-          borderWidth={1}
-          borderColor="$border"
-          opacity={pressed || isRequesting ? 0.6 : 1}
-          // Lifts the control off the map, where a flat disc would sink into the
-          // tiles. Elevation is enough on Android; iOS needs the shadow.
-          boxShadow="0 2px 8px rgba(0,0,0,0.22)"
-          elevation={3}
-        >
-          {isRequesting ? (
-            <ActivityIndicator size="small" />
-          ) : needsSettings ? (
-            <Settings size={20} color="$textPrimary" />
-          ) : (
-            <LocateFixed size={20} color="$textPrimary" />
-          )}
-        </YStack>
+      {isRequesting ? (
+        <ActivityIndicator size="small" />
+      ) : needsSettings ? (
+        <LocateOff size={20} color="$textPrimary" />
+      ) : (
+        <LocateFixed size={20} color="$textPrimary" />
       )}
-    </Pressable>
+    </GradntGlassSurface>
   )
 }
