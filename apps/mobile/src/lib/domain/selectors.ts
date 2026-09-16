@@ -330,3 +330,80 @@ export function getTrendDirection(
 export function getNextWorkout(workouts: PlannedWorkout[]): PlannedWorkout | null {
   return workouts.find((workout) => workout.status === 'planned') ?? null
 }
+
+/**
+ * The intensity bands a ride falls into, by intensity factor.
+ *
+ * The boundaries are the conventional ones: a ride's intensity factor — its
+ * normalised power over FTP — places it in a band, and the bands run from
+ * recovery up to VO₂ max.
+ */
+export type IntensityZone = 'recovery' | 'endurance' | 'tempo' | 'threshold' | 'vo2max'
+
+const INTENSITY_BANDS: readonly { zone: IntensityZone; below: number }[] = [
+  { zone: 'recovery', below: 0.55 },
+  { zone: 'endurance', below: 0.75 },
+  { zone: 'tempo', below: 0.9 },
+  { zone: 'threshold', below: 1.05 },
+  { zone: 'vo2max', below: Number.POSITIVE_INFINITY },
+]
+
+export type IntensityShare = {
+  zone: IntensityZone
+  hours: number
+  /** Fraction of the analysed time, 0–1. */
+  share: number
+}
+
+/**
+ * How the rider's training splits across intensity bands.
+ *
+ * Null when it cannot be known, which is the common case rather than a failure:
+ * it needs an FTP *and* rides recorded with a power meter. Both are absent for
+ * most riders, and a split inferred from heart rate alone would be the kind of
+ * plausible-looking figure this app has spent its time removing.
+ *
+ * Rides without power are left out of the total rather than assumed easy, so
+ * the shares describe the power rides only — which is what the label says.
+ */
+export function getIntensityDistribution(
+  activities: Activity[],
+  ftp: number | null,
+): IntensityShare[] | null {
+  if (ftp === null || ftp <= 0) {
+    return null
+  }
+
+  const hoursByZone = new Map<IntensityZone, number>()
+  let total = 0
+
+  for (const activity of activities) {
+    // Weighted power where it exists — it is Strava's normalised-power
+    // approximation, and intensity is about the whole ride, not its average.
+    const power = activity.weightedPower ?? activity.averagePower
+
+    if (power === null || power <= 0) {
+      continue
+    }
+
+    const band = INTENSITY_BANDS.find((candidate) => power / ftp < candidate.below)
+
+    if (band === undefined) {
+      continue
+    }
+
+    const hours = activity.durationSeconds / 3600
+    hoursByZone.set(band.zone, (hoursByZone.get(band.zone) ?? 0) + hours)
+    total += hours
+  }
+
+  if (total === 0) {
+    return null
+  }
+
+  return INTENSITY_BANDS.map((band) => {
+    const hours = hoursByZone.get(band.zone) ?? 0
+
+    return { zone: band.zone, hours: Math.round(hours * 10) / 10, share: hours / total }
+  }).filter((entry) => entry.hours > 0)
+}

@@ -2,9 +2,9 @@ import { useRouter, type Href } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
   GradntCard,
-  GradntChip,
   GradntGoalCard,
   GradntHeading,
+  GradntIntensityBreakdown,
   GradntSectionHeader,
   GradntStatTile,
   GradntStravaConnectBlock,
@@ -23,6 +23,7 @@ import {
   getActivityDataState,
   getDeterministicTrainingInsight,
   getGoalProgressPercentage,
+  getIntensityDistribution,
   getNextWorkout,
   getWeeklyDistanceSeries,
   getWeeklyRideCountSeries,
@@ -85,6 +86,10 @@ export function HomeScreen() {
   const previousFtp = ftpHistory.at(-2) ?? null
   const ftpDelta =
     latestFtp !== null && previousFtp !== null ? latestFtp.value - previousFtp.value : null
+
+  // Needs an FTP and rides recorded with power, so it is null for most riders —
+  // and null rather than an invented split.
+  const intensity = getIntensityDistribution(activities, latestFtp?.value ?? null)
 
   // `navigate` rather than `push`: these targets are tabs, so they should be
   // switched to, not stacked on top of the current one.
@@ -218,17 +223,19 @@ export function HomeScreen() {
             />
           )}
 
-          <YStack gap="$4">
-            {/* No destination exists for this section, so it carries no action
-                rather than a chevron that goes nowhere. */}
-            <GradntSectionHeader title="Intensités" />
-            <XStack gap="$2" flexWrap="wrap">
-              <GradntChip label="Endurance" selected />
-              <GradntChip label="Tempo" />
-              <GradntChip label="Seuil" />
-              <GradntChip label="VO₂ Max" />
-            </XStack>
-          </YStack>
+          {/*
+            Only where the split can actually be known — it needs an FTP and
+            rides recorded with power. Absent rather than empty: a block saying
+            "no data" on a dashboard is worse than no block.
+          */}
+          {intensity ? (
+            <YStack gap="$4">
+              {/* No destination exists for this section, so it carries no action
+                  rather than a chevron that goes nowhere. */}
+              <GradntSectionHeader title="Intensités" />
+              <GradntIntensityBreakdown distribution={intensity} />
+            </YStack>
+          ) : null}
 
           <GradntCard padding="$4" gap="$3">
             <GradntText weight="semibold">{insight.title}</GradntText>
