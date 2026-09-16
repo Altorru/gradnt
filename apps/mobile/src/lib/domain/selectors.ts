@@ -108,21 +108,6 @@ export function getWeeklyVolumeFloorHours(band: keyof typeof WEEKLY_VOLUME_FLOOR
 }
 
 /**
- * The rider's current standing against the goal, or null when nothing honest
- * can be read off their data.
- *
- * This is the whole of the goal business logic, kept pure so it can be tested
- * without a device — the repository's only job is to supply the activities and
- * the FTP.
- *
- * - `distance` and `climbing` read a running total or the best single ride,
- *   whichever the rider chose.
- * - `ftp` is not a ride statistic: it comes from what the rider or Strava says.
- * - `fitness` is average weekly hours, compared against the band declared.
- * - `event` has no value at all. It has a deadline, and the caller renders a
- *   countdown; a current-over-target ratio would mean nothing.
- */
-/**
  * Whole days until an event, or null when the goal has no usable date.
  *
  * Floors at zero rather than going negative: once the day arrives the
@@ -142,6 +127,21 @@ export function getEventDaysRemaining(goal: Goal, now: Date = new Date()): numbe
   return Math.max(0, Math.ceil((target - now.getTime()) / DAY_MS))
 }
 
+/**
+ * The rider's current standing against the goal, or null when nothing honest
+ * can be read off their data.
+ *
+ * This is the whole of the goal business logic, kept pure so it can be tested
+ * without a device — the repository's only job is to supply the activities and
+ * the FTP.
+ *
+ * - `distance` and `climbing` read a running total or the best single ride,
+ *   whichever the rider chose.
+ * - `ftp` is not a ride statistic: it comes from what the rider or Strava says.
+ * - `fitness` is average weekly hours, compared against the band declared.
+ * - `event` has no value at all. It has a deadline, and the caller renders a
+ *   countdown; a current-over-target ratio would mean nothing.
+ */
 export function getGoalCurrentValue(
   goal: Goal,
   activities: Activity[],
