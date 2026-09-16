@@ -76,6 +76,10 @@ export const fr = {
       deduce: 'Déduire de mes zones Strava',
       editing: 'Correction d’un relevé existant',
       cancelEditing: 'Annuler la correction',
+      deleted: 'Relevé supprimé.',
+      edited: 'Relevé corrigé.',
+      unchanged: 'Cette valeur est déjà enregistrée.',
+      saved: 'FTP enregistrée.',
     },
 
     privacy: {
@@ -99,6 +103,17 @@ export const fr = {
    * readable even when the screen is in the other one — "French" is no help to
    * someone who cannot read English.
    */
+  insights: {
+    startTitle: 'Point de départ déclaré',
+    startMessage:
+      'Le premier plan s’appuie sur ton volume déclaré ({{band}}) et tes disponibilités. Il deviendra plus précis après tes premières sorties.',
+    observedTitle: 'Tendance observée',
+    observedMessage: {
+      one: '{{count}} sortie observée dans la période analysée.',
+      other: '{{count}} sorties observées dans la période analysée.',
+    },
+  },
+
   languages: {
     fr: 'Français',
     en: 'English',

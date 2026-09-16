@@ -42,7 +42,7 @@ import type { FtpEntry } from '@/services/ftp/ftp.persistence'
 import { loadFtpHistory } from '@/services/ftp/ftp.service'
 
 export function HomeScreen() {
-  const { t } = useTranslation()
+  const { t, plural } = useTranslation()
   const router = useRouter()
   const setStrava = useOnboardingStore((state) => state.setStrava)
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
@@ -71,6 +71,7 @@ export function HomeScreen() {
   const insight = getDeterministicTrainingInsight(
     activities,
     athleteQuery.data?.weeklyVolumeBand ?? '3to6',
+    { t, plural },
   )
   const hasError =
     athleteQuery.isError ||

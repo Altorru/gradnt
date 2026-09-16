@@ -1,3 +1,5 @@
+import type { Translation } from '@/i18n'
+
 import type { Activity, Goal, PlannedWorkout, TrainingMetrics } from './schemas'
 
 export type ActivityDataState = 'none' | 'observed'
@@ -282,23 +284,33 @@ export function getWeekWindow(
   return { start: new Date(end.getTime() - WEEK_MS), end }
 }
 
+/**
+ * What to say about where a rider is starting from.
+ *
+ * Takes the translator rather than returning keys, the way the label maps do:
+ * the sentence belongs to the catalogue, and a domain module has no business
+ * deciding how it reads. It also makes the count a real plural — the sentence
+ * this replaced glued an `s` on for anything above one, which is the rule
+ * English uses and French does not.
+ */
 export function getDeterministicTrainingInsight(
   activities: Activity[],
   declaredWeeklyVolumeBand: 'lt3' | '3to6' | '6to10' | 'gt10',
+  { t, plural }: Translation,
 ): DeterministicTrainingInsight {
   const activityState = getActivityDataState(activities)
 
   if (activityState === 'none') {
     return {
-      title: 'Point de départ déclaré',
-      message: `Le premier plan s’appuie sur ton volume déclaré (${declaredWeeklyVolumeBand}) et tes disponibilités. Il deviendra plus précis après tes premières sorties.`,
+      title: t('insights.startTitle'),
+      message: t('insights.startMessage', { band: declaredWeeklyVolumeBand }),
       provenance: 'declared',
     }
   }
 
   return {
-    title: 'Tendance observée',
-    message: `${getWeeklyRideCount(activities)} sortie${activities.length > 1 ? 's' : ''} observée${activities.length > 1 ? 's' : ''} dans la période analysée.`,
+    title: t('insights.observedTitle'),
+    message: plural('insights.observedMessage', getWeeklyRideCount(activities)),
     provenance: 'observed',
   }
 }

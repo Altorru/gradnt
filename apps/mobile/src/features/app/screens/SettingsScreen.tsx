@@ -295,7 +295,7 @@ export function SettingsScreen() {
       setDraftedSource(latest?.source ?? 'declared')
     }
 
-    setFtpFeedback({ tone: 'ok', text: 'Relevé supprimé.' })
+    setFtpFeedback({ tone: 'ok', text: t('settings.ftp.deleted') })
   }
 
   const saveFtp = async () => {
@@ -310,7 +310,7 @@ export function SettingsScreen() {
       await editFtp(editingRecordedAt, parsed, draftedSource)
       await refreshHistory()
       setEditingRecordedAt(null)
-      setFtpFeedback({ tone: 'ok', text: 'Relevé corrigé.' })
+      setFtpFeedback({ tone: 'ok', text: t('settings.ftp.edited') })
       return
     }
 
@@ -318,13 +318,13 @@ export function SettingsScreen() {
     // reading — the history is read as a progression, and repeated identical
     // entries would flatten it. It still has to say so.
     if (latestFtp !== null && latestFtp.value === parsed && latestFtp.source === draftedSource) {
-      setFtpFeedback({ tone: 'ok', text: 'Cette valeur est déjà enregistrée.' })
+      setFtpFeedback({ tone: 'ok', text: t('settings.ftp.unchanged') })
       return
     }
 
     await saveFtpValue(parsed, draftedSource)
     await refreshHistory()
-    setFtpFeedback({ tone: 'ok', text: 'FTP enregistrée.' })
+    setFtpFeedback({ tone: 'ok', text: t('settings.ftp.saved') })
   }
 
   const connect = async () => {

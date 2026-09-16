@@ -100,7 +100,7 @@ export function ProgressScreen() {
     return `${formatDate(start, 'd MMM', { locale: dateLocale })} – ${formatDate(end, 'd MMM', { locale: dateLocale })}`
   }
   const declaredVolume = athleteQuery.data?.weeklyVolumeBand ?? '3to6'
-  const insight = getDeterministicTrainingInsight(activities, declaredVolume)
+  const insight = getDeterministicTrainingInsight(activities, declaredVolume, { t, plural })
   const goal = goalQuery.data
   const currentValue = currentValueQuery.data?.value ?? null
   const goalProgress = goal ? getGoalProgressPercentage(goal, currentValue) : 0

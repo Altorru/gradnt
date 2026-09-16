@@ -26,7 +26,13 @@ export type {
 export { deviceLanguage, useAppLanguage } from './use-app-language'
 export { dateLocale, formatNumber, useDateLocale, useNumberFormat } from './format'
 
-type Translation = {
+/**
+ * What a screen gets from `useTranslation()`.
+ *
+ * Exported because domain modules that build a sentence — not just a label —
+ * take it as an argument, the same way the label maps take `Translate`.
+ */
+export type Translation = {
   t: Translate
   plural: (key: PluralKey, count: number, params?: TranslateParams) => string
 }

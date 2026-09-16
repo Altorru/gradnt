@@ -72,6 +72,10 @@ export const en = {
       deduce: 'Deduce from my Strava zones',
       editing: 'Correcting a recorded value',
       cancelEditing: 'Cancel the correction',
+      deleted: 'Reading deleted.',
+      edited: 'Reading updated.',
+      unchanged: 'That value is already recorded.',
+      saved: 'FTP saved.',
     },
 
     privacy: {
@@ -85,6 +89,17 @@ export const en = {
     importedRides: {
       one: '{{count}} ride imported',
       other: '{{count}} rides imported',
+    },
+  },
+
+  insights: {
+    startTitle: 'Declared starting point',
+    startMessage:
+      'The first plan builds on your declared volume ({{band}}) and your availability. It will sharpen after your first rides.',
+    observedTitle: 'Observed trend',
+    observedMessage: {
+      one: '{{count}} ride observed over the period analysed.',
+      other: '{{count}} rides observed over the period analysed.',
     },
   },
 
