@@ -1,8 +1,16 @@
 import { z } from 'zod'
 
 export const routeModeSchema = z.enum(['road', 'gravel', 'mtb'])
-export const trainingIntentSchema = z.enum(['endurance', 'tempo', 'climbing', 'recovery'])
-export const surfacePreferenceSchema = z.enum(['paved', 'mixed', 'gravel', 'trail'])
+/**
+ * `none` is a real answer, not a missing one.
+ *
+ * A rider who has not thought about the surface, or does not care, should be
+ * able to say so — and saying it is different from picking the first option in
+ * the list. Without it the filters imply a preference nobody expressed, and the
+ * ranking quietly pushes routes towards it.
+ */
+export const trainingIntentSchema = z.enum(['none', 'endurance', 'tempo', 'climbing', 'recovery'])
+export const surfacePreferenceSchema = z.enum(['none', 'paved', 'mixed', 'gravel', 'trail'])
 
 /**
  * A span the rider is happy with, rather than one figure they would have to hit.
@@ -46,9 +54,8 @@ export const defaultRoutePreferences: RoutePreferences = {
   distanceRangeKm: { min: 40, max: 90 },
   elevationRangeM: { min: 200, max: 800 },
   lowTraffic: true,
-  surfacePreference: 'paved',
-  trainingIntent: 'endurance',
-  plannedWorkoutIntent: 'endurance',
+  surfacePreference: 'none',
+  trainingIntent: 'none',
   loop: true,
 }
 

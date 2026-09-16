@@ -34,12 +34,14 @@ const ELEVATION_M = { bounds: { min: 0, max: 2000 }, step: 100 }
 
 const MODE_LABELS = { road: 'Route', gravel: 'Gravel', mtb: 'VTT' } as const
 const SURFACE_LABELS = {
+  none: 'Sans préférence',
   paved: 'Asphalte',
   mixed: 'Mixte',
   gravel: 'Gravier',
   trail: 'Sentier',
 } as const
 const INTENT_LABELS = {
+  none: 'Sans préférence',
   endurance: 'Endurance',
   recovery: 'Récupération',
   climbing: 'Dénivelé',
@@ -134,6 +136,23 @@ export function ExploreFiltersPanel({ preferences, onChange, onClose }: ExploreF
         accessibilityLabel="Fourchette de dénivelé en mètres"
         onValueChange={(elevationRangeM) => onChange({ elevationRangeM })}
       />
+
+      <FilterGroup label="Type d'itinéraire">
+        {/* The domain has carried `loop` since the beginning and never had a
+            control for it — so the engine was always asked for a round trip,
+            whatever the rider wanted. */}
+        <ChoiceChip
+          label="Boucle"
+          selected={preferences.loop}
+          onPress={() => onChange({ loop: true })}
+        />
+
+        <ChoiceChip
+          label="Aller simple"
+          selected={!preferences.loop}
+          onPress={() => onChange({ loop: false })}
+        />
+      </FilterGroup>
 
       <FilterGroup label="Surface">
         {surfacePreferenceSchema.options.map((surface) => (

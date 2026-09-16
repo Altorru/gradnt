@@ -277,6 +277,12 @@ function intentFit(route: Route, preferences: RoutePreferences) {
 }
 
 function surfaceFit(route: Route, preferences: RoutePreferences) {
+  // A rider who expressed no preference is not better served by any surface, so
+  // the term is neutral rather than quietly favouring one.
+  if (preferences.surfacePreference === 'none') {
+    return 100
+  }
+
   const surfaceMix = route.surfaceBreakdown.reduce(
     (mix, item) => {
       const group = normalizeSurfaceGroup(item.label)
@@ -292,7 +298,7 @@ function surfaceFit(route: Route, preferences: RoutePreferences) {
     { paved: 0, gravel: 0, trail: 0 },
   )
 
-  const preferenceScore: Record<SurfacePreference, number> = {
+  const preferenceScore: Record<Exclude<SurfacePreference, 'none'>, number> = {
     paved: surfaceMix.paved,
     mixed: Math.max(0, 100 - Math.abs(surfaceMix.gravel + surfaceMix.trail - 30)),
     gravel: surfaceMix.gravel,
