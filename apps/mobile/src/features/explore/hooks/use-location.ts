@@ -1,6 +1,6 @@
 import * as Location from 'expo-location'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Platform } from 'react-native'
+import { Linking, Platform } from 'react-native'
 
 import type { RoutePoint } from '../domain'
 
@@ -11,6 +11,15 @@ function toRoutePoint(position: Location.LocationObject): RoutePoint {
     elevationMeters: position.coords.altitude,
   }
 }
+
+export type LocationStatus =
+  /** Never asked, or asking. */
+  | 'idle'
+  | 'granted'
+  /** Refused, but the system will ask again — the button can retry. */
+  | 'refused'
+  /** Refused for good, or location is off: only Settings can change it. */
+  | 'blocked'
 
 /**
  * The rider's position, asked for as soon as the screen opens.
@@ -26,13 +35,16 @@ function toRoutePoint(position: Location.LocationObject): RoutePoint {
  * for a cold fix would leave the screen empty for seconds, and a cached position
  * alone can be hours old.
  *
- * A refusal is not silent: the message says what to do, and the request stays
- * callable so the rider can change their mind.
+ * Three refusals are distinguished because they need three different actions:
+ * granting is the rider's to give, a denial the system will re-ask can simply
+ * be retried, and a permanent denial — or location switched off for the whole
+ * device — can only be changed in Settings. Asking again in the last case does
+ * nothing at all, which is what made the old flow feel broken.
  */
 export function useCurrentRouteStart() {
   const [start, setStart] = useState<RoutePoint | null>(null)
   const [isRequesting, setIsRequesting] = useState(false)
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [status, setStatus] = useState<LocationStatus>('idle')
   const [error, setError] = useState<string | null>(null)
 
   // Guards the mount effect against React 19's double invocation in
@@ -49,14 +61,36 @@ export function useCurrentRouteStart() {
     setError(null)
 
     try {
-      const permission = await Location.requestForegroundPermissionsAsync()
-      setHasPermission(permission.granted)
+      // Off at the device level: no permission dialog would even appear.
+      if (!(await Location.hasServicesEnabledAsync())) {
+        setStatus('blocked')
+        setError('La localisation est désactivée sur ton téléphone.')
+        return null
+      }
+
+      const existing = await Location.getForegroundPermissionsAsync()
+
+      // Asked already, and the system will not ask again — retrying is a no-op,
+      // so the only way forward is Settings.
+      if (!existing.granted && !existing.canAskAgain) {
+        setStatus('blocked')
+        setError('La localisation est refusée. Autorise-la dans les réglages.')
+        return null
+      }
+
+      const permission = existing.granted
+        ? existing
+        : await Location.requestForegroundPermissionsAsync()
 
       if (!permission.granted) {
+        setStatus(permission.canAskAgain ? 'refused' : 'blocked')
         setError('Autorise la localisation pour que GRADNT propose un départ près de chez toi.')
         return null
       }
 
+      setStatus('granted')
+
+      // A cached point first: instant, and no GPS spin-up.
       const lastKnown = await Location.getLastKnownPositionAsync()
 
       if (lastKnown) {
@@ -78,6 +112,15 @@ export function useCurrentRouteStart() {
     }
   }, [])
 
+  /** The only thing that can help when the status is `blocked`. */
+  const openSettings = useCallback(async () => {
+    if (Platform.OS === 'web') {
+      return
+    }
+
+    await Linking.openSettings()
+  }, [])
+
   useEffect(() => {
     if (hasAsked.current) {
       return
@@ -90,9 +133,10 @@ export function useCurrentRouteStart() {
   return {
     start,
     isRequesting,
-    hasPermission,
+    status,
     error,
     requestCurrentLocation,
+    openSettings,
     hasStart: start !== null,
   }
 }

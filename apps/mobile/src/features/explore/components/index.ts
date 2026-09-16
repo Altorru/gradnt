@@ -1,5 +1,6 @@
 export { ExploreFiltersSheet, FilterSummary } from './ExploreFiltersSheet'
 export { ExploreMap } from './ExploreMap'
+export { LocationButton } from './LocationButton'
 export { RouteDetailPanel } from './RouteDetailPanel'
 export { RouteMap } from './RouteMap'
 export { RouteResultStrip } from './RouteResultStrip'

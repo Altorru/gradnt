@@ -11,6 +11,7 @@ import {
   ExploreFiltersSheet,
   FilterSummary,
 } from '@/features/explore/components/ExploreFiltersSheet'
+import { LocationButton } from '@/features/explore/components/LocationButton'
 import { RouteResultStrip } from '@/features/explore/components/RouteResultStrip'
 import {
   isRealRoutingConfigured,
@@ -80,19 +81,10 @@ export function ExploreScreen() {
           ) : null}
 
           {routingConfigured && !routeStart.hasStart ? (
-            <GradntCard padding="$3" gap="$2">
+            <GradntCard padding="$3">
               <GradntText muted fontSize={12} lineHeight={18}>
                 {routeStart.error ?? 'Recherche de ta position…'}
               </GradntText>
-
-              {!routeStart.isRequesting ? (
-                <GradntButton
-                  tone="secondary"
-                  onPress={() => void routeStart.requestCurrentLocation()}
-                >
-                  Utiliser ma position
-                </GradntButton>
-              ) : null}
             </GradntCard>
           ) : null}
 
@@ -132,6 +124,27 @@ export function ExploreScreen() {
           style={{ paddingBottom: bottomClearance }}
           pointerEvents="box-none"
         >
+          {/* Above the strip rather than beside it: stacked in the same column,
+              the button sits directly on top of it at any strip height, with no
+              offset guessed from a hardcoded size. It steps aside for the detail
+              panel, which is a reading state rather than a map one. */}
+          {!isDetailOpen && routingConfigured ? (
+            <YStack alignSelf="flex-start">
+              <LocationButton
+                isRequesting={routeStart.isRequesting}
+                needsSettings={routeStart.status === 'blocked'}
+                onPress={() => {
+                  if (routeStart.status === 'blocked') {
+                    void routeStart.openSettings()
+                    return
+                  }
+
+                  void routeStart.requestCurrentLocation()
+                }}
+              />
+            </YStack>
+          ) : null}
+
           {isDetailOpen && selectedRoute ? (
             <YStack
               maxHeight={520}
