@@ -4,6 +4,7 @@ import {
   aggregateSurfaceBreakdown,
   detectClimbs,
   getTrafficExposure,
+  midpointOf,
   rankRouteProposals,
   routeSchema,
   type BreakdownItem,
@@ -76,6 +77,16 @@ const heigitResponseSchema = z
 
 type HeigitFeature = z.infer<typeof heigitFeatureSchema>
 type HeigitExtraSummary = z.infer<typeof extraSummarySchema>
+
+/**
+ * What the engine accepts for a round trip, in metres.
+ *
+ * Its own words: "The requested route length must not be greater than
+ * 100000.0 meters". Asking for more is a 400, which the screen reports as
+ * a failure to load — so it is clamped here rather than left to the caller
+ * to get right.
+ */
+const MAX_ROUND_TRIP_LENGTH_METERS = 100_000
 
 const heigitProfileByMode: Record<RouteMode, string> = {
   road: 'cycling-road',
@@ -285,7 +296,10 @@ export class HeigitRoutingService implements RoutingService {
               ? {
                   options: {
                     round_trip: {
-                      length: request.preferences.targetDistanceKm * 1000,
+                      length: Math.min(
+                        midpointOf(request.preferences.distanceRangeKm) * 1000,
+                        MAX_ROUND_TRIP_LENGTH_METERS,
+                      ),
                       points: 3,
                       seed,
                     },

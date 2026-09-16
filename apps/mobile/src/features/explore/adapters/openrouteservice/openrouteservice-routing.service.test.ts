@@ -11,8 +11,8 @@ const request: RouteRequest = {
   },
   preferences: {
     mode: 'road',
-    targetDistanceKm: 20,
-    targetElevationGainMeters: 200,
+    distanceRangeKm: { min: 10, max: 20 },
+    elevationRangeM: { min: 0, max: 200 },
     lowTraffic: true,
     surfacePreference: 'paved',
     trainingIntent: 'endurance',

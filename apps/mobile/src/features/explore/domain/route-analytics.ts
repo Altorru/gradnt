@@ -206,18 +206,34 @@ export function getTrafficExposure(input: {
   }
 }
 
-function distanceFit(route: Route, preferences: RoutePreferences) {
-  const difference = Math.abs(route.distanceMeters / 1000 - preferences.targetDistanceKm)
-  return Math.max(0, 100 - (difference / Math.max(preferences.targetDistanceKm, 1)) * 100)
-}
-
-function elevationFit(route: Route, preferences: RoutePreferences) {
-  if (preferences.targetElevationGainMeters === 0) {
+/**
+ * How well a figure sits inside the span the rider asked for.
+ *
+ * Everything inside is worth the same. A 55 km route is as right as a 60 km one
+ * when the rider said "between 40 and 90" — scoring by distance from a single
+ * figure punished routes for missing a target nobody had chosen.
+ *
+ * Outside, the score falls away in proportion to how far past the edge it is,
+ * with the span itself as the scale: a route just over the line ranks above one
+ * far beyond it, and a wider span is more forgiving than a narrow one.
+ */
+export function rangeFit(value: number, range: { min: number; max: number }): number {
+  if (value >= range.min && value <= range.max) {
     return 100
   }
 
-  const difference = Math.abs(route.elevationGainMeters - preferences.targetElevationGainMeters)
-  return Math.max(0, 100 - (difference / preferences.targetElevationGainMeters) * 100)
+  const span = Math.max(range.max - range.min, 1)
+  const overshoot = value < range.min ? range.min - value : value - range.max
+
+  return Math.max(0, 100 - (overshoot / span) * 100)
+}
+
+function distanceFit(route: Route, preferences: RoutePreferences) {
+  return rangeFit(route.distanceMeters / 1000, preferences.distanceRangeKm)
+}
+
+function elevationFit(route: Route, preferences: RoutePreferences) {
+  return rangeFit(route.elevationGainMeters, preferences.elevationRangeM)
 }
 
 function intentFit(route: Route, preferences: RoutePreferences) {

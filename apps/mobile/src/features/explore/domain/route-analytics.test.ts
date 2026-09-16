@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-
 import {
+  rangeFit,
   aggregateSurfaceBreakdown,
   detectClimbs,
   getTrafficExposure,
   rankRouteProposals,
 } from './route-analytics'
+
 import type { Route } from './route'
 import { defaultRoutePreferences } from './route-preferences'
 
@@ -101,7 +102,7 @@ describe('route analytics', () => {
     }
     const ranked = rankRouteProposals([routeBase, climbingRoute], {
       ...defaultRoutePreferences,
-      targetElevationGainMeters: 700,
+      elevationRangeM: { min: 600, max: 800 },
       trainingIntent: 'climbing',
       plannedWorkoutIntent: 'climbing',
     })
@@ -109,5 +110,45 @@ describe('route analytics', () => {
     expect(ranked[0]?.id).toBe('route-climbing')
     expect(ranked[0]?.trainingIntent).toBe('climbing')
     expect(ranked[0]?.recommendationLabel).toBe('recommended')
+  })
+})
+
+describe('rangeFit', () => {
+  const span = { min: 40, max: 90 }
+
+  it('treats everything inside the span as equally right', () => {
+    // A rider asking for 40–90 km wants a ride of about that length, not a
+    // route that hits a number. Scoring by distance from a single figure
+    // punished the ends of a span that was explicitly chosen.
+    expect(rangeFit(40, span)).toBe(100)
+    expect(rangeFit(65, span)).toBe(100)
+    expect(rangeFit(90, span)).toBe(100)
+  })
+
+  it('falls away once past an edge', () => {
+    expect(rangeFit(30, span)).toBeLessThan(100)
+    expect(rangeFit(100, span)).toBeLessThan(100)
+  })
+
+  it('ranks a route just over the line above one far beyond it', () => {
+    expect(rangeFit(95, span)).toBeGreaterThan(rangeFit(140, span))
+  })
+
+  it('uses the span as the scale, so a wide span forgives more', () => {
+    const narrow = { min: 40, max: 50 }
+    const wide = { min: 20, max: 120 }
+
+    expect(rangeFit(70, wide)).toBeGreaterThan(rangeFit(70, narrow))
+  })
+
+  it('never goes below zero, however far past the edge', () => {
+    expect(rangeFit(1000, span)).toBe(0)
+  })
+
+  it('has no span to fall back on, so it stays exact', () => {
+    // A single-value span is a legitimate ask — "about 60 km" — and one step
+    // off it should cost something rather than nothing.
+    expect(rangeFit(60, { min: 60, max: 60 })).toBe(100)
+    expect(rangeFit(61, { min: 60, max: 60 })).toBeLessThan(100)
   })
 })

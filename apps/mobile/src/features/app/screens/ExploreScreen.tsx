@@ -8,9 +8,9 @@ import { defaultRoutePreferences, type RoutePreferences } from '@/features/explo
 import { RouteDetailPanel } from '@/features/explore/components'
 import { ExploreMap } from '@/features/explore/components/ExploreMap'
 import {
-  ExploreFiltersSheet,
+  ExploreFiltersPanel,
   FilterSummary,
-} from '@/features/explore/components/ExploreFiltersSheet'
+} from '@/features/explore/components/ExploreFiltersPanel'
 import { LocationButton } from '@/features/explore/components/LocationButton'
 import { RouteResultStrip } from '@/features/explore/components/RouteResultStrip'
 import {
@@ -19,7 +19,25 @@ import {
   useRouteProposalsQuery,
 } from '@/features/explore/hooks'
 
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
+
 import { AppShell } from '../components/AppShell'
+
+/** A panel that rises from the foot of the screen, above the tab bar. */
+function PanelFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <YStack
+      maxHeight={560}
+      backgroundColor="$backgroundElevated"
+      borderRadius="$5"
+      borderWidth={1}
+      borderColor="$border"
+      overflow="hidden"
+    >
+      <ScrollView contentContainerStyle={{ padding: SCREEN_GUTTER }}>{children}</ScrollView>
+    </YStack>
+  )
+}
 
 export function ExploreScreen() {
   const insets = useSafeAreaInsets()
@@ -30,7 +48,10 @@ export function ExploreScreen() {
 
   const routingConfigured = isRealRoutingConfigured()
   const routeStart = useCurrentRouteStart()
-  const proposalsQuery = useRouteProposalsQuery(preferences, routeStart.start)
+  // The controls render `preferences` immediately; only what reaches the
+  // network waits for the drag to settle.
+  const settledPreferences = useDebouncedValue(preferences)
+  const proposalsQuery = useRouteProposalsQuery(settledPreferences, routeStart.start)
   const proposals = proposalsQuery.data ?? []
 
   // The chosen route, or the best one while nothing is chosen — so the strip has
@@ -105,10 +126,13 @@ export function ExploreScreen() {
         </YStack>
 
         {/* Tapping anywhere else closes the detail. */}
-        {isDetailOpen && selectedRoute ? (
+        {isDetailOpen || isFiltersOpen ? (
           <Pressable
-            accessibilityLabel="Fermer le détail"
-            onPress={() => setIsDetailOpen(false)}
+            accessibilityLabel="Fermer le panneau"
+            onPress={() => {
+              setIsDetailOpen(false)
+              setIsFiltersOpen(false)
+            }}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           />
         ) : null}
@@ -149,19 +173,18 @@ export function ExploreScreen() {
             </YStack>
           ) : null}
 
-          {isDetailOpen && selectedRoute ? (
-            <YStack
-              maxHeight={520}
-              backgroundColor="$backgroundElevated"
-              borderRadius="$5"
-              borderWidth={1}
-              borderColor="$border"
-              overflow="hidden"
-            >
-              <ScrollView contentContainerStyle={{ padding: SCREEN_GUTTER }}>
-                <RouteDetailPanel route={selectedRoute} onClose={() => setIsDetailOpen(false)} />
-              </ScrollView>
-            </YStack>
+          {isFiltersOpen ? (
+            <PanelFrame>
+              <ExploreFiltersPanel
+                preferences={preferences}
+                onChange={updatePreferences}
+                onClose={() => setIsFiltersOpen(false)}
+              />
+            </PanelFrame>
+          ) : isDetailOpen && selectedRoute ? (
+            <PanelFrame>
+              <RouteDetailPanel route={selectedRoute} onClose={() => setIsDetailOpen(false)} />
+            </PanelFrame>
           ) : selectedRoute ? (
             <RouteResultStrip
               route={selectedRoute}
@@ -182,13 +205,6 @@ export function ExploreScreen() {
           ) : null}
         </YStack>
       </YStack>
-
-      <ExploreFiltersSheet
-        isOpen={isFiltersOpen}
-        preferences={preferences}
-        onChange={updatePreferences}
-        onClose={() => setIsFiltersOpen(false)}
-      />
     </AppShell>
   )
 }
