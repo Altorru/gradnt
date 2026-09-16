@@ -1,4 +1,5 @@
-import type { MessageKey, Translation } from '@/i18n'
+import type { MessageKey, Language, Translation } from '@/i18n'
+import { formatNumber } from '@/i18n/format'
 
 import type { NotificationPreferences } from '../../services/preferences/preferences.persistence'
 
@@ -273,10 +274,16 @@ export type NotificationWording = {
  * Written here, at scheduling time, and copied into the notification: a local
  * notification is not rendered by the app, so a language change has to
  * re-trigger reconciliation rather than re-render.
+ *
+ * Every figure goes through `formatNumber` before it reaches a template, since
+ * `interpolate` only does `String(value)`: a raw 6.5 would reach a French lock
+ * screen as "6.5 h", where French writes "6,5 h". The words come from the
+ * catalogue; the numbers come from the formatter.
  */
 export function describeNotification(
   notification: DesiredNotification,
   { t }: Translation,
+  language: Language,
 ): NotificationWording {
   switch (notification.kind) {
     case 'session':
@@ -284,7 +291,7 @@ export function describeNotification(
         title: t('notifications.session.title'),
         body: `${t(SESSION_TITLE_KEYS[notification.workout.type])} · ${t(
           'notifications.session.duration',
-          { minutes: notification.workout.durationMinutes },
+          { minutes: formatNumber(language, notification.workout.durationMinutes) },
         )}`,
         url: `/plan/${notification.workout.id}`,
       }
@@ -296,9 +303,13 @@ export function describeNotification(
           notification.summary === null
             ? t('notifications.weekly.bodyWithoutFigures')
             : t('notifications.weekly.bodyWithFigures', {
-                rides: notification.summary.rides,
-                hours: notification.summary.hours,
-                distance: notification.summary.distanceKm,
+                rides: formatNumber(language, notification.summary.rides),
+                // The one figure with a fractional part, and so the one that
+                // makes the separator visible. Same treatment as the plan screen.
+                hours: formatNumber(language, notification.summary.hours, {
+                  maximumFractionDigits: 1,
+                }),
+                distance: formatNumber(language, notification.summary.distanceKm),
               }),
         url: '/progress',
       }
@@ -314,7 +325,9 @@ export function describeNotification(
     case 'milestone':
       return {
         title: t('notifications.milestone.title'),
-        body: t('notifications.milestone.body', { threshold: notification.threshold }),
+        body: t('notifications.milestone.body', {
+          threshold: formatNumber(language, notification.threshold),
+        }),
         url: '/progress',
       }
   }

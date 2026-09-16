@@ -2,23 +2,25 @@ import type { Locale } from 'date-fns'
 import { enUS, fr as frLocale } from 'date-fns/locale'
 
 import type { Language } from './languages'
-import { useAppLanguage } from './use-app-language'
 
 /**
- * `date-fns` locales, keyed by the app's languages.
+ * Pure formatters, deliberately: nothing here is a hook.
  *
- * The screens used to import `fr` from `date-fns` directly and hand it to every
- * formatter, so an English screen still dated its workouts in French. The locale
- * is a function of the active language now, like every other piece of copy.
+ * The domain module that words a notification takes a language and formats with
+ * it directly, so reaching this file must not load `expo-localization` or the
+ * preferences store — the domain half is tested with no device attached, and a
+ * module that only ever runs in Node has no business importing a native one.
+ * The hooks that read the active language live in `use-format.ts`.
+ *
+ * `date-fns` locales are keyed by the app's languages: the screens used to
+ * import `fr` from `date-fns` directly and hand it to every formatter, so an
+ * English screen still dated its workouts in French. The locale is a function of
+ * the active language now, like every other piece of copy.
  */
 const DATE_LOCALES: Record<Language, Locale> = { fr: frLocale, en: enUS }
 
 export function dateLocale(language: Language): Locale {
   return DATE_LOCALES[language]
-}
-
-export function useDateLocale(): Locale {
-  return dateLocale(useAppLanguage())
 }
 
 const numberFormatters = new Map<string, Intl.NumberFormat>()
@@ -49,10 +51,4 @@ export function formatNumber(
   options: Intl.NumberFormatOptions = {},
 ): string {
   return formatterFor(language, options).format(value)
-}
-
-export function useNumberFormat(): (value: number, options?: Intl.NumberFormatOptions) => string {
-  const language = useAppLanguage()
-
-  return (value, options) => formatNumber(language, value, options)
 }

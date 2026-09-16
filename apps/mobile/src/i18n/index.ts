@@ -24,7 +24,8 @@ export type {
   TranslateParams,
 } from './translate'
 export { deviceLanguage, useAppLanguage } from './use-app-language'
-export { dateLocale, formatNumber, useDateLocale, useNumberFormat } from './format'
+export { dateLocale, formatNumber } from './format'
+export { useDateLocale, useNumberFormat } from './use-format'
 
 /**
  * What a screen gets from `useTranslation()`.

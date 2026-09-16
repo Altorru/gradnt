@@ -306,7 +306,7 @@ describe('describeNotification', () => {
   it('names the session type from the code, never from the stored French title', () => {
     const notification = planNotifications(input({ workouts: [workout()] }))[0]
 
-    const wording = describeNotification(notification, enTranslation)
+    const wording = describeNotification(notification, enTranslation, 'en')
 
     expect(wording.body).toContain('Endurance')
     expect(wording.body).not.toContain('fondamentale')
@@ -315,15 +315,28 @@ describe('describeNotification', () => {
   it('writes in the language it is handed', () => {
     const notification = planNotifications(input({ workouts: [workout()] }))[0]
 
-    expect(describeNotification(notification, frTranslation).title).not.toBe(
-      describeNotification(notification, enTranslation).title,
+    expect(describeNotification(notification, frTranslation, 'fr').title).not.toBe(
+      describeNotification(notification, enTranslation, 'en').title,
     )
   })
 
   it('deep links a session to its own screen', () => {
     const notification = planNotifications(input({ workouts: [workout()] }))[0]
 
-    expect(describeNotification(notification, frTranslation).url).toBe('/plan/w1')
+    expect(describeNotification(notification, frTranslation, 'fr').url).toBe('/plan/w1')
+  })
+
+  it('writes the weekly figures the way the rider’s language writes numbers', () => {
+    const notification = planNotifications(
+      input({
+        preferences: { ...input().preferences, weeklySummary: true },
+        weeklySummary: { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 },
+        lastSyncedAt: new Date(NOW.getTime() - 60 * 1000).toISOString(),
+      }),
+    )[0]
+
+    expect(describeNotification(notification, frTranslation, 'fr').body).toContain('6,5')
+    expect(describeNotification(notification, enTranslation, 'en').body).toContain('6.5')
   })
 
   it('has two weekly wordings, and uses the one the data allows', () => {
@@ -342,8 +355,8 @@ describe('describeNotification', () => {
       }),
     )[0]
 
-    expect(describeNotification(fresh, frTranslation).body).toContain('4')
-    expect(describeNotification(stale, frTranslation).body).not.toContain('4')
+    expect(describeNotification(fresh, frTranslation, 'fr').body).toContain('4')
+    expect(describeNotification(stale, frTranslation, 'fr').body).not.toContain('4')
   })
 
   it('deep links a nudge to the home screen, the only screen it has', () => {
@@ -355,6 +368,6 @@ describe('describeNotification', () => {
       }),
     )[0]
 
-    expect(describeNotification(notification, frTranslation).url).toBe('/home')
+    expect(describeNotification(notification, frTranslation, 'fr').url).toBe('/home')
   })
 })
