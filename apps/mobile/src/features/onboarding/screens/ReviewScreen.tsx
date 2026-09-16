@@ -199,7 +199,10 @@ export function ReviewScreen() {
               minHeight={44}
               onPress={() => {
                 void reset()
-                router.replace('/onboarding')
+                // Dismisses the flow rather than landing on top of it. Left in
+                // place, every screen just walked through comes back at the
+                // first back press.
+                router.dismissTo('/onboarding')
               }}
             >
               Recommencer l&apos;onboarding

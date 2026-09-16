@@ -1,6 +1,5 @@
 import { ArrowRight, Brain, Route, Target } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
-import { useEffect } from 'react'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -35,24 +34,18 @@ const benefits = [
 
 export function WelcomeScreen() {
   const router = useRouter()
-  const hydrated = useOnboardingStore((state) => state.hydrated)
-  const completed = useOnboardingStore((state) => state.completed)
   const currentStep = useOnboardingStore((state) => state.currentStep)
 
-  useEffect(() => {
-    if (!hydrated) {
-      return
-    }
-
-    if (completed) {
-      router.replace('/home')
-      return
-    }
-
-    if (currentStep > 1) {
-      router.replace(getOnboardingResumeRoute(currentStep))
-    }
-  }, [completed, currentStep, hydrated, router])
+  /**
+   * Resuming is a choice made here, not a redirect imposed on the way through.
+   *
+   * This screen stays mounted under every step of the flow, so an effect that
+   * navigated whenever `currentStep` moved fired on each save — and pushed a
+   * step of its own over the one the rider had just reached. The launch
+   * decision belongs to `AppEntryScreen`, which is gone by then.
+   */
+  const resumeRoute =
+    currentStep > 1 ? getOnboardingResumeRoute(currentStep) : '/onboarding/profile'
 
   return (
     <GradntScreen>
@@ -126,7 +119,7 @@ export function WelcomeScreen() {
             <GradntButton
               iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
               onPress={() => {
-                router.push('/onboarding/profile')
+                router.push(resumeRoute)
               }}
             >
               {currentStep > 1 ? 'Reprendre' : 'Commencer'}
