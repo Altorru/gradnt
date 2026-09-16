@@ -43,6 +43,8 @@ export const defaultPreferences: Preferences = {
   inactivityNudge: false,
 }
 
+export type NotificationPreferences = Preferences
+
 async function readStoredValue(): Promise<string | null> {
   if (Platform.OS === 'web') {
     return typeof window === 'undefined' ? null : window.localStorage.getItem(preferencesStorageKey)
