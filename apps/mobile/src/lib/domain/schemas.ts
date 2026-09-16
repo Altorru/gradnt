@@ -13,11 +13,20 @@ export const athleteProfileSchema = z.object({
   provenance: z.literal('declared'),
 })
 
+export const goalMeasureSchema = z.enum(['cumulative', 'best'])
+export type GoalMeasure = z.infer<typeof goalMeasureSchema>
+
 export const goalSchema = z.object({
   id: z.string(),
   type: z.enum(['ftp', 'distance', 'event', 'climbing', 'fitness']),
   targetValue: z.number().positive().nullable(),
-  targetUnit: z.enum(['w', 'km', 'm', 'none']),
+  targetUnit: z.enum(['w', 'km', 'm', 'h', 'none']),
+  /**
+   * How a distance or climbing target is read: accumulated over the window, or
+   * the best single ride. Null for the types where it means nothing, rather
+   * than a default nobody chose.
+   */
+  measure: goalMeasureSchema.nullable(),
   targetDate: z.string().datetime().nullable(),
   status: z.enum(['active', 'completed', 'paused']),
   createdAt: z.string().datetime(),

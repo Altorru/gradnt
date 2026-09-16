@@ -6,6 +6,15 @@ export const cyclistGoalSchema = z
 
     targetValue: z.string().trim(),
     eventName: z.string().trim(),
+
+    /**
+     * Optional rather than defaulted: a default makes the parsed output differ
+     * from the form's input type, which react-hook-form's resolver generics
+     * reject. Absent means "not asked yet", and the repository reads a missing
+     * measure as a running total — the only behaviour before this existed.
+     */
+    measure: z.enum(['cumulative', 'best']).optional(),
+    targetDate: z.string().trim().nullable().optional(),
   })
   .superRefine((data, context) => {
     if (data.type === 'event') {

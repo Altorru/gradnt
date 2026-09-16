@@ -42,6 +42,112 @@ export function getTotalElevationGainMeters(activities: Activity[]): number {
   return Math.round(activities.reduce((total, activity) => total + activity.elevationGainMeters, 0))
 }
 
+/** The longest single ride, in kilometres. Zero when nothing has been ridden. */
+export function getBestRideDistanceKm(activities: Activity[]): number {
+  const longest = activities.reduce((best, activity) => Math.max(best, activity.distanceMeters), 0)
+
+  return Math.round((longest / 1000) * 10) / 10
+}
+
+/** The biggest single climb, in metres of elevation gain. */
+export function getBestRideElevationGainMeters(activities: Activity[]): number {
+  return Math.round(
+    activities.reduce((best, activity) => Math.max(best, activity.elevationGainMeters), 0),
+  )
+}
+
+/**
+ * Mean training hours per week the rider has actually been riding.
+ *
+ * Two weeks are deliberately left out. The current one is still in progress, so
+ * counting it would report a rider who trained five hours by Friday as being
+ * under target. And weeks before their first recorded ride are not zero weeks —
+ * they are weeks they were not riding yet, and averaging those in would put
+ * every recent starter permanently below their own target.
+ */
+export function getAverageWeeklyHours(activities: Activity[], weeks = 4): number {
+  const series = getWeeklyVolumeSeries(activities, weeks)
+  const firstRideWeek = series.findIndex((hours) => hours > 0)
+
+  if (firstRideWeek === -1) {
+    return 0
+  }
+
+  const counted = series.slice(firstRideWeek, -1)
+
+  if (counted.length === 0) {
+    // No completed week yet, so the week in progress is the only evidence
+    // there is. Reporting zero would tell a rider who has just ridden that they
+    // have done nothing.
+    return series.at(-1) ?? 0
+  }
+
+  const total = counted.reduce((sum, hours) => sum + hours, 0)
+
+  return Math.round((total / counted.length) * 10) / 10
+}
+
+/**
+ * The bottom of each declared weekly-volume band, in hours.
+ *
+ * A fitness goal has no natural target figure, so it targets the floor of the
+ * band the rider chose at sign-up — "at least what you said you would do".
+ * `lt3` uses the band's own ceiling, since its floor is zero and a target of
+ * zero would read as met before the first ride.
+ */
+const WEEKLY_VOLUME_FLOOR_HOURS = {
+  lt3: 3,
+  '3to6': 3,
+  '6to10': 6,
+  gt10: 10,
+} as const
+
+export function getWeeklyVolumeFloorHours(band: keyof typeof WEEKLY_VOLUME_FLOOR_HOURS): number {
+  return WEEKLY_VOLUME_FLOOR_HOURS[band]
+}
+
+/**
+ * The rider's current standing against the goal, or null when nothing honest
+ * can be read off their data.
+ *
+ * This is the whole of the goal business logic, kept pure so it can be tested
+ * without a device — the repository's only job is to supply the activities and
+ * the FTP.
+ *
+ * - `distance` and `climbing` read a running total or the best single ride,
+ *   whichever the rider chose.
+ * - `ftp` is not a ride statistic: it comes from what the rider or Strava says.
+ * - `fitness` is average weekly hours, compared against the band declared.
+ * - `event` has no value at all. It has a deadline, and the caller renders a
+ *   countdown; a current-over-target ratio would mean nothing.
+ */
+export function getGoalCurrentValue(
+  goal: Goal,
+  activities: Activity[],
+  ftp: number | null,
+): number | null {
+  switch (goal.type) {
+    case 'distance':
+      return goal.measure === 'best'
+        ? getBestRideDistanceKm(activities)
+        : getTotalDistanceKm(activities)
+
+    case 'climbing':
+      return goal.measure === 'best'
+        ? getBestRideElevationGainMeters(activities)
+        : getTotalElevationGainMeters(activities)
+
+    case 'ftp':
+      return ftp
+
+    case 'fitness':
+      return getAverageWeeklyHours(activities)
+
+    case 'event':
+      return null
+  }
+}
+
 /**
  * Training hours per week, oldest first, for the last `weeks` weeks.
  *

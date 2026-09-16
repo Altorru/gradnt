@@ -44,6 +44,7 @@ const goalUnits = {
   w: 'W',
   km: 'km',
   m: 'm',
+  h: 'h',
   none: '',
 } as const
 

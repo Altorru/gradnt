@@ -2,8 +2,8 @@ import { loadOnboardingSnapshot } from '@/features/onboarding/services/onboardin
 import {
   generateFirstPlan,
   buildTrainingMetrics,
-  getTotalDistanceKm,
-  getTotalElevationGainMeters,
+  getGoalCurrentValue,
+  getWeeklyVolumeFloorHours,
   trainingPlanSchema,
   type Activity,
   type AthleteProfile,
@@ -14,7 +14,11 @@ import {
   type TrainingPlan,
 } from '@/lib/domain'
 
+import { loadCurrentFtp } from './ftp/ftp.persistence'
 import { fetchRecentActivities, historyWindowStart } from './strava/api/strava-activity.service'
+
+/** Used when a snapshot predates the profile, or stored a band we no longer know. */
+const DEFAULT_WEEKLY_VOLUME_BAND = '3to6' as const
 
 export type GoalValueSnapshot = {
   value: number | null
@@ -147,6 +151,23 @@ export class MockGradntRepository implements GradntRepository {
       return null
     }
 
+    // A fitness goal has no figure to enter: its target is the floor of the
+    // weekly-volume band the rider declared, expressed in hours.
+    if (snapshot.goal.type === 'fitness') {
+      return {
+        id: 'goal-local',
+        type: 'fitness',
+        targetValue: getWeeklyVolumeFloorHours(
+          snapshot.profile?.weeklyVolume ?? DEFAULT_WEEKLY_VOLUME_BAND,
+        ),
+        targetUnit: 'h',
+        measure: null,
+        targetDate: null,
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+      }
+    }
+
     const targetValue = snapshot.goal.targetValue ? Number(snapshot.goal.targetValue) : null
     const targetUnit: Goal['targetUnit'] =
       snapshot.goal.type === 'ftp'
@@ -162,24 +183,21 @@ export class MockGradntRepository implements GradntRepository {
       type: snapshot.goal.type,
       targetValue,
       targetUnit,
-      targetDate: null,
+      // Absent from snapshots saved before the measure existed; a running total
+      // was the only behaviour then, so that is the honest default.
+      measure: snapshot.goal.measure ?? 'cumulative',
+      targetDate: snapshot.goal.targetDate ?? null,
       status: 'active' as const,
       createdAt: new Date().toISOString(),
     }
   }
 
-  /**
-   * The rider's progress toward the goal, derived from their own rides.
-   *
-   * Only the goal types whose target is a running total can be read off
-   * activity data — distance and climbing. An FTP or an event has no
-   * counterpart in a ride feed, so those report nothing rather than a number
-   * nobody can justify. The invented `258` that used to stand here is gone.
-   */
   async getCurrentGoalValue(): Promise<GoalValueSnapshot> {
     const goal = await this.getGoal()
 
-    if (goal === null || (goal.type !== 'distance' && goal.type !== 'climbing')) {
+    if (goal === null || goal.type === 'event') {
+      // An event has a deadline, not a total: the countdown is rendered from
+      // the date, and there is no ratio to compute.
       return { value: null, provenance: 'declared' }
     }
 
@@ -189,13 +207,11 @@ export class MockGradntRepository implements GradntRepository {
       return { value: null, provenance: 'declared' }
     }
 
-    return {
-      value:
-        goal.type === 'distance'
-          ? getTotalDistanceKm(activities)
-          : getTotalElevationGainMeters(activities),
-      provenance: 'observed',
-    }
+    const value = getGoalCurrentValue(goal, activities, await loadCurrentFtp())
+
+    return value === null
+      ? { value: null, provenance: 'declared' }
+      : { value, provenance: 'observed' }
   }
 
   /**
