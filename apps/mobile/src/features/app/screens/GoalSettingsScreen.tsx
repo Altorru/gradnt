@@ -10,6 +10,7 @@ import { XStack, YStack } from 'tamagui'
 import {
   GradntButton,
   GradntChoiceCard,
+  GradntChip,
   GradntHeading,
   GradntIconButton,
   GradntInput,
@@ -17,7 +18,7 @@ import {
   GradntScrollView,
   GradntText,
 } from '@/design-system'
-import { getTargetMeta, goalTypes } from '@/features/onboarding/domain/goal.options'
+import { getTargetMeta, goalMeasures, goalTypes } from '@/features/onboarding/domain/goal.options'
 import { cyclistGoalSchema } from '@/features/onboarding/domain/goal.schema'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 
@@ -137,6 +138,73 @@ export function GoalSettingsScreen() {
                       {fieldState.error.message}
                     </GradntText>
                   ) : null}
+                </YStack>
+              )}
+            />
+          ) : null}
+
+          {type === 'event' ? (
+            <Controller
+              control={control}
+              name="targetDate"
+              render={({ field, fieldState }) => (
+                <YStack gap="$2">
+                  <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+                    DATE
+                  </GradntText>
+
+                  <GradntText muted fontSize={12} lineHeight={18}>
+                    Au format AAAA-MM-JJ. L’app en tire le compte à rebours.
+                  </GradntText>
+
+                  <GradntInput
+                    value={field.value ?? ''}
+                    onChangeText={field.onChange}
+                    placeholder="2027-06-13"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+
+                  {fieldState.error ? (
+                    <GradntText color="$danger" fontSize={12}>
+                      {fieldState.error.message}
+                    </GradntText>
+                  ) : null}
+                </YStack>
+              )}
+            />
+          ) : null}
+
+          {/* Only these two carry a total to reach; an FTP is a value and an
+              event is a date. */}
+          {type === 'distance' || type === 'climbing' ? (
+            <Controller
+              control={control}
+              name="measure"
+              render={({ field }) => (
+                <YStack gap="$3">
+                  <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+                    COMMENT LE MESURER
+                  </GradntText>
+
+                  <XStack gap="$2" flexWrap="wrap">
+                    {goalMeasures.map((measure) => (
+                      <GradntChip
+                        key={measure.value}
+                        label={measure.label}
+                        selected={(field.value ?? 'cumulative') === measure.value}
+                        onPress={() => field.onChange(measure.value)}
+                      />
+                    ))}
+                  </XStack>
+
+                  <GradntText muted fontSize={12} lineHeight={18}>
+                    {
+                      goalMeasures.find(
+                        (measure) => measure.value === (field.value ?? 'cumulative'),
+                      )?.description
+                    }
+                  </GradntText>
                 </YStack>
               )}
             />

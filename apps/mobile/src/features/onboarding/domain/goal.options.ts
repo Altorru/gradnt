@@ -52,7 +52,26 @@ export const goalTypeLabels = {
 } as const satisfies Record<CyclistGoalForm['type'], string>
 
 /**
- * The numeric target a goal type asks for, or null for the types that carry no
+ * How a distance or climbing target is read.
+ *
+ * "500 km" means a season to one rider and a single long day to another. The
+ * app assumed the running total, which silently made a one-day target
+ * unreachable rather than wrong-looking.
+ */
+export const goalMeasures = [
+  {
+    value: 'cumulative',
+    label: 'Cumulé',
+    description: 'Le total de tes sorties sur la période analysée.',
+  },
+  {
+    value: 'best',
+    label: 'En une sortie',
+    description: 'Ta meilleure sortie, réussie d’un seul tenant.',
+  },
+] as const
+
+/** The numeric target a goal type asks for, or null for the types that carry no
  * figure — an event has a name, "progresser globalement" has nothing.
  */
 export function getTargetMeta(type: CyclistGoalForm['type']): {

@@ -3,6 +3,7 @@ import type { Activity, Goal, PlannedWorkout, TrainingMetrics } from './schemas'
 export type ActivityDataState = 'none' | 'observed'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+const DAY_MS = 24 * 60 * 60 * 1000
 
 export type DeterministicTrainingInsight = {
   title: string
@@ -121,6 +122,26 @@ export function getWeeklyVolumeFloorHours(band: keyof typeof WEEKLY_VOLUME_FLOOR
  * - `event` has no value at all. It has a deadline, and the caller renders a
  *   countdown; a current-over-target ratio would mean nothing.
  */
+/**
+ * Whole days until an event, or null when the goal has no usable date.
+ *
+ * Floors at zero rather than going negative: once the day arrives the
+ * countdown is over, and "−3 jours" is not a useful thing to show a rider.
+ */
+export function getEventDaysRemaining(goal: Goal, now: Date = new Date()): number | null {
+  if (goal.targetDate === null) {
+    return null
+  }
+
+  const target = Date.parse(goal.targetDate)
+
+  if (Number.isNaN(target)) {
+    return null
+  }
+
+  return Math.max(0, Math.ceil((target - now.getTime()) / DAY_MS))
+}
+
 export function getGoalCurrentValue(
   goal: Goal,
   activities: Activity[],

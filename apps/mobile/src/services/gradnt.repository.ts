@@ -2,6 +2,7 @@ import { loadOnboardingSnapshot } from '@/features/onboarding/services/onboardin
 import {
   generateFirstPlan,
   buildTrainingMetrics,
+  getEventDaysRemaining,
   getGoalCurrentValue,
   getWeeklyVolumeFloorHours,
   trainingPlanSchema,
@@ -195,10 +196,18 @@ export class MockGradntRepository implements GradntRepository {
   async getCurrentGoalValue(): Promise<GoalValueSnapshot> {
     const goal = await this.getGoal()
 
-    if (goal === null || goal.type === 'event') {
-      // An event has a deadline, not a total: the countdown is rendered from
-      // the date, and there is no ratio to compute.
+    if (goal === null) {
       return { value: null, provenance: 'declared' }
+    }
+
+    // An event has no total to reach, so its standing is the countdown to the
+    // day itself — the only quantity that changes and that a rider acts on.
+    if (goal.type === 'event') {
+      const daysRemaining = getEventDaysRemaining(goal)
+
+      return daysRemaining === null
+        ? { value: null, provenance: 'declared' }
+        : { value: daysRemaining, provenance: 'observed' }
     }
 
     const activities = await this.getActivities()

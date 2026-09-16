@@ -8,6 +8,18 @@ import { gradntAssets } from '../assets'
 import { GradntHeroArtwork } from './composites/GradntHeroArtwork'
 import { GradntBadge, GradntCard, GradntHeading, GradntProgressBar, GradntText } from './primitives'
 
+/**
+ * Every type is named here. `event` and `fitness` used to fall through to a
+ * generic "OBJECTIF", so a rider who had picked one could not tell which.
+ */
+const GOAL_TYPE_TITLES = {
+  ftp: 'FTP',
+  distance: 'DISTANCE',
+  climbing: 'DÉNIVELÉ',
+  event: 'ÉVÉNEMENT',
+  fitness: 'FORME',
+} as const satisfies Record<Goal['type'], string>
+
 type GradntGoalCardProps = {
   goal?: Goal
   currentValue?: number | null
@@ -29,14 +41,20 @@ export function GradntGoalCard({
   const scheme = useColorScheme()
   const artwork =
     scheme === 'light' ? gradntAssets.goals.ftpClimbLight : gradntAssets.goals.ftpClimbDark
-  const isPreview = goal === undefined
-  const currentGoalValue = isPreview ? (currentValue ?? 258) : currentValue
-  const goalValue = isPreview ? 280 : goal.targetValue
-  const progressValue = isPreview ? (progressPercentage ?? 72) : (progressPercentage ?? 0)
-  const goalUnit = isPreview ? 'W' : goal.targetUnit === 'w' ? 'W' : goal.targetUnit
-  const resolvedChangeLabel =
-    changeLabel ?? (isPreview ? '+6 W ce mois-ci' : 'Progression à préciser')
-  const resolvedStatusLabel = statusLabel ?? (isPreview ? 'EN BONNE VOIE' : 'POINT DE DÉPART')
+  /**
+   * Nothing here invents a figure.
+   *
+   * This used to stand in 258 W, 280 W, 72 % and "+6 W ce mois-ci" whenever no
+   * goal was passed. That branch was reachable in the app and not only in the
+   * design-system preview, so a rider without a goal could be shown a
+   * fabricated 258. Absent values now read as absent.
+   */
+  const goalValue = goal?.targetValue ?? null
+  const currentGoalValue = currentValue ?? null
+  const progressValue = progressPercentage ?? 0
+  const goalUnit = goal?.targetUnit === 'w' ? 'W' : (goal?.targetUnit ?? '')
+  const resolvedChangeLabel = changeLabel ?? 'Progression à préciser'
+  const resolvedStatusLabel = statusLabel ?? 'POINT DE DÉPART'
 
   return (
     <GradntCard
@@ -58,13 +76,7 @@ export function GradntGoalCard({
           </GradntText>
 
           <GradntHeading level={3} fontSize={19} lineHeight={23}>
-            {goal?.type === 'ftp'
-              ? 'FTP'
-              : goal?.type === 'distance'
-                ? 'DISTANCE'
-                : goal?.type === 'climbing'
-                  ? 'DÉNIVELÉ'
-                  : 'OBJECTIF'}
+            {goal ? GOAL_TYPE_TITLES[goal.type] : 'OBJECTIF'}
           </GradntHeading>
 
           <XStack alignItems="center" gap="$2">

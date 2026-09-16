@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getGoalCurrentValue, getWeeklyVolumeFloorHours } from './selectors'
+import { getEventDaysRemaining, getGoalCurrentValue, getWeeklyVolumeFloorHours } from './selectors'
 import { goalSchema, type Activity, type Goal } from './schemas'
 
 const NOW = Date.parse('2026-09-16T12:00:00.000Z')
@@ -169,6 +169,27 @@ describe('getGoalCurrentValue', () => {
     // préciser" is not, and the screen must not claim the goal is unmeasurable.
     expect(getGoalCurrentValue(goal({ type: 'distance' }), [], null)).toBe(0)
     expect(getGoalCurrentValue(goal({ type: 'distance', measure: 'best' }), [], null)).toBe(0)
+  })
+})
+
+describe('getEventDaysRemaining', () => {
+  const now = new Date(NOW)
+
+  function eventGoal(targetDate: string | null): Goal {
+    return goal({ type: 'event', targetUnit: 'none', targetDate })
+  }
+
+  it('counts the whole days left', () => {
+    expect(getEventDaysRemaining(eventGoal('2026-09-26T12:00:00.000Z'), now)).toBe(10)
+  })
+
+  it('floors at zero once the day has arrived', () => {
+    // "−3 jours" is not a useful thing to show a rider.
+    expect(getEventDaysRemaining(eventGoal('2026-09-10T12:00:00.000Z'), now)).toBe(0)
+  })
+
+  it('reports nothing when the goal carries no date', () => {
+    expect(getEventDaysRemaining(eventGoal(null), now)).toBeNull()
   })
 })
 
