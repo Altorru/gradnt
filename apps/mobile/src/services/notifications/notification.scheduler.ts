@@ -46,12 +46,15 @@ export const CHANNEL_FOR_KIND = {
 /**
  * Makes the OS hold exactly what we want, and nothing else.
  *
- * Written against a port rather than `expo-notifications` so the three ways this
- * can go quietly wrong — dropping a reminder, duplicating one, cancelling a
- * notification that belongs to someone else — are decisions a test can observe.
+ * Written against a port rather than `expo-notifications` so the ways this can
+ * go quietly wrong — re-scheduling what the OS already holds, dropping a
+ * reminder a rider was owed, cancelling one that was never ours — are decisions
+ * a test can observe.
  *
- * Idempotent: the key is the whole identity, so a second pass over the same
- * wanted set schedules nothing and cancels nothing.
+ * Idempotent, not deduplicating: identity is the key alone, so a second pass over
+ * the same wanted set writes nothing and cancels nothing. Two OS entries carrying
+ * one key are both left alone rather than healed — nothing we schedule can
+ * produce that, so it is not worth the pass.
  */
 export async function reconcile(
   desired: DesiredNotification[],
@@ -123,7 +126,7 @@ export const expoScheduler: SchedulerPort = {
         color: colors.lime,
         // 'passive' for the digest, so it lands in the list without lighting the
         // screen: a weekly summary that wakes someone is one they switch off.
-        interruptionLevel: channelId === 'sessions' ? 'active' : 'passive',
+        interruptionLevel: channelId === CHANNEL_FOR_KIND.session ? 'active' : 'passive',
       },
       // A `null` trigger means "deliver now", which is what an already-due
       // notification wants: a date trigger in the past would never fire.

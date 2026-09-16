@@ -24,9 +24,32 @@ const translation: Translation = {
   plural: (key, count, params) => translatePlural('fr', key, count, params),
 }
 
-function port(scheduled: { key: string; identifier: string }[] = []) {
-  const cancel = vi.fn(async () => {})
-  const schedule = vi.fn(async () => 'new-id')
+/**
+ * A stand-in for the OS's pending list, and a stateful one.
+ *
+ * `cancel` forgets, `schedule` remembers, so what the second pass sees is what
+ * the first pass actually did. A fake whose `list` returned a fixed closure
+ * would make every pass look like the first — and the idempotence this module
+ * promises would be untestable rather than merely untested.
+ */
+function port(initial: { key: string; identifier: string }[] = []) {
+  const scheduled = [...initial]
+  let nextId = 0
+
+  const cancel = vi.fn(async (identifier: string) => {
+    const index = scheduled.findIndex((entry) => entry.identifier === identifier)
+
+    if (index !== -1) {
+      scheduled.splice(index, 1)
+    }
+  })
+
+  const schedule = vi.fn(async (input: Parameters<SchedulerPort['schedule']>[0]) => {
+    const identifier = `scheduled-${++nextId}`
+    scheduled.push({ key: input.key, identifier })
+
+    return identifier
+  })
 
   const scheduler: SchedulerPort = {
     list: async () => scheduled.map(({ key, identifier }) => ({ identifier, key })),
@@ -61,6 +84,16 @@ describe('reconcile', () => {
     await reconcile([session], translation, 'fr', scheduler)
 
     expect(schedule).toHaveBeenCalledTimes(1)
+    // The key we hand over is the whole mechanism: it is the only thing
+    // `list()` can read back. A bare `session:w1` here would leave `present`
+    // empty forever and re-schedule — and cancel — everything, every pass.
+    expect(schedule).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: 'gradnt:session:w1',
+        channelId: 'sessions',
+        fireAt: session.fireAt,
+      }),
+    )
   })
 
   it('cancels what is no longer wanted', async () => {
@@ -80,21 +113,31 @@ describe('reconcile', () => {
     expect(cancel).not.toHaveBeenCalled()
   })
 
-  it('is idempotent: a second pass changes nothing', async () => {
-    const { scheduler, schedule, cancel } = port([{ key: 'gradnt:session:w1', identifier: 'kept' }])
+  it('is idempotent: the second pass writes nothing the first one already wrote', async () => {
+    const { scheduler, schedule, cancel } = port()
 
     await reconcile([session], translation, 'fr', scheduler)
     await reconcile([session], translation, 'fr', scheduler)
 
-    expect(schedule).not.toHaveBeenCalled()
+    // One across both passes, not zero: the first pass had to write, and the
+    // second had to notice. An empty pending list starting out is what makes
+    // this the property rather than a restatement of "leaves alone".
+    expect(schedule).toHaveBeenCalledTimes(1)
     expect(cancel).not.toHaveBeenCalled()
   })
 
   it('never touches a notification that is not ours', async () => {
-    const { scheduler, cancel } = port([{ key: 'someone-elses', identifier: 'foreign' }])
+    const { scheduler, cancel } = port([
+      { key: 'gradnt:session:gone', identifier: 'ours-but-unwanted' },
+      { key: 'someone-elses', identifier: 'foreign' },
+    ])
 
     await reconcile([], translation, 'fr', scheduler)
 
-    expect(cancel).not.toHaveBeenCalled()
+    // Mixed, so the guard is proven while there is also something legitimate to
+    // cancel: a blanket "cancel nothing" fails this, and so does "cancel all".
+    expect(cancel).toHaveBeenCalledTimes(1)
+    expect(cancel).toHaveBeenCalledWith('ours-but-unwanted')
+    expect(cancel).not.toHaveBeenCalledWith('foreign')
   })
 })
