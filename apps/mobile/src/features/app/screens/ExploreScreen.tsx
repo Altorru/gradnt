@@ -46,6 +46,9 @@ export function ExploreScreen() {
   function updatePreferences(update: Partial<RoutePreferences>) {
     setSelectedRouteId(null)
     setIsDetailOpen(false)
+    // New proposals mean the rider is looking at routes again, not at
+    // themselves.
+    routeStart.stopFollowing()
     setPreferences((current) => ({ ...current, ...update }))
   }
 
@@ -56,6 +59,7 @@ export function ExploreScreen() {
           routes={proposals}
           selectedRouteId={selectedRoute?.id ?? null}
           start={routeStart.start}
+          followUser={routeStart.isFollowing}
         />
 
         {/* Floating over the map, so the map is the screen rather than a block
@@ -139,7 +143,7 @@ export function ExploreScreen() {
                     return
                   }
 
-                  void routeStart.requestCurrentLocation()
+                  void routeStart.followCurrentLocation()
                 }}
               />
             </YStack>
@@ -161,7 +165,12 @@ export function ExploreScreen() {
           ) : selectedRoute ? (
             <RouteResultStrip
               route={selectedRoute}
-              totalCount={proposals.length}
+              alternatives={proposals}
+              onSelect={(routeId) => {
+                setSelectedRouteId(routeId)
+                // Choosing a route means looking at it, not at where you are.
+                routeStart.stopFollowing()
+              }}
               onOpenDetail={() => setIsDetailOpen(true)}
             />
           ) : proposalsQuery.isPending && routeStart.hasStart ? (

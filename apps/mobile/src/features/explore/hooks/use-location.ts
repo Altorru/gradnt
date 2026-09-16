@@ -130,12 +130,71 @@ export function useCurrentRouteStart() {
     void requestCurrentLocation()
   }, [requestCurrentLocation])
 
+  /**
+   * Follow the rider as they move, rather than reading their position once.
+   *
+   * Only while they ask for it: a watcher keeps the GPS awake, and a rider
+   * reading a route does not need to be tracked to the metre. It is also what
+   * makes the location control mean something — pressing it recentres the map
+   * on the rider and keeps it there.
+   */
+  const [isFollowing, setIsFollowing] = useState(false)
+
+  const followCurrentLocation = useCallback(async () => {
+    const position = await requestCurrentLocation()
+
+    if (position !== null) {
+      setIsFollowing(true)
+    }
+
+    return position
+  }, [requestCurrentLocation])
+
+  const stopFollowing = useCallback(() => {
+    setIsFollowing(false)
+  }, [])
+
+  useEffect(() => {
+    if (!isFollowing || Platform.OS === 'web') {
+      return
+    }
+
+    let subscription: Location.LocationSubscription | null = null
+    let cancelled = false
+
+    void (async () => {
+      const permission = await Location.getForegroundPermissionsAsync()
+
+      if (!permission.granted || cancelled) {
+        return
+      }
+
+      subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.LocationAccuracy.Balanced,
+          // A rider moves at tens of metres a second at most; waking the radio
+          // on every metre would cost battery for nothing visible.
+          distanceInterval: 10,
+        },
+        (position) => setStart(toRoutePoint(position)),
+      )
+    })()
+
+    return () => {
+      cancelled = true
+      subscription?.remove()
+    }
+  }, [isFollowing])
+
   return {
     start,
     isRequesting,
     status,
     error,
+    isFollowing,
     requestCurrentLocation,
+    followCurrentLocation,
+    stopFollowing,
     openSettings,
     hasStart: start !== null,
   }

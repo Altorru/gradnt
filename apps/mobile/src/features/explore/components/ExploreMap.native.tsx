@@ -11,6 +11,14 @@ type ExploreMapProps = {
   selectedRouteId: string | null
   /** The rider's position, when it is known. */
   start: RoutePoint | null
+  /**
+   * Frame the rider rather than the route.
+   *
+   * The camera followed the selected route unconditionally, and a route is
+   * almost always selected — so pressing "where am I" updated the position and
+   * moved nothing at all.
+   */
+  followUser?: boolean
 }
 
 /**
@@ -80,12 +88,19 @@ function boundsOf(route: Route): [number, number, number, number] {
  * own position when nothing is selected. Passing one or the other rather than
  * both keeps the camera from reconciling two instructions at once.
  */
-export function ExploreMap({ routes, selectedRouteId, start }: ExploreMapProps) {
+export function ExploreMap({
+  routes,
+  selectedRouteId,
+  start,
+  followUser = false,
+}: ExploreMapProps) {
   const selectedRoute = routes.find((route) => route.id === selectedRouteId)
 
   return (
     <Map style={{ flex: 1 }} mapStyle={openFreeMapStyleUrl} attribution logo compass>
-      {selectedRoute ? (
+      {followUser && start ? (
+        <Camera center={[start.longitude, start.latitude]} zoom={14} duration={650} />
+      ) : selectedRoute ? (
         <Camera bounds={boundsOf(selectedRoute)} padding={VIEWPORT_PADDING} duration={650} />
       ) : start ? (
         <Camera center={[start.longitude, start.latitude]} zoom={12} duration={650} />

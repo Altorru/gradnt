@@ -1,7 +1,7 @@
 import { ChevronUp } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
-import { GradntBadge, GradntCard, GradntIconButton, GradntText } from '@/design-system'
+import { GradntBadge, GradntCard, GradntChip, GradntIconButton, GradntText } from '@/design-system'
 
 import type { RouteWithScore } from '../domain'
 
@@ -9,8 +9,9 @@ import { formatDistance, formatElevation, recommendationLabels } from './route-f
 
 type RouteResultStripProps = {
   route: RouteWithScore
-  /** How many proposals there are, so the strip can say what it is showing. */
-  totalCount: number
+  /** Every proposal, so the rider can switch without going back to the map. */
+  alternatives: RouteWithScore[]
+  onSelect: (routeId: string) => void
   onOpenDetail: () => void
 }
 
@@ -24,7 +25,12 @@ type RouteResultStripProps = {
  * It shows the selected route, or the best one while nothing is selected, and
  * says how many alternatives there are so the rider knows there is a choice.
  */
-export function RouteResultStrip({ route, totalCount, onOpenDetail }: RouteResultStripProps) {
+export function RouteResultStrip({
+  route,
+  alternatives,
+  onSelect,
+  onOpenDetail,
+}: RouteResultStripProps) {
   return (
     <GradntCard accent padding="$4" gap="$3">
       <XStack alignItems="flex-start" justifyContent="space-between" gap="$3">
@@ -35,12 +41,6 @@ export function RouteResultStrip({ route, totalCount, onOpenDetail }: RouteResul
             >
               {recommendationLabels[route.recommendationLabel]}
             </GradntBadge>
-
-            {totalCount > 1 ? (
-              <GradntText muted fontSize={11}>
-                {totalCount} propositions
-              </GradntText>
-            ) : null}
           </XStack>
 
           <GradntText weight="semibold" numberOfLines={1}>
@@ -57,6 +57,23 @@ export function RouteResultStrip({ route, totalCount, onOpenDetail }: RouteResul
           <ChevronUp size={18} color="$textPrimary" />
         </GradntIconButton>
       </XStack>
+
+      {/* The map draws every proposal, so there has to be a way to pick one
+          without touching the lines themselves — a line is a thin target on a
+          busy map, and picking between three overlapping loops by finger is a
+          worse job than picking between three labels. */}
+      {alternatives.length > 1 ? (
+        <XStack gap="$2" flexWrap="wrap">
+          {alternatives.map((candidate, index) => (
+            <GradntChip
+              key={candidate.id}
+              label={`${index + 1}`}
+              selected={candidate.id === route.id}
+              onPress={() => onSelect(candidate.id)}
+            />
+          ))}
+        </XStack>
+      ) : null}
     </GradntCard>
   )
 }

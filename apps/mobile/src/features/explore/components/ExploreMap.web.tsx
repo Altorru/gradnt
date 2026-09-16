@@ -10,6 +10,8 @@ type ExploreMapProps = {
   selectedRouteId: string | null
   /** The rider's position, when it is known. */
   start: RoutePoint | null
+  /** Unused here: there is no camera to move. Kept for a single prop contract. */
+  followUser?: boolean
 }
 
 /**
