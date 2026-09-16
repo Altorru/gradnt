@@ -1,7 +1,16 @@
-import { ArrowLeft, ChevronRight, RefreshCw, ShieldCheck, Unlink } from '@tamagui/lucide-icons-2'
+import {
+  ArrowLeft,
+  ChevronRight,
+  Download,
+  RefreshCw,
+  ShieldCheck,
+  Unlink,
+} from '@tamagui/lucide-icons-2'
 import { useQueryClient } from '@tanstack/react-query'
+import { format as formatDate, formatDistanceToNow } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable } from 'react-native'
 import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated'
 import { XStack, YStack } from 'tamagui'
@@ -11,6 +20,7 @@ import {
   GradntCard,
   GradntHeading,
   GradntIconButton,
+  GradntInput,
   GradntScreen,
   GradntScrollView,
   GradntStravaConnectBlock,
@@ -19,6 +29,8 @@ import {
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { goalTypeLabels } from '@/features/onboarding/domain/goal.options'
 import { describeProfile } from '@/features/onboarding/domain/profile.options'
+import { importFtpFromStrava, loadFtpHistory, recordDeclaredFtp } from '@/services/ftp/ftp.service'
+import type { FtpEntry } from '@/services/ftp/ftp.persistence'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { describeActivityFailure } from '@/services/gradnt.repository'
 import type { Activity } from '@/lib/domain'
@@ -114,6 +126,55 @@ export function SettingsScreen() {
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [syncReport, setSyncReport] = useState<string | null>(null)
+
+  /**
+   * The FTP is held in a dated history, so the screen shows the latest entry
+   * and when it was recorded — the evolution is the point of keeping one.
+   */
+  const [ftpHistory, setFtpHistory] = useState<FtpEntry[]>([])
+  const [draftFtp, setDraftFtp] = useState('')
+  const [isImportingFtp, setIsImportingFtp] = useState(false)
+  const [ftpMessage, setFtpMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    void loadFtpHistory().then(setFtpHistory)
+  }, [])
+
+  const latestFtp = ftpHistory.at(-1) ?? null
+
+  const importFtp = async () => {
+    setIsImportingFtp(true)
+    setFtpMessage(null)
+
+    const result = await importFtpFromStrava()
+
+    if (result.status === 'imported') {
+      setFtpHistory(await loadFtpHistory())
+      setFtpMessage(`${result.value} W, déduits de tes zones de puissance Strava.`)
+    } else if (result.status === 'unavailable') {
+      // The common case, not a failure: most riders have never set an FTP in
+      // Strava, and there is an obvious thing for them to do about it.
+      setFtpMessage('Strava n’a pas de zones de puissance pour toi. Saisis ta FTP ci-dessous.')
+    } else {
+      setFtpMessage('L’import a échoué. Réessaie dans un instant.')
+    }
+
+    setIsImportingFtp(false)
+  }
+
+  const saveFtp = async () => {
+    const parsed = Math.round(Number(draftFtp))
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setFtpMessage('Indique une valeur en watts.')
+      return
+    }
+
+    await recordDeclaredFtp(parsed)
+    setFtpHistory(await loadFtpHistory())
+    setDraftFtp('')
+    setFtpMessage(null)
+  }
 
   const connect = async () => {
     setIsConnecting(true)
@@ -272,6 +333,66 @@ export function SettingsScreen() {
                 value={storedGoal ? goalTypeLabels[storedGoal.type] : 'À définir'}
                 onPress={() => router.push('/settings/goal')}
               />
+            </GradntCard>
+          </YStack>
+
+          <YStack gap="$4">
+            <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+              PUISSANCE
+            </GradntText>
+
+            <GradntCard gap="$4" padding="$4">
+              <YStack gap="$1">
+                <GradntText weight="semibold">FTP</GradntText>
+                <GradntText muted fontSize={13} lineHeight={18}>
+                  {latestFtp === null
+                    ? 'Aucune valeur enregistrée : ton objectif FTP ne peut pas être suivi.'
+                    : `${latestFtp.value} W — ${
+                        latestFtp.source === 'strava'
+                          ? 'déduite de tes zones Strava'
+                          : 'saisie par toi'
+                      }, ${formatDistanceToNow(Date.parse(latestFtp.recordedAt), {
+                        addSuffix: true,
+                        locale: fr,
+                      })}.`}
+                </GradntText>
+              </YStack>
+
+              <GradntButton
+                tone="secondary"
+                disabled={isImportingFtp}
+                opacity={isImportingFtp ? 0.55 : 1}
+                iconAfter={<Download size={17} color="$textPrimary" />}
+                onPress={() => void importFtp()}
+              >
+                {isImportingFtp ? 'Lecture des zones…' : 'Déduire de mes zones Strava'}
+              </GradntButton>
+
+              <XStack alignItems="center" gap="$3">
+                <GradntInput
+                  flex={1}
+                  value={draftFtp}
+                  onChangeText={setDraftFtp}
+                  keyboardType="numeric"
+                  placeholder="250"
+                />
+                <GradntText muted>W</GradntText>
+                <GradntButton onPress={() => void saveFtp()}>Enregistrer</GradntButton>
+              </XStack>
+
+              {ftpMessage ? (
+                <GradntText muted fontSize={12} lineHeight={18}>
+                  {ftpMessage}
+                </GradntText>
+              ) : null}
+
+              {ftpHistory.length > 1 ? (
+                <GradntText muted fontSize={11} lineHeight={16}>
+                  {ftpHistory.length} valeurs enregistrées depuis{' '}
+                  {formatDate(Date.parse(ftpHistory[0]!.recordedAt), 'd MMMM yyyy', { locale: fr })}
+                  .
+                </GradntText>
+              ) : null}
             </GradntCard>
           </YStack>
 

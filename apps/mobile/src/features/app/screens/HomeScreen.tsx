@@ -1,5 +1,5 @@
 import { useRouter, type Href } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   GradntCard,
   GradntChip,
@@ -33,6 +33,8 @@ import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
+import type { FtpEntry } from '@/services/ftp/ftp.persistence'
+import { loadFtpHistory } from '@/services/ftp/ftp.service'
 
 export function HomeScreen() {
   const router = useRouter()
@@ -40,6 +42,7 @@ export function HomeScreen() {
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
+  const [ftpHistory, setFtpHistory] = useState<FtpEntry[]>([])
   const athleteQuery = useAthleteQuery()
   const activitiesQuery = useActivitiesQuery()
   const goalQuery = useGoalQuery()
@@ -64,6 +67,21 @@ export function HomeScreen() {
     currentValueQuery.isError ||
     workoutsQuery.isError
   const isLoading = goalQuery.isPending || currentValueQuery.isPending || workoutsQuery.isPending
+
+  // The FTP is the one goal whose movement is worth stating: it is recorded as
+  // a dated history precisely so the change between two readings is visible.
+  const isFtpGoal = goal?.type === 'ftp'
+
+  useEffect(() => {
+    if (isFtpGoal) {
+      void loadFtpHistory().then(setFtpHistory)
+    }
+  }, [isFtpGoal])
+
+  const ftpDelta =
+    ftpHistory.length >= 2
+      ? ftpHistory[ftpHistory.length - 1]!.value - ftpHistory[ftpHistory.length - 2]!.value
+      : null
 
   // `navigate` rather than `push`: these targets are tabs, so they should be
   // switched to, not stacked on top of the current one.
@@ -120,7 +138,11 @@ export function HomeScreen() {
             progressPercentage={progressPercentage || undefined}
             statusLabel={currentGoalValue === null ? 'POINT DE DÉPART' : 'EN BONNE VOIE'}
             changeLabel={
-              currentGoalValue === null ? 'Après tes premières sorties' : 'Progression observée'
+              isFtpGoal && ftpDelta !== null
+                ? `${ftpDelta >= 0 ? '+' : ''}${ftpDelta} W depuis le dernier relevé`
+                : currentGoalValue === null
+                  ? 'Après tes premières sorties'
+                  : 'Progression observée'
             }
           />
 
