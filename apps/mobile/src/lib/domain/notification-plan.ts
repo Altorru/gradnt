@@ -182,8 +182,11 @@ function inactivityNotifications(input: PlanInput): DesiredNotification[] {
 
   return [
     {
-      // Keyed on the last ride, so it fires once per idle stretch rather than
-      // once per reconcile.
+      // Derived from the last ride, not from `now`, so successive reconciles
+      // agree on the key. A fired notification leaves the pending list, so an
+      // idle rider who keeps opening the app is nudged at most once per launch.
+      // ponytail: no persisted "nudged" flag; the spec asks for deterministic
+      // keys, not once-per-stretch.
       key: `inactivity:${lastActivityAt.slice(0, 10)}`,
       kind: 'inactivity',
       fireAt: nextDailyFire(now, preferences.reminderHour, preferences.reminderMinute),

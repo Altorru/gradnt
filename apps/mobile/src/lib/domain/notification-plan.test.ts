@@ -203,4 +203,16 @@ describe('inactivity nudge', () => {
 
     expect(result).toHaveLength(0)
   })
+
+  it('keys the nudge on the last ride, so successive reconciles agree', () => {
+    const lastActivityAt = new Date(NOW.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
+    const plan = () =>
+      planNotifications(input({ preferences: enabled, lastSyncedAt: fresh, lastActivityAt }))
+
+    const first = plan()
+    const second = plan()
+
+    expect(first[0].key).toBe(second[0].key)
+    expect(first[0].key).toBe(`inactivity:${lastActivityAt.slice(0, 10)}`)
+  })
 })
