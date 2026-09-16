@@ -194,10 +194,56 @@ function inactivityNotifications(input: PlanInput): DesiredNotification[] {
   ]
 }
 
-export function planNotifications(input: PlanInput): DesiredNotification[] {
+function milestoneNotifications(input: PlanInput): DesiredNotification[] {
+  const { goal, celebrated, now } = input
+
+  if (goal === null) {
+    return []
+  }
+
+  const reached = MILESTONE_THRESHOLDS.filter((threshold) => goal.progress >= threshold)
+  const highest = reached.at(-1)
+
+  if (highest === undefined || (celebrated[goal.key] ?? 0) >= highest) {
+    return []
+  }
+
   return [
+    {
+      key: `milestone:${goal.key}:${highest}`,
+      kind: 'milestone',
+      threshold: highest,
+      progress: goal.progress,
+      fireAt: now,
+    },
+  ]
+}
+
+/**
+ * Everything that should be scheduled, capped.
+ *
+ * iOS drops pending local notifications past 64 without saying so, and a plan
+ * of several weeks clears that on its own. We keep the soonest, because a
+ * reminder three weeks out is the one a rider can most afford to lose.
+ *
+ * Milestones are exempt: they fire now, not later, and a cap that swallowed the
+ * one notification the rider did something to earn would be the worst possible
+ * thing to drop.
+ */
+export function planNotifications(input: PlanInput): DesiredNotification[] {
+  const all = [
     ...sessionNotifications(input),
     ...weeklyNotifications(input),
     ...inactivityNotifications(input),
-  ].sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
+    ...milestoneNotifications(input),
+  ]
+
+  const immediate = all.filter((notification) => notification.fireAt <= input.now)
+  const later = all
+    .filter((notification) => notification.fireAt > input.now)
+    .sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
+
+  const room = Math.max(0, SCHEDULE_CAP - immediate.length)
+
+  return [...immediate, ...later.slice(0, room)]
 }

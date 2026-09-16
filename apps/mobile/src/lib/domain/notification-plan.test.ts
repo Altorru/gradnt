@@ -4,6 +4,7 @@ import {
   FRESHNESS_WINDOW_MS,
   isFresh,
   planNotifications,
+  SCHEDULE_CAP,
   type PlanInput,
 } from './notification-plan'
 
@@ -214,5 +215,70 @@ describe('inactivity nudge', () => {
 
     expect(first[0].key).toBe(second[0].key)
     expect(first[0].key).toBe(`inactivity:${lastActivityAt.slice(0, 10)}`)
+  })
+})
+
+describe('goal milestones', () => {
+  const goal = { key: 'goal-1', progress: 78 }
+
+  it('celebrates the highest level reached', () => {
+    const result = planNotifications(input({ goal }))
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({ kind: 'milestone', threshold: 75, progress: 78 })
+  })
+
+  it('never celebrates the same level twice', () => {
+    const first = planNotifications(input({ goal }))
+    const celebrated = { 'goal-1': 75 }
+
+    const second = planNotifications(input({ goal, celebrated }))
+
+    expect(first).toHaveLength(1)
+    expect(second).toHaveLength(0)
+  })
+
+  it('still celebrates a level further up', () => {
+    const result = planNotifications(
+      input({ goal: { key: 'goal-1', progress: 100 }, celebrated: { 'goal-1': 75 } }),
+    )
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).toMatchObject({ threshold: 100 })
+  })
+
+  it('says nothing below the first level', () => {
+    expect(planNotifications(input({ goal: { key: 'goal-1', progress: 12 } }))).toHaveLength(0)
+  })
+})
+
+describe('the scheduling cap', () => {
+  it('keeps the soonest and drops the rest', () => {
+    const many = Array.from({ length: 30 }, (_, index) =>
+      workout({
+        id: `w${index}`,
+        date: new Date(NOW.getTime() + (index + 1) * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    )
+
+    const result = planNotifications(input({ workouts: many }))
+
+    expect(result).toHaveLength(SCHEDULE_CAP)
+    expect(result[0].key).toBe('session:w0')
+  })
+
+  it('never drops a milestone, which fires now rather than later', () => {
+    const many = Array.from({ length: 30 }, (_, index) =>
+      workout({
+        id: `w${index}`,
+        date: new Date(NOW.getTime() + (index + 1) * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    )
+
+    const result = planNotifications(
+      input({ workouts: many, goal: { key: 'goal-1', progress: 50 } }),
+    )
+
+    expect(result.filter((n) => n.kind === 'milestone')).toHaveLength(1)
   })
 })
