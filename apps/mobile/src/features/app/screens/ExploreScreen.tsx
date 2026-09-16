@@ -5,9 +5,8 @@ import { XStack, YStack } from 'tamagui'
 
 import { GradntButton, GradntCard, GradntScreen, GradntText, SCREEN_GUTTER } from '@/design-system'
 import { defaultRoutePreferences, type RoutePreferences } from '@/features/explore/domain'
-import { RouteDetailPanel } from '@/features/explore/components'
+import { FilterBar, RouteDetailPanel, type ExploreFilterKey } from '@/features/explore/components'
 import { ExploreMap } from '@/features/explore/components/ExploreMap'
-import { ExploreFiltersPanel, FilterBar } from '@/features/explore/components/ExploreFiltersPanel'
 import { LocationButton } from '@/features/explore/components/LocationButton'
 import { RouteResultStrip } from '@/features/explore/components/RouteResultStrip'
 import {
@@ -38,7 +37,7 @@ export function ExploreScreen() {
   const insets = useSafeAreaInsets()
   const [preferences, setPreferences] = useState<RoutePreferences>(defaultRoutePreferences)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [openFilter, setOpenFilter] = useState<ExploreFilterKey | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   const routingConfigured = isRealRoutingConfigured()
@@ -72,6 +71,12 @@ export function ExploreScreen() {
     setPreferences((current) => ({ ...current, ...update }))
   }
 
+  // The row stays open across a change: a rider who moves the distance thumb
+  // wants to see the map answer, not to reopen the row for a second look.
+  function toggleFilter(filter: ExploreFilterKey) {
+    setOpenFilter((current) => (current === filter ? null : filter))
+  }
+
   return (
     /* No safe-area edge at the top: the map runs under the status bar, which
        is the difference between a screen with a map on it and a screen that
@@ -96,7 +101,12 @@ export function ExploreScreen() {
           style={{ paddingTop: insets.top + 12 }}
           pointerEvents="box-none"
         >
-          <FilterBar preferences={preferences} onOpen={() => setIsFiltersOpen(true)} />
+          <FilterBar
+            preferences={preferences}
+            openFilter={openFilter}
+            onToggleFilter={toggleFilter}
+            onChange={updatePreferences}
+          />
 
           <YStack paddingHorizontal="$3" gap="$2">
             {!routingConfigured ? (
@@ -130,13 +140,10 @@ export function ExploreScreen() {
         </YStack>
 
         {/* Tapping anywhere else closes the detail. */}
-        {isDetailOpen || isFiltersOpen ? (
+        {isDetailOpen ? (
           <Pressable
             accessibilityLabel="Fermer le panneau"
-            onPress={() => {
-              setIsDetailOpen(false)
-              setIsFiltersOpen(false)
-            }}
+            onPress={() => setIsDetailOpen(false)}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           />
         ) : null}
@@ -177,15 +184,7 @@ export function ExploreScreen() {
             </YStack>
           ) : null}
 
-          {isFiltersOpen ? (
-            <PanelFrame>
-              <ExploreFiltersPanel
-                preferences={preferences}
-                onChange={updatePreferences}
-                onClose={() => setIsFiltersOpen(false)}
-              />
-            </PanelFrame>
-          ) : isDetailOpen && selectedRoute ? (
+          {isDetailOpen && selectedRoute ? (
             <PanelFrame>
               <RouteDetailPanel route={selectedRoute} onClose={() => setIsDetailOpen(false)} />
             </PanelFrame>
@@ -204,8 +203,8 @@ export function ExploreScreen() {
                 distance ou le dénivelé pour voir plus de parcours.
               </GradntText>
 
-              <GradntButton tone="secondary" onPress={() => setIsFiltersOpen(true)}>
-                Modifier les filtres
+              <GradntButton tone="secondary" onPress={() => setOpenFilter('distance')}>
+                Élargir la distance
               </GradntButton>
             </GradntCard>
           ) : selectedRoute ? (
@@ -217,7 +216,13 @@ export function ExploreScreen() {
                 // Choosing a route means looking at it, not at where you are.
                 routeStart.stopFollowing()
               }}
-              onOpenDetail={() => setIsDetailOpen(true)}
+              onOpenDetail={() => {
+                // One thing open at a time: the detail is a reading state, and
+                // a filter row left unfolded above it would be two answers to
+                // the same tap.
+                setOpenFilter(null)
+                setIsDetailOpen(true)
+              }}
             />
           ) : proposalsQuery.isPending && routeStart.hasStart ? (
             <GradntCard padding="$4">

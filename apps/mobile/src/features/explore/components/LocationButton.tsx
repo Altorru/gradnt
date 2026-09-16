@@ -37,8 +37,8 @@ export function LocationButton({ isRequesting, needsSettings, onPress }: Locatio
       style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}
       onPress={onPress}
       accessibilityLabel={needsSettings ? 'Ouvrir les réglages' : 'Actualiser ma position'}
+      accessibilityState={{ busy: isRequesting }}
       disabled={isRequesting}
-      busy={isRequesting}
     >
       {isRequesting ? (
         <ActivityIndicator size="small" />
