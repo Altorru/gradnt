@@ -7,10 +7,7 @@ import { GradntButton, GradntCard, GradntText, SCREEN_GUTTER } from '@/design-sy
 import { defaultRoutePreferences, type RoutePreferences } from '@/features/explore/domain'
 import { RouteDetailPanel } from '@/features/explore/components'
 import { ExploreMap } from '@/features/explore/components/ExploreMap'
-import {
-  ExploreFiltersPanel,
-  FilterSummary,
-} from '@/features/explore/components/ExploreFiltersPanel'
+import { ExploreFiltersPanel, FilterBar } from '@/features/explore/components/ExploreFiltersPanel'
 import { LocationButton } from '@/features/explore/components/LocationButton'
 import { RouteResultStrip } from '@/features/explore/components/RouteResultStrip'
 import {
@@ -89,44 +86,38 @@ export function ExploreScreen() {
 
         {/* Floating over the map, so the map is the screen rather than a block
             in a column. */}
-        <YStack
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          padding="$3"
-          gap="$2"
-          pointerEvents="box-none"
-        >
-          <FilterSummary preferences={preferences} onPress={() => setIsFiltersOpen(true)} />
+        <YStack position="absolute" top={0} left={0} right={0} gap="$2" pointerEvents="box-none">
+          <FilterBar preferences={preferences} onOpen={() => setIsFiltersOpen(true)} />
 
-          {!routingConfigured ? (
-            <GradntCard padding="$3">
-              <GradntText muted fontSize={12} lineHeight={18}>
-                Le calcul d’itinéraire n’est pas configuré : GRADNT n’affiche rien plutôt que des
-                parcours inventés.
-              </GradntText>
-            </GradntCard>
-          ) : null}
+          <YStack paddingHorizontal="$3" gap="$2">
+            {!routingConfigured ? (
+              <GradntCard padding="$3">
+                <GradntText muted fontSize={12} lineHeight={18}>
+                  Le calcul d’itinéraire n’est pas configuré : GRADNT n’affiche rien plutôt que des
+                  parcours inventés.
+                </GradntText>
+              </GradntCard>
+            ) : null}
 
-          {routingConfigured && !routeStart.hasStart ? (
-            <GradntCard padding="$3">
-              <GradntText muted fontSize={12} lineHeight={18}>
-                {routeStart.error ?? 'Recherche de ta position…'}
-              </GradntText>
-            </GradntCard>
-          ) : null}
+            {routingConfigured && !routeStart.hasStart ? (
+              <GradntCard padding="$3">
+                <GradntText muted fontSize={12} lineHeight={18}>
+                  {routeStart.error ?? 'Recherche de ta position…'}
+                </GradntText>
+              </GradntCard>
+            ) : null}
 
-          {proposalsQuery.isError ? (
-            <GradntCard padding="$3" gap="$2">
-              <GradntText color="$danger" fontSize={12} lineHeight={18}>
-                Impossible de charger les parcours.
-              </GradntText>
-              <GradntButton tone="secondary" onPress={() => void proposalsQuery.refetch()}>
-                Réessayer
-              </GradntButton>
-            </GradntCard>
-          ) : null}
+            {proposalsQuery.isError ? (
+              <GradntCard padding="$3" gap="$2">
+                <GradntText color="$danger" fontSize={12} lineHeight={18}>
+                  Impossible de charger les parcours.
+                </GradntText>
+                <GradntButton tone="secondary" onPress={() => void proposalsQuery.refetch()}>
+                  Réessayer
+                </GradntButton>
+              </GradntCard>
+            ) : null}
+          </YStack>
         </YStack>
 
         {/* Tapping anywhere else closes the detail. */}

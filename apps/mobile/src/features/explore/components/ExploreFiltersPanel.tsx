@@ -1,12 +1,14 @@
-import { X } from '@tamagui/lucide-icons-2'
+import { ChevronDown } from '@tamagui/lucide-icons-2'
+import { useState } from 'react'
+import { Pressable, ScrollView } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
-  GradntChip,
   GradntHeading,
   GradntIconButton,
   GradntOptionList,
   GradntRangeSlider,
+  GradntText,
 } from '@/design-system'
 
 import {
@@ -48,33 +50,115 @@ const INTENT_LABELS = {
   tempo: 'Tempo',
 } as const
 
+/** A pill in the bar. Carries its own value, so the state reads at a glance. */
+function FilterPill({
+  label,
+  isDefault,
+  onPress,
+}: {
+  label: string
+  /** Dimmed when the value is the one nobody chose. */
+  isDefault?: boolean
+  onPress: () => void
+}) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={6}>
+      {({ pressed }) => (
+        <XStack
+          alignItems="center"
+          gap="$1"
+          paddingHorizontal="$3"
+          paddingVertical="$2"
+          borderRadius="$pill"
+          borderWidth={1}
+          borderColor="$border"
+          backgroundColor="$backgroundElevated"
+          opacity={pressed ? 0.7 : 1}
+        >
+          <GradntText
+            color={isDefault ? '$textSecondary' : '$color'}
+            weight="semibold"
+            fontSize={13}
+          >
+            {label}
+          </GradntText>
+
+          <ChevronDown size={14} color="$textSecondary" />
+        </XStack>
+      )}
+    </Pressable>
+  )
+}
+
 /**
- * The filters, as design-system controls.
+ * The filter bar, floating over the map.
  *
- * This was a native sheet of `@expo/ui` controls. They are real SwiftUI and
- * Compose widgets and they behave impeccably, but they carry the platform's
- * typography, spacing and colour — which on a screen already dressed in GRADNT
- * reads as a different application opening on top of this one. Brand coherence
- * won.
+ * Three pills, each showing the value it holds rather than the name of the
+ * setting. That is the whole point: a bar of labels ("Discipline", "Distance")
+ * tells a rider nothing without being opened, while a bar of values reads like a
+ * summary of what is already chosen.
  *
- * Choices are columns rather than a wrapping row of chips: the eye runs down one
- * left edge, every option gets a full-width target, and a check says which is on
- * without leaning on colour.
+ * They scroll rather than wrap, so the row never becomes two lines of chrome
+ * over the map, and the trailing control holds everything that did not earn a
+ * place here.
+ */
+export function FilterBar({
+  preferences,
+  onOpen,
+}: {
+  preferences: RoutePreferences
+  onOpen: () => void
+}) {
+  const { min, max } = preferences.distanceRangeKm
+  const hasExtras =
+    preferences.surfacePreference !== 'none' ||
+    preferences.trainingIntent !== 'none' ||
+    !preferences.lowTraffic
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
+    >
+      <FilterPill label={MODE_LABELS[preferences.mode]} onPress={onOpen} />
+
+      <FilterPill label={`${min}–${max} km`} onPress={onOpen} />
+
+      <FilterPill label={preferences.loop ? 'Boucle' : 'Aller simple'} onPress={onOpen} />
+
+      {/* Dimmed when nothing behind it has been touched, so a rider can tell at
+          a glance that the extras are still at their defaults. */}
+      <FilterPill
+        label={hasExtras ? 'Filtres ·' : 'Filtres'}
+        isDefault={!hasExtras}
+        onPress={onOpen}
+      />
+    </ScrollView>
+  )
+}
+
+/**
+ * The filter panel.
  *
- * **A limit worth knowing.** Only the discipline, the distance, the route type
- * and the start point reach the routing service. Surface, intent and quiet roads
- * reorder what comes back; they do not change its shape. The distance and
- * elevation spans are the exception — those *exclude*, because a span says what
- * a rider will accept rather than what they would like.
+ * Seven groups of options stacked made a sheet nobody could take in — and four
+ * of them are what a rider actually tunes, while the other three are refinements
+ * most rides never touch. The four stay; the three wait behind a disclosure.
+ *
+ * That is the whole change: not smaller controls, fewer of them at once.
  */
 export function ExploreFiltersPanel({ preferences, onChange, onClose }: ExploreFiltersPanelProps) {
+  const [showMore, setShowMore] = useState(false)
+
   return (
     <YStack gap="$5">
       <XStack alignItems="center" justifyContent="space-between" gap="$3">
         <GradntHeading level={3}>Filtres</GradntHeading>
 
         <GradntIconButton accessibilityLabel="Fermer les filtres" onPress={onClose}>
-          <X size={18} color="$textPrimary" />
+          <GradntText muted fontSize={14} weight="semibold">
+            OK
+          </GradntText>
         </GradntIconButton>
       </XStack>
 
@@ -118,59 +202,60 @@ export function ExploreFiltersPanel({ preferences, onChange, onClose }: ExploreF
         ]}
       />
 
-      <GradntOptionList
-        label="Surface"
-        value={preferences.surfacePreference}
-        onChange={(surfacePreference) => onChange({ surfacePreference })}
-        options={surfacePreferenceSchema.options.map((surface) => ({
-          value: surface,
-          label: SURFACE_LABELS[surface],
-        }))}
-      />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: showMore }}
+        accessibilityLabel="Plus de filtres"
+        onPress={() => setShowMore((open) => !open)}
+      >
+        {({ pressed }) => (
+          <XStack alignItems="center" gap="$2" opacity={pressed ? 0.6 : 1} paddingVertical="$2">
+            <ChevronDown
+              size={16}
+              color="$textSecondary"
+              style={{ transform: [{ rotate: showMore ? '180deg' : '0deg' }] }}
+            />
 
-      <GradntOptionList
-        label="Intention"
-        value={preferences.trainingIntent}
-        onChange={(trainingIntent) => onChange({ trainingIntent })}
-        options={trainingIntentSchema.options.map((intent) => ({
-          value: intent,
-          label: INTENT_LABELS[intent],
-        }))}
-      />
+            <GradntText muted weight="semibold" fontSize={13}>
+              {showMore ? 'Moins de filtres' : 'Plus de filtres'}
+            </GradntText>
+          </XStack>
+        )}
+      </Pressable>
 
-      <GradntOptionList
-        label="Type de voies"
-        value={preferences.lowTraffic ? 'quiet' : 'any'}
-        onChange={(choice) => onChange({ lowTraffic: choice === 'quiet' })}
-        options={[
-          { value: 'any', label: 'Peu importe' },
-          { value: 'quiet', label: 'Plus calmes' },
-        ]}
-      />
+      {showMore ? (
+        <YStack gap="$5">
+          <GradntOptionList
+            label="Surface"
+            value={preferences.surfacePreference}
+            onChange={(surfacePreference) => onChange({ surfacePreference })}
+            options={surfacePreferenceSchema.options.map((surface) => ({
+              value: surface,
+              label: SURFACE_LABELS[surface],
+            }))}
+          />
+
+          <GradntOptionList
+            label="Intention"
+            value={preferences.trainingIntent}
+            onChange={(trainingIntent) => onChange({ trainingIntent })}
+            options={trainingIntentSchema.options.map((intent) => ({
+              value: intent,
+              label: INTENT_LABELS[intent],
+            }))}
+          />
+
+          <GradntOptionList
+            label="Type de voies"
+            value={preferences.lowTraffic ? 'quiet' : 'any'}
+            onChange={(choice) => onChange({ lowTraffic: choice === 'quiet' })}
+            options={[
+              { value: 'any', label: 'Peu importe' },
+              { value: 'quiet', label: 'Plus calmes' },
+            ]}
+          />
+        </YStack>
+      ) : null}
     </YStack>
-  )
-}
-
-/**
- * The compact control that opens the panel, carrying the current values.
- *
- * Built from the design system rather than `@expo/ui`, because it floats over
- * the map beside our own chrome and a platform-styled pill would sit oddly next
- * to it.
- */
-export function FilterSummary({
-  preferences,
-  onPress,
-}: {
-  preferences: RoutePreferences
-  onPress: () => void
-}) {
-  const { min, max } = preferences.distanceRangeKm
-
-  return (
-    <GradntChip
-      label={`Filtres · ${MODE_LABELS[preferences.mode]} · ${min}–${max} km`}
-      onPress={onPress}
-    />
   )
 }

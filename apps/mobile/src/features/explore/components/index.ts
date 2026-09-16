@@ -1,4 +1,4 @@
-export { ExploreFiltersPanel, FilterSummary } from './ExploreFiltersPanel'
+export { ExploreFiltersPanel, FilterBar } from './ExploreFiltersPanel'
 export { ExploreMap } from './ExploreMap'
 export { LocationButton } from './LocationButton'
 export { RouteDetailPanel } from './RouteDetailPanel'
