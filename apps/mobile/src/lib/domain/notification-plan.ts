@@ -1,3 +1,5 @@
+import type { MessageKey, Translation } from '@/i18n'
+
 import type { NotificationPreferences } from '../../services/preferences/preferences.persistence'
 
 import type { PlannedWorkout } from './schemas'
@@ -246,4 +248,74 @@ export function planNotifications(input: PlanInput): DesiredNotification[] {
   const room = Math.max(0, SCHEDULE_CAP - immediate.length)
 
   return [...immediate, ...later.slice(0, room)]
+}
+
+/** The workout type, as a catalogue key. Never `workout.title`. */
+const SESSION_TITLE_KEYS = {
+  endurance: 'notifications.session.endurance',
+  tempo: 'notifications.session.tempo',
+  sweet_spot: 'notifications.session.sweetSpot',
+  threshold: 'notifications.session.threshold',
+  vo2_max: 'notifications.session.vo2Max',
+  recovery: 'notifications.session.recovery',
+} as const satisfies Record<PlannedWorkout['type'], MessageKey>
+
+export type NotificationWording = {
+  title: string
+  body: string
+  /** Where a tap lands. */
+  url: string
+}
+
+/**
+ * The words a notification will carry, in the language it is handed.
+ *
+ * Written here, at scheduling time, and copied into the notification: a local
+ * notification is not rendered by the app, so a language change has to
+ * re-trigger reconciliation rather than re-render.
+ */
+export function describeNotification(
+  notification: DesiredNotification,
+  { t }: Translation,
+): NotificationWording {
+  switch (notification.kind) {
+    case 'session':
+      return {
+        title: t('notifications.session.title'),
+        body: `${t(SESSION_TITLE_KEYS[notification.workout.type])} · ${t(
+          'notifications.session.duration',
+          { minutes: notification.workout.durationMinutes },
+        )}`,
+        url: `/plan/${notification.workout.id}`,
+      }
+
+    case 'weekly':
+      return {
+        title: t('notifications.weekly.title'),
+        body:
+          notification.summary === null
+            ? t('notifications.weekly.bodyWithoutFigures')
+            : t('notifications.weekly.bodyWithFigures', {
+                rides: notification.summary.rides,
+                hours: notification.summary.hours,
+                distance: notification.summary.distanceKm,
+              }),
+        url: '/progress',
+      }
+
+    case 'inactivity':
+      return {
+        title: t('notifications.inactivity.title'),
+        body: t('notifications.inactivity.body'),
+        // The nudge has no screen of its own; it lands the rider on home.
+        url: '/home',
+      }
+
+    case 'milestone':
+      return {
+        title: t('notifications.milestone.title'),
+        body: t('notifications.milestone.body', { threshold: notification.threshold }),
+        url: '/progress',
+      }
+  }
 }

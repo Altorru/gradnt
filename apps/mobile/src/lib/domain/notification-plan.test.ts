@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
+
+// The leaf module, not `@/i18n`: the barrel pulls in the preferences store and
+// with it expo-secure-store, which a domain test has no business loading.
+import { translate, translatePlural } from '@/i18n/translate'
+
 import type { PlannedWorkout } from './schemas'
 import {
+  describeNotification,
   FRESHNESS_WINDOW_MS,
   isFresh,
   planNotifications,
@@ -280,5 +286,75 @@ describe('the scheduling cap', () => {
     )
 
     expect(result.filter((n) => n.kind === 'milestone')).toHaveLength(1)
+  })
+})
+
+const frTranslation = {
+  t: (key: Parameters<typeof translate>[1], params?: Parameters<typeof translate>[2]) =>
+    translate('fr', key, params),
+  plural: (key: Parameters<typeof translatePlural>[1], count: number) =>
+    translatePlural('fr', key, count),
+}
+const enTranslation = {
+  t: (key: Parameters<typeof translate>[1], params?: Parameters<typeof translate>[2]) =>
+    translate('en', key, params),
+  plural: (key: Parameters<typeof translatePlural>[1], count: number) =>
+    translatePlural('en', key, count),
+}
+
+describe('describeNotification', () => {
+  it('names the session type from the code, never from the stored French title', () => {
+    const notification = planNotifications(input({ workouts: [workout()] }))[0]
+
+    const wording = describeNotification(notification, enTranslation)
+
+    expect(wording.body).toContain('Endurance')
+    expect(wording.body).not.toContain('fondamentale')
+  })
+
+  it('writes in the language it is handed', () => {
+    const notification = planNotifications(input({ workouts: [workout()] }))[0]
+
+    expect(describeNotification(notification, frTranslation).title).not.toBe(
+      describeNotification(notification, enTranslation).title,
+    )
+  })
+
+  it('deep links a session to its own screen', () => {
+    const notification = planNotifications(input({ workouts: [workout()] }))[0]
+
+    expect(describeNotification(notification, frTranslation).url).toBe('/plan/w1')
+  })
+
+  it('has two weekly wordings, and uses the one the data allows', () => {
+    const fresh = planNotifications(
+      input({
+        preferences: { ...input().preferences, weeklySummary: true },
+        weeklySummary: { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 },
+        lastSyncedAt: new Date(NOW.getTime() - 60 * 1000).toISOString(),
+      }),
+    )[0]
+    const stale = planNotifications(
+      input({
+        preferences: { ...input().preferences, weeklySummary: true },
+        weeklySummary: { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 },
+        lastSyncedAt: null,
+      }),
+    )[0]
+
+    expect(describeNotification(fresh, frTranslation).body).toContain('4')
+    expect(describeNotification(stale, frTranslation).body).not.toContain('4')
+  })
+
+  it('deep links a nudge to the home screen, the only screen it has', () => {
+    const notification = planNotifications(
+      input({
+        preferences: { ...input().preferences, inactivityNudge: true },
+        lastSyncedAt: new Date(NOW.getTime() - 60 * 1000).toISOString(),
+        lastActivityAt: new Date(NOW.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    )[0]
+
+    expect(describeNotification(notification, frTranslation).url).toBe('/home')
   })
 })
