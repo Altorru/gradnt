@@ -4,21 +4,23 @@ import { Platform } from 'react-native'
 
 import type { RoutePoint } from '../domain'
 
-export const defaultRouteStart: RoutePoint = {
-  latitude: 45.764,
-  longitude: 4.835,
-  elevationMeters: 171,
-}
-
+/**
+ * The rider's position, or null until they grant it.
+ *
+ * There used to be a hardcoded point in Lyon standing in as the start, and the
+ * screen proposed routes from it. Routing needs *a* start, but a made-up one is
+ * worse than none: a rider in Lille was shown Lyon loops that looked like real
+ * proposals, and nothing on the screen said where they began.
+ */
 export function useCurrentRouteStart() {
-  const [start, setStart] = useState<RoutePoint>(defaultRouteStart)
+  const [start, setStart] = useState<RoutePoint | null>(null)
   const [isRequesting, setIsRequesting] = useState(false)
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const requestCurrentLocation = useCallback(async () => {
     if (Platform.OS === 'web') {
-      setError('La position réelle est disponible dans la development build native.')
+      setError('La position est disponible dans la development build native.')
       return null
     }
 
@@ -31,22 +33,24 @@ export function useCurrentRouteStart() {
       setHasPermission(granted)
 
       if (!granted) {
-        setError('Permission refusée : le départ local de démonstration reste utilisé.')
+        setError('Autorise la localisation pour que GRADNT propose un départ près de chez toi.')
         return null
       }
 
       const position = await Location.getCurrentPositionAsync({
         accuracy: Location.LocationAccuracy.Balanced,
       })
+
       const nextStart: RoutePoint = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         elevationMeters: position.coords.altitude,
       }
+
       setStart(nextStart)
       return nextStart
     } catch {
-      setError('Position indisponible : le départ local de démonstration reste utilisé.')
+      setError("Ta position n'a pas pu être obtenue. Réessaie dans un instant.")
       return null
     } finally {
       setIsRequesting(false)
@@ -59,6 +63,6 @@ export function useCurrentRouteStart() {
     hasPermission,
     error,
     requestCurrentLocation,
-    isDefaultStart: start === defaultRouteStart,
+    hasStart: start !== null,
   }
 }

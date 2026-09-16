@@ -12,7 +12,11 @@ import {
   GradntText,
 } from '@/design-system'
 import { RouteDetailPanel } from '@/features/explore/components'
-import { useCurrentRouteStart, useRouteProposalsQuery } from '@/features/explore/hooks'
+import {
+  isRealRoutingConfigured,
+  useCurrentRouteStart,
+  useRouteProposalsQuery,
+} from '@/features/explore/hooks'
 import {
   defaultRoutePreferences,
   type Route,
@@ -154,11 +158,14 @@ function RouteProposalCard({
 export function ExploreScreen() {
   const [preferences, setPreferences] = useState<RoutePreferences>(defaultRoutePreferences)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
+  const routingConfigured = isRealRoutingConfigured()
   const routeStart = useCurrentRouteStart()
   const proposalsQuery = useRouteProposalsQuery(preferences, routeStart.start)
   const proposals = proposalsQuery.data ?? []
   const selectedRoute = proposals.find((route) => route.id === selectedRouteId)
-  const usesRealRouting = proposals.some((route) => route.provider.name === 'openrouteservice')
+  // Both are needed to ask anything: a key to route with, and somewhere to
+  // start from.
+  const canPropose = routingConfigured && routeStart.hasStart
 
   function updatePreferences(update: Partial<RoutePreferences>) {
     setSelectedRouteId(null)
@@ -252,9 +259,9 @@ export function ExploreScreen() {
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">Départ local</GradntText>
                 <GradntText muted fontSize={13}>
-                  {usesRealRouting
-                    ? 'Parcours calculés par HeiGIT depuis le départ configuré.'
-                    : 'Les propositions actuelles sont des données de démonstration autour de Lyon.'}
+                  {routeStart.hasStart
+                    ? 'Les parcours partent de ta position actuelle.'
+                    : 'GRADNT a besoin de ta position pour proposer un départ près de chez toi.'}
                 </GradntText>
               </YStack>
             </XStack>
@@ -272,17 +279,17 @@ export function ExploreScreen() {
               >
                 {routeStart.isRequesting
                   ? 'Localisation…'
-                  : routeStart.isDefaultStart
-                    ? 'Utiliser ma position'
-                    : 'Position actuelle utilisée'}
+                  : routeStart.hasStart
+                    ? 'Position actuelle utilisée'
+                    : 'Utiliser ma position'}
               </GradntButton>
             </XStack>
-            <GradntText muted fontSize={12}>
-              {routeStart.error ??
-                (routeStart.isDefaultStart
-                  ? 'Départ de démonstration à Lyon. La position réelle est demandée uniquement à ton action.'
-                  : 'Les parcours partent de ta position actuelle.')}
-            </GradntText>
+
+            {routeStart.error ? (
+              <GradntText color="$danger" fontSize={12} lineHeight={18}>
+                {routeStart.error}
+              </GradntText>
+            ) : null}
           </GradntCard>
 
           <YStack gap="$3">
@@ -290,46 +297,76 @@ export function ExploreScreen() {
               <Sparkles size={19} color="$accentInk" />
               <GradntHeading level={2}>Tes propositions</GradntHeading>
             </XStack>
-            <GradntText muted fontSize={13}>
-              Le score GRADNT combine distance, relief, surface, discipline, calme des voies et
-              intention d&apos;entraînement.
-            </GradntText>
-
-            {proposalsQuery.isPending ? (
-              <GradntCard padding="$4">
-                <GradntText muted>Recherche de parcours…</GradntText>
+            {!routingConfigured ? (
+              <GradntCard padding="$4" gap="$3">
+                <GradntText weight="semibold">Calcul d&apos;itinéraire indisponible</GradntText>
+                <GradntText muted fontSize={13} lineHeight={19}>
+                  GRADNT a besoin d&apos;une clé de routage pour proposer des parcours. Sans elle il
+                  n&apos;affiche rien, plutôt que des itinéraires inventés.
+                </GradntText>
               </GradntCard>
             ) : null}
 
-            {proposalsQuery.isError ? (
+            {routingConfigured && !routeStart.hasStart ? (
               <GradntCard padding="$4" gap="$3">
-                <GradntText color="$danger" weight="semibold">
-                  Impossible de charger les parcours.
+                <GradntText weight="semibold">Commence par ta position</GradntText>
+                <GradntText muted fontSize={13} lineHeight={19}>
+                  Un parcours part d&apos;un point réel. Utilise ta position et GRADNT calculera
+                  trois propositions depuis chez toi.
                 </GradntText>
-                <GradntText muted fontSize={13}>
-                  Vérifie ta connexion puis réessaie. Aucun parcours n&apos;est inventé lorsque le
-                  moteur de routing est indisponible.
-                </GradntText>
-                <GradntButton tone="secondary" onPress={() => void proposalsQuery.refetch()}>
-                  Réessayer
+                <GradntButton
+                  disabled={routeStart.isRequesting}
+                  onPress={() => void routeStart.requestCurrentLocation()}
+                >
+                  {routeStart.isRequesting ? 'Localisation…' : 'Utiliser ma position'}
                 </GradntButton>
               </GradntCard>
             ) : null}
 
-            {!proposalsQuery.isPending && !proposalsQuery.isError && proposals.length === 0 ? (
-              <GradntCard padding="$4">
-                <GradntText muted>Aucun parcours ne correspond à ces préférences.</GradntText>
-              </GradntCard>
-            ) : null}
+            {canPropose ? (
+              <>
+                <GradntText muted fontSize={13}>
+                  Le score GRADNT combine distance, relief, surface, discipline, calme des voies et
+                  intention d&apos;entraînement.
+                </GradntText>
 
-            {proposals.map((route) => (
-              <RouteProposalCard
-                key={route.id}
-                route={route}
-                selected={route.id === selectedRouteId}
-                onPress={() => setSelectedRouteId(route.id)}
-              />
-            ))}
+                {proposalsQuery.isPending ? (
+                  <GradntCard padding="$4">
+                    <GradntText muted>Recherche de parcours…</GradntText>
+                  </GradntCard>
+                ) : null}
+
+                {proposalsQuery.isError ? (
+                  <GradntCard padding="$4" gap="$3">
+                    <GradntText color="$danger" weight="semibold">
+                      Impossible de charger les parcours.
+                    </GradntText>
+                    <GradntText muted fontSize={13}>
+                      Vérifie ta connexion puis réessaie. Aucun parcours n&apos;est inventé lorsque
+                      le moteur de routing est indisponible.
+                    </GradntText>
+                    <GradntButton tone="secondary" onPress={() => void proposalsQuery.refetch()}>
+                      Réessayer
+                    </GradntButton>
+                  </GradntCard>
+                ) : null}
+
+                {!proposalsQuery.isPending && !proposalsQuery.isError && proposals.length === 0 ? (
+                  <GradntCard padding="$4">
+                    <GradntText muted>Aucun parcours ne correspond à ces préférences.</GradntText>
+                  </GradntCard>
+                ) : null}
+
+                {proposals.map((route) => (
+                  <RouteProposalCard
+                    key={route.id}
+                    route={route}
+                    selected={route.id === selectedRouteId}
+                    onPress={() => setSelectedRouteId(route.id)}
+                  />
+                ))}
+              </>
+            ) : null}
           </YStack>
 
           {selectedRoute ? (

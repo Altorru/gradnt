@@ -3,37 +3,36 @@ import { Platform } from 'react-native'
 
 import { heigitRoutingService } from '../adapters'
 import { defaultRoutePreferences, type RoutePoint, type RoutePreferences } from '../domain'
-import { mockRoutingService } from '../services'
-import type { RouteRequest } from '../services'
-import { defaultRouteStart } from './use-location'
 
-const routingService =
-  Platform.OS !== 'web' && heigitRoutingService.isConfigured()
-    ? heigitRoutingService
-    : mockRoutingService
-const routeProposalSeeds = [17, 31, 73] as const
+/**
+ * Whether real routing is available at all.
+ *
+ * It needs an API key, and on web the service is not wired up. When it is false
+ * there is nothing to ask, and the screen says so — it used to fall back to a
+ * mock service, which meant the app quietly answered with invented routes
+ * instead of admitting it could not answer.
+ */
+export function isRealRoutingConfigured(): boolean {
+  return Platform.OS !== 'web' && heigitRoutingService.isConfigured()
+}
 
 export function useRouteProposalsQuery(
   preferences: RoutePreferences = defaultRoutePreferences,
-  start: RoutePoint = defaultRouteStart,
+  start: RoutePoint | null,
 ) {
-  const request: RouteRequest = {
-    start,
-    preferences,
-  }
+  const enabled = start !== null && isRealRoutingConfigured()
 
   return useQuery({
-    queryKey: [
-      'route-proposals',
-      request.start,
-      request.preferences,
-      routeProposalSeeds,
-      routingService.constructor.name,
-    ],
-    queryFn: () => routingService.getProposals(request),
-  })
-}
+    // Disabled until there is somewhere to route from, so nothing is fetched
+    // speculatively and no placeholder result is ever cached under a real key.
+    enabled,
+    queryKey: ['route-proposals', start, preferences],
+    queryFn: async () => {
+      if (start === null) {
+        return []
+      }
 
-export function isRealRoutingConfigured() {
-  return Platform.OS !== 'web' && heigitRoutingService.isConfigured()
+      return heigitRoutingService.getProposals({ start, preferences })
+    },
+  })
 }
