@@ -154,3 +154,53 @@ describe('isFresh', () => {
     expect(isFresh(atTheEdge, NOW)).toBe(false)
   })
 })
+
+describe('inactivity nudge', () => {
+  const enabled = { ...input().preferences, inactivityNudge: true }
+  const fresh = new Date(NOW.getTime() - 60 * 60 * 1000).toISOString()
+
+  it('stays quiet about a rider who rode yesterday', () => {
+    const result = planNotifications(
+      input({
+        preferences: enabled,
+        lastSyncedAt: fresh,
+        lastActivityAt: new Date(NOW.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    )
+
+    expect(result).toHaveLength(0)
+  })
+
+  it('speaks up after four days without a ride', () => {
+    const result = planNotifications(
+      input({
+        preferences: enabled,
+        lastSyncedAt: fresh,
+        lastActivityAt: new Date(NOW.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    )
+
+    expect(result).toHaveLength(1)
+    expect(result[0].kind).toBe('inactivity')
+  })
+
+  it('stays quiet on stale data, because it cannot know whether he rode', () => {
+    const result = planNotifications(
+      input({
+        preferences: enabled,
+        lastSyncedAt: new Date(NOW.getTime() - 30 * 60 * 60 * 1000).toISOString(),
+        lastActivityAt: new Date(NOW.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+    )
+
+    expect(result).toHaveLength(0)
+  })
+
+  it('says nothing when the rider never rode at all', () => {
+    const result = planNotifications(
+      input({ preferences: enabled, lastSyncedAt: fresh, lastActivityAt: null }),
+    )
+
+    expect(result).toHaveLength(0)
+  })
+})

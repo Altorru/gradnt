@@ -144,8 +144,57 @@ function weeklyNotifications(input: PlanInput): DesiredNotification[] {
   ]
 }
 
+/**
+ * The next time the clock passes the rider's hour.
+ *
+ * The nudge is not fired the moment it is detected: an app that has just
+ * noticed you were idle should not also interrupt you about it. It waits for
+ * the hour the rider already nominated for hearing from us.
+ */
+function nextDailyFire(now: Date, hour: number, minute: number): Date {
+  const fireAt = new Date(now)
+  fireAt.setHours(hour, minute, 0, 0)
+
+  if (fireAt <= now) {
+    fireAt.setDate(fireAt.getDate() + 1)
+  }
+
+  return fireAt
+}
+
+function inactivityNotifications(input: PlanInput): DesiredNotification[] {
+  const { preferences, lastActivityAt, lastSyncedAt, now } = input
+
+  if (!preferences.inactivityNudge || lastActivityAt === null) {
+    return []
+  }
+
+  // Without a recent sync we cannot tell idleness from not having looked.
+  if (!isFresh(lastSyncedAt, now)) {
+    return []
+  }
+
+  const idleMs = now.getTime() - Date.parse(lastActivityAt)
+
+  if (Number.isNaN(idleMs) || idleMs < INACTIVITY_DAYS * DAY_MS) {
+    return []
+  }
+
+  return [
+    {
+      // Keyed on the last ride, so it fires once per idle stretch rather than
+      // once per reconcile.
+      key: `inactivity:${lastActivityAt.slice(0, 10)}`,
+      kind: 'inactivity',
+      fireAt: nextDailyFire(now, preferences.reminderHour, preferences.reminderMinute),
+    },
+  ]
+}
+
 export function planNotifications(input: PlanInput): DesiredNotification[] {
-  return [...sessionNotifications(input), ...weeklyNotifications(input)].sort(
-    (a, b) => a.fireAt.getTime() - b.fireAt.getTime(),
-  )
+  return [
+    ...sessionNotifications(input),
+    ...weeklyNotifications(input),
+    ...inactivityNotifications(input),
+  ].sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
 }
