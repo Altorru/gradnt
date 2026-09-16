@@ -1,3 +1,5 @@
 {
-  "NSLocationWhenInUseUsageDescription": "GRADNT utilise ta position uniquement pour proposer un départ proche de toi."
+  "ios": {
+    "NSLocationWhenInUseUsageDescription": "GRADNT utilise ta position uniquement pour proposer un départ proche de toi."
+  }
 }
