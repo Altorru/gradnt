@@ -5,8 +5,8 @@ import {
   GradntChip,
   GradntHeading,
   GradntIconButton,
+  GradntOptionList,
   GradntRangeSlider,
-  GradntText,
 } from '@/design-system'
 
 import {
@@ -48,33 +48,6 @@ const INTENT_LABELS = {
   tempo: 'Tempo',
 } as const
 
-function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <YStack gap="$3">
-      <GradntText muted fontSize={11} weight="semibold" letterSpacing={1}>
-        {label.toUpperCase()}
-      </GradntText>
-
-      <XStack gap="$2" flexWrap="wrap">
-        {children}
-      </XStack>
-    </YStack>
-  )
-}
-
-/** A chip that behaves as a single choice among its siblings. */
-function ChoiceChip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string
-  selected: boolean
-  onPress: () => void
-}) {
-  return <GradntChip label={label} selected={selected} onPress={onPress} />
-}
-
 /**
  * The filters, as design-system controls.
  *
@@ -82,18 +55,17 @@ function ChoiceChip({
  * Compose widgets and they behave impeccably, but they carry the platform's
  * typography, spacing and colour — which on a screen already dressed in GRADNT
  * reads as a different application opening on top of this one. Brand coherence
- * won; the one genuinely missing control, a slider, now exists in the design
- * system rather than being borrowed.
+ * won.
  *
- * Two categorical groups stay as chips because that is what a choice between
- * four named options wants: a row you can read at a glance, not a menu you have
- * to open to discover what is in it.
+ * Choices are columns rather than a wrapping row of chips: the eye runs down one
+ * left edge, every option gets a full-width target, and a check says which is on
+ * without leaning on colour.
  *
- * **A limit worth knowing.** Only the discipline, the distance and the start
- * point reach the routing service. Elevation, surface, intent and quiet roads
- * reorder the three routes that come back; they do not change their shape.
- * Moving the elevation slider changes the ranking, not the traces — a property
- * of the engine, not a fault to hide.
+ * **A limit worth knowing.** Only the discipline, the distance, the route type
+ * and the start point reach the routing service. Surface, intent and quiet roads
+ * reorder what comes back; they do not change its shape. The distance and
+ * elevation spans are the exception — those *exclude*, because a span says what
+ * a rider will accept rather than what they would like.
  */
 export function ExploreFiltersPanel({ preferences, onChange, onClose }: ExploreFiltersPanelProps) {
   return (
@@ -106,16 +78,15 @@ export function ExploreFiltersPanel({ preferences, onChange, onClose }: ExploreF
         </GradntIconButton>
       </XStack>
 
-      <FilterGroup label="Discipline">
-        {routeModeSchema.options.map((mode) => (
-          <ChoiceChip
-            key={mode}
-            label={MODE_LABELS[mode]}
-            selected={preferences.mode === mode}
-            onPress={() => onChange({ mode })}
-          />
-        ))}
-      </FilterGroup>
+      <GradntOptionList
+        label="Discipline"
+        value={preferences.mode}
+        onChange={(mode) => onChange({ mode })}
+        options={routeModeSchema.options.map((mode) => ({
+          value: mode,
+          label: MODE_LABELS[mode],
+        }))}
+      />
 
       <GradntRangeSlider
         label="Distance"
@@ -137,59 +108,56 @@ export function ExploreFiltersPanel({ preferences, onChange, onClose }: ExploreF
         onValueChange={(elevationRangeM) => onChange({ elevationRangeM })}
       />
 
-      <FilterGroup label="Type d'itinéraire">
-        {/* The domain has carried `loop` since the beginning and never had a
-            control for it — so the engine was always asked for a round trip,
-            whatever the rider wanted. */}
-        <ChoiceChip
-          label="Boucle"
-          selected={preferences.loop}
-          onPress={() => onChange({ loop: true })}
-        />
+      <GradntOptionList
+        label="Type d'itinéraire"
+        value={preferences.loop ? 'loop' : 'oneWay'}
+        onChange={(routeType) => onChange({ loop: routeType === 'loop' })}
+        options={[
+          { value: 'loop', label: 'Boucle' },
+          { value: 'oneWay', label: 'Aller simple' },
+        ]}
+      />
 
-        <ChoiceChip
-          label="Aller simple"
-          selected={!preferences.loop}
-          onPress={() => onChange({ loop: false })}
-        />
-      </FilterGroup>
+      <GradntOptionList
+        label="Surface"
+        value={preferences.surfacePreference}
+        onChange={(surfacePreference) => onChange({ surfacePreference })}
+        options={surfacePreferenceSchema.options.map((surface) => ({
+          value: surface,
+          label: SURFACE_LABELS[surface],
+        }))}
+      />
 
-      <FilterGroup label="Surface">
-        {surfacePreferenceSchema.options.map((surface) => (
-          <ChoiceChip
-            key={surface}
-            label={SURFACE_LABELS[surface]}
-            selected={preferences.surfacePreference === surface}
-            onPress={() => onChange({ surfacePreference: surface })}
-          />
-        ))}
-      </FilterGroup>
+      <GradntOptionList
+        label="Intention"
+        value={preferences.trainingIntent}
+        onChange={(trainingIntent) => onChange({ trainingIntent })}
+        options={trainingIntentSchema.options.map((intent) => ({
+          value: intent,
+          label: INTENT_LABELS[intent],
+        }))}
+      />
 
-      <FilterGroup label="Intention">
-        {trainingIntentSchema.options.map((intent) => (
-          <ChoiceChip
-            key={intent}
-            label={INTENT_LABELS[intent]}
-            selected={preferences.trainingIntent === intent}
-            // The workout the plan scheduled and the intent of this ride are the
-            // same choice here, so they move together.
-            onPress={() => onChange({ trainingIntent: intent, plannedWorkoutIntent: intent })}
-          />
-        ))}
-      </FilterGroup>
-
-      <FilterGroup label="Type de voies">
-        <ChoiceChip
-          label="Plus calmes"
-          selected={preferences.lowTraffic}
-          onPress={() => onChange({ lowTraffic: !preferences.lowTraffic })}
-        />
-      </FilterGroup>
+      <GradntOptionList
+        label="Type de voies"
+        value={preferences.lowTraffic ? 'quiet' : 'any'}
+        onChange={(choice) => onChange({ lowTraffic: choice === 'quiet' })}
+        options={[
+          { value: 'any', label: 'Peu importe' },
+          { value: 'quiet', label: 'Plus calmes' },
+        ]}
+      />
     </YStack>
   )
 }
 
-/** The compact control that opens the panel, carrying the current values. */
+/**
+ * The compact control that opens the panel, carrying the current values.
+ *
+ * Built from the design system rather than `@expo/ui`, because it floats over
+ * the map beside our own chrome and a platform-styled pill would sit oddly next
+ * to it.
+ */
 export function FilterSummary({
   preferences,
   onPress,
@@ -197,9 +165,11 @@ export function FilterSummary({
   preferences: RoutePreferences
   onPress: () => void
 }) {
+  const { min, max } = preferences.distanceRangeKm
+
   return (
     <GradntChip
-      label={`Filtres · ${MODE_LABELS[preferences.mode]} · ${preferences.distanceRangeKm.min}–${preferences.distanceRangeKm.max} km`}
+      label={`Filtres · ${MODE_LABELS[preferences.mode]} · ${min}–${max} km`}
       onPress={onPress}
     />
   )
