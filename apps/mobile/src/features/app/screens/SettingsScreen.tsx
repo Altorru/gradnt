@@ -151,10 +151,13 @@ export function SettingsScreen() {
     if (result.status === 'imported') {
       setFtpHistory(await loadFtpHistory())
       setFtpMessage(`${result.value} W, déduits de tes zones de puissance Strava.`)
-    } else if (result.status === 'unavailable') {
+    } else if (result.status === 'noPowerZones') {
       // The common case, not a failure: most riders have never set an FTP in
       // Strava, and there is an obvious thing for them to do about it.
       setFtpMessage('Strava n’a pas de zones de puissance pour toi. Saisis ta FTP ci-dessous.')
+    } else if (result.status === 'unrecognized') {
+      // Not the rider's problem, and not something to describe as one.
+      setFtpMessage(`Réponse inattendue de Strava (${result.summary}). Saisis ta FTP ci-dessous.`)
     } else {
       setFtpMessage('L’import a échoué. Réessaie dans un instant.')
     }

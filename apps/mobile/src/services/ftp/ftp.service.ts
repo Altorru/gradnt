@@ -1,12 +1,15 @@
 import { getValidAccessToken } from '../strava/api/strava-session'
 
-import { estimateFtpFromZones } from './ftp-from-zones'
+import { estimateFtpFromZones, readPowerZones } from './ftp-from-zones'
 import { loadCurrentFtp, loadFtpHistory, recordFtp, type FtpEntry } from './ftp.persistence'
 import { fetchStravaZones } from './strava-zones.api'
 
 export type FtpImportResult =
   | { status: 'imported'; value: number }
-  | { status: 'unavailable' }
+  /** The response was understood, and the rider has no power zones configured. */
+  | { status: 'noPowerZones' }
+  /** The response was not understood at all — a fault on our side, worth reporting. */
+  | { status: 'unrecognized'; summary: string }
   | { status: 'disconnected' }
   | { status: 'expired' }
   | { status: 'rateLimited' }
@@ -15,9 +18,11 @@ export type FtpImportResult =
 /**
  * Reads the rider's FTP out of Strava's power zones and records it, dated.
  *
- * `unavailable` is its own outcome because it is the common case rather than a
- * failure: most riders have never set an FTP in Strava, and telling them the
- * import "failed" would be both wrong and discouraging. They can enter one.
+ * `noPowerZones` and `unrecognized` are deliberately separate. The first is the
+ * common case — most riders have never set an FTP in Strava — and has an
+ * obvious remedy. The second means the response did not look like anything
+ * expected, and reporting it as "you have no zones" is what made this look like
+ * the rider's problem for two rounds of guessing.
  */
 export async function importFtpFromStrava(now: Date = new Date()): Promise<FtpImportResult> {
   const session = await getValidAccessToken()
@@ -30,10 +35,16 @@ export async function importFtpFromStrava(now: Date = new Date()): Promise<FtpIm
 
   switch (response.status) {
     case 'ok': {
+      const reading = readPowerZones(response.zones)
+
+      if (reading.kind === 'unrecognized') {
+        return { status: 'unrecognized', summary: reading.summary }
+      }
+
       const value = estimateFtpFromZones(response.zones)
 
       if (value === null) {
-        return { status: 'unavailable' }
+        return { status: 'noPowerZones' }
       }
 
       await recordFtp({ value, source: 'strava', recordedAt: now.toISOString() })

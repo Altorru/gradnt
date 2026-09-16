@@ -1,70 +1,140 @@
 import { z } from 'zod'
 
 /**
- * Reading an FTP out of Strava's power zones.
+ * Reading the athlete's power zones, without assuming a single response shape.
  *
- * **This is a deduction, not a measurement.** Strava does not expose the
- * athlete's FTP on any endpoint — but it computes the power zones *from* that
- * FTP, so the floor of the threshold zone reveals it. The result is therefore an
- * inference, and the caller records it with `source: 'strava'` so the UI never
- * presents it as a figure the rider entered.
+ * Twice this expected the wrong one — first an object keyed by `power`, then an
+ * array of entries carrying a `type` — and both times the mistake survived
+ * testing, because the fixtures were written from the same assumption as the
+ * code. So this accepts either, and when it recognises neither it says what
+ * arrived instead of reporting the same "no zones" as a rider who has none.
  *
- * The assumption is Strava's own zone model: seven power zones, the fourth
- * being lactate threshold and starting at 91% of FTP. It is checked rather than
- * trusted — anything that does not look like that shape yields null, because a
- * wrong FTP would quietly distort every figure derived from it.
- *
- * The endpoint answers with an **array** of zone objects, one per metric, each
- * carrying its own `type`. It is not an object keyed by `power` and
- * `heart_rate`, which is what this read before and why a rider whose zones
- * plainly exist was told they had none.
+ * Strava documents the endpoint loosely enough to support both readings, and
+ * only a real response settles it.
  */
 const zoneBucketSchema = z.object({
   min: z.number(),
   max: z.number(),
 })
 
-const stravaZonesSchema = z.array(
-  z.object({
-    type: z.string(),
-    // Deliberately unvalidated here: only the power entry's buckets are read,
-    // and demanding a shape of every metric would let a heart-rate entry with
-    // one bucket sink a perfectly good power reading.
-    distribution_buckets: z.array(z.unknown()),
-  }),
-)
-
 const powerBucketsSchema = z.array(zoneBucketSchema).min(4)
 
+/**
+ * Strava's own zone model: seven power zones, the fourth being lactate
+ * threshold and starting at 91% of FTP.
+ */
 const THRESHOLD_ZONE_INDEX = 3
 const THRESHOLD_ZONE_FLOOR = 0.91
 
-export function estimateFtpFromZones(payload: unknown): number | null {
-  const entries = stravaZonesSchema.safeParse(payload)
+export type PowerZonesReading =
+  | { kind: 'buckets'; buckets: z.infer<typeof powerBucketsSchema> }
+  /** The response parsed, and genuinely holds no power zones. */
+  | { kind: 'noPowerZones' }
+  /** The response did not look like anything expected — a fault on our side. */
+  | { kind: 'unrecognized'; summary: string }
 
-  if (!entries.success) {
-    return null
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+/**
+ * Locates the power buckets, and says whether the container was understood.
+ *
+ * The two questions are separate on purpose. A rider with heart-rate zones and
+ * no power meter has a response that is perfectly well understood and simply
+ * holds no power — reporting that as an unrecognised response would blame them
+ * for our parsing.
+ */
+function locatePowerBuckets(payload: unknown): { recognized: boolean; buckets: unknown } {
+  if (Array.isArray(payload)) {
+    const entries = payload.filter((entry) => isRecord(entry) && typeof entry.type === 'string')
+
+    if (entries.length === 0) {
+      return { recognized: false, buckets: null }
+    }
+
+    const power = entries.find((entry) => entry.type === 'power')
+
+    return { recognized: true, buckets: isRecord(power) ? power.distribution_buckets : null }
   }
 
-  const power = entries.data.find((zone) => zone.type === 'power')
+  if (isRecord(payload)) {
+    // An object is a zones container when its values look like zones, rather
+    // than because it happens to carry a key we guessed at.
+    const zoneValues = Object.values(payload).filter(
+      (value) => isRecord(value) && 'distribution_buckets' in value,
+    )
 
-  if (power === undefined) {
-    return null
+    if (zoneValues.length === 0) {
+      return { recognized: false, buckets: null }
+    }
+
+    const power = payload.power
+
+    return { recognized: true, buckets: isRecord(power) ? power.distribution_buckets : null }
   }
 
-  const buckets = powerBucketsSchema.safeParse(power.distribution_buckets)
+  return { recognized: false, buckets: null }
+}
 
+/** Describes a payload we could not read, so the next report is evidence. */
+function summarize(payload: unknown): string {
+  if (Array.isArray(payload)) {
+    const types = payload
+      .filter(isRecord)
+      .map((entry) => String(entry.type ?? '?'))
+      .join(', ')
+
+    return `tableau de ${payload.length} (types : ${types || 'aucun'})`
+  }
+
+  if (isRecord(payload)) {
+    return `objet avec les clés : ${Object.keys(payload).join(', ') || 'aucune'}`
+  }
+
+  return `type ${payload === null ? 'null' : typeof payload}`
+}
+
+export function readPowerZones(payload: unknown): PowerZonesReading {
+  const located = locatePowerBuckets(payload)
+
+  if (!located.recognized) {
+    return { kind: 'unrecognized', summary: summarize(payload) }
+  }
+
+  const buckets = powerBucketsSchema.safeParse(located.buckets)
+
+  // Understood, but holding nothing usable: the athlete has no power zones
+  // configured. A real answer, not a failure.
   if (!buckets.success) {
-    return null
+    return { kind: 'noPowerZones' }
   }
 
   const thresholdFloor = buckets.data[THRESHOLD_ZONE_INDEX]?.min
 
-  // A zone starting at zero is not a threshold zone — the athlete has no power
-  // zones configured, and dividing by 0.91 would invent a number from nothing.
   if (thresholdFloor === undefined || thresholdFloor <= 0) {
+    return { kind: 'noPowerZones' }
+  }
+
+  return { kind: 'buckets', buckets: buckets.data }
+}
+
+/**
+ * The athlete's FTP, deduced from the floor of their threshold zone.
+ *
+ * **A deduction, not a measurement.** Strava exposes no FTP, but computes the
+ * zones *from* it, so the floor gives it back. The caller records the result
+ * with `source: 'strava'` so nothing presents an inference as a figure the
+ * rider entered.
+ */
+export function estimateFtpFromZones(payload: unknown): number | null {
+  const reading = readPowerZones(payload)
+
+  if (reading.kind !== 'buckets') {
     return null
   }
+
+  const thresholdFloor = reading.buckets[THRESHOLD_ZONE_INDEX]!.min
 
   return Math.round(thresholdFloor / THRESHOLD_ZONE_FLOOR)
 }
