@@ -6,11 +6,10 @@ import {
   savePreferences,
   type AppearancePreference,
   type LanguagePreference,
+  type Preferences,
 } from '@/services/preferences/preferences.persistence'
 
-type PreferencesState = {
-  language: LanguagePreference
-  appearance: AppearancePreference
+type PreferencesState = Preferences & {
   hydrated: boolean
 
   setLanguage: (language: LanguagePreference) => void
@@ -20,12 +19,28 @@ type PreferencesState = {
 
 const initialState = { ...defaultPreferences, hydrated: false }
 
+/**
+ * Writes every preference, not the two this store happens to have setters for.
+ *
+ * `savePreferences` replaces the whole record. Writing only the fields the
+ * store knows about would reset the rest to their defaults the next time the
+ * rider switched language — silently, and only for riders who had changed
+ * something.
+ */
 function persist(state: PreferencesState): void {
   if (!state.hydrated) {
     return
   }
 
-  void savePreferences({ language: state.language, appearance: state.appearance })
+  void savePreferences({
+    language: state.language,
+    appearance: state.appearance,
+    sessionReminder: state.sessionReminder,
+    reminderHour: state.reminderHour,
+    reminderMinute: state.reminderMinute,
+    weeklySummary: state.weeklySummary,
+    inactivityNudge: state.inactivityNudge,
+  })
 }
 
 /**

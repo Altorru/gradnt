@@ -18,6 +18,15 @@ export const appearancePreferenceSchema = z.enum(['system', 'light', 'dark'])
 export const preferencesSchema = z.object({
   language: languagePreferenceSchema,
   appearance: appearancePreferenceSchema,
+
+  // Flat, each with its own default. A nested object would need `.default({...})`
+  // to spell out every value again: zod returns a default without reparsing it,
+  // so the inner defaults would never run.
+  sessionReminder: z.boolean().default(true),
+  reminderHour: z.number().int().min(0).max(23).default(7),
+  reminderMinute: z.number().int().min(0).max(59).default(0),
+  weeklySummary: z.boolean().default(true),
+  inactivityNudge: z.boolean().default(false),
 })
 
 export type LanguagePreference = z.infer<typeof languagePreferenceSchema>
@@ -27,6 +36,11 @@ export type Preferences = z.infer<typeof preferencesSchema>
 export const defaultPreferences: Preferences = {
   language: 'system',
   appearance: 'system',
+  sessionReminder: true,
+  reminderHour: 7,
+  reminderMinute: 0,
+  weeklySummary: true,
+  inactivityNudge: false,
 }
 
 async function readStoredValue(): Promise<string | null> {
