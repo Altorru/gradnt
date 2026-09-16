@@ -1,399 +1,172 @@
-import { ChevronRight, Clock3, Compass, Gauge, MapPin, Sparkles } from '@tamagui/lucide-icons-2'
+import { Platform, Pressable, ScrollView } from 'react-native'
 import { useState } from 'react'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { XStack, YStack } from 'tamagui'
 
-import {
-  GradntBadge,
-  GradntButton,
-  GradntCard,
-  GradntChip,
-  GradntHeading,
-  GradntMetric,
-  GradntText,
-} from '@/design-system'
+import { GradntButton, GradntCard, GradntText, SCREEN_GUTTER } from '@/design-system'
+import { defaultRoutePreferences, type RoutePreferences } from '@/features/explore/domain'
 import { RouteDetailPanel } from '@/features/explore/components'
+import { ExploreMap } from '@/features/explore/components/ExploreMap'
+import {
+  ExploreFiltersSheet,
+  FilterSummary,
+} from '@/features/explore/components/ExploreFiltersSheet'
+import { RouteResultStrip } from '@/features/explore/components/RouteResultStrip'
 import {
   isRealRoutingConfigured,
   useCurrentRouteStart,
   useRouteProposalsQuery,
 } from '@/features/explore/hooks'
-import {
-  defaultRoutePreferences,
-  type Route,
-  type RouteMode,
-  type RoutePreferences,
-  type RouteWithScore,
-  type SurfacePreference,
-  type TrainingIntent,
-} from '@/features/explore/domain'
 
-import { AppScreenIntro } from '../components/AppHeader'
-import { AppScrollView, AppShell } from '../components/AppShell'
-
-const routeModes: { label: string; value: RouteMode }[] = [
-  { label: 'Route', value: 'road' },
-  { label: 'Gravel', value: 'gravel' },
-  { label: 'VTT', value: 'mtb' },
-]
-
-const distanceOptions = [30, 60, 90]
-const elevationOptions = [200, 500, 800]
-
-const surfaceOptions: { label: string; value: SurfacePreference }[] = [
-  { label: 'Asphalte', value: 'paved' },
-  { label: 'Mixte', value: 'mixed' },
-  { label: 'Gravier', value: 'gravel' },
-  { label: 'Sentier', value: 'trail' },
-]
-
-const intentOptions: { label: string; value: TrainingIntent }[] = [
-  { label: 'Endurance', value: 'endurance' },
-  { label: 'Récupération', value: 'recovery' },
-  { label: 'Dénivelé', value: 'climbing' },
-  { label: 'Tempo', value: 'tempo' },
-]
-
-function formatDistance(distanceMeters: number) {
-  return `${(distanceMeters / 1000).toFixed(1).replace('.', ',')} km`
-}
-
-function formatDuration(durationSeconds: number) {
-  const minutes = Math.round(durationSeconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-
-  if (!hours) {
-    return `${minutes} min`
-  }
-
-  return `${hours} h${remainingMinutes ? ` ${remainingMinutes} min` : ''}`
-}
-
-function formatExposureLabel(label: Route['trafficExposure']['label']) {
-  return label === 'low'
-    ? 'Faible'
-    : label === 'moderate'
-      ? 'Modérée'
-      : label === 'high'
-        ? 'Élevée'
-        : 'Inconnue'
-}
-
-function getRouteModeLabel(mode: RouteMode) {
-  return mode === 'road' ? 'Route' : mode === 'gravel' ? 'Gravel' : 'VTT'
-}
-
-function getRecommendationLabel(label: RouteWithScore['recommendationLabel']) {
-  return label === 'recommended'
-    ? 'Recommandée'
-    : label === 'quieter'
-      ? 'Plus calme'
-      : label === 'training'
-        ? 'Plus entraînante'
-        : 'Alternative'
-}
-
-function getTrainingFitLabel(score: number) {
-  return score >= 85 ? 'Très adaptée' : score >= 70 ? 'Adaptée' : 'À ajuster'
-}
-
-function RouteProposalCard({
-  route,
-  selected,
-  onPress,
-}: {
-  route: RouteWithScore
-  selected: boolean
-  onPress: () => void
-}) {
-  const mainSurface = route.surfaceBreakdown[0]
-
-  return (
-    <GradntCard accent={selected} padding="$4" gap="$4">
-      <XStack alignItems="center" gap="$3">
-        <YStack flex={1} gap="$1">
-          <GradntBadge tone={route.recommendationLabel === 'recommended' ? 'positive' : 'neutral'}>
-            {getRecommendationLabel(route.recommendationLabel)}
-          </GradntBadge>
-          <GradntHeading level={3}>{route.name}</GradntHeading>
-          <GradntText muted fontSize={13}>
-            {getRouteModeLabel(route.mode)} · score GRADNT {route.score}/100
-          </GradntText>
-        </YStack>
-        <ChevronRight size={19} color="$textSecondary" />
-      </XStack>
-
-      <XStack justifyContent="space-between" gap="$3">
-        <GradntMetric label="Distance" value={formatDistance(route.distanceMeters)} />
-        <GradntMetric label="Durée" value={formatDuration(route.durationSeconds)} />
-        <GradntMetric label="Dénivelé" value={`+${route.elevationGainMeters} m`} />
-      </XStack>
-
-      <XStack gap="$3" flexWrap="wrap">
-        <XStack alignItems="center" gap="$2">
-          <Gauge size={16} color="$positive" />
-          <GradntText muted fontSize={13}>
-            Route {formatExposureLabel(route.trafficExposure.label).toLowerCase()}
-          </GradntText>
-        </XStack>
-        <GradntText muted fontSize={13}>
-          {mainSurface?.percentage ?? 0}% {mainSurface?.label.toLowerCase() ?? 'surface'}
-        </GradntText>
-        <GradntText muted fontSize={13}>
-          Séance {getTrainingFitLabel(route.trainingIntentFit).toLowerCase()}
-        </GradntText>
-      </XStack>
-
-      <GradntButton
-        tone={selected ? 'primary' : 'secondary'}
-        iconAfter={<ChevronRight size={17} color={selected ? '$onAccent' : '$color'} />}
-        onPress={onPress}
-      >
-        {selected ? 'Détail ouvert' : 'Voir le détail'}
-      </GradntButton>
-    </GradntCard>
-  )
-}
+import { AppShell } from '../components/AppShell'
 
 export function ExploreScreen() {
+  const insets = useSafeAreaInsets()
   const [preferences, setPreferences] = useState<RoutePreferences>(defaultRoutePreferences)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+
   const routingConfigured = isRealRoutingConfigured()
   const routeStart = useCurrentRouteStart()
   const proposalsQuery = useRouteProposalsQuery(preferences, routeStart.start)
   const proposals = proposalsQuery.data ?? []
-  const selectedRoute = proposals.find((route) => route.id === selectedRouteId)
-  // Both are needed to ask anything: a key to route with, and somewhere to
-  // start from.
-  const canPropose = routingConfigured && routeStart.hasStart
+
+  // The chosen route, or the best one while nothing is chosen — so the strip has
+  // something to say as soon as proposals arrive.
+  const selectedRoute =
+    proposals.find((route) => route.id === selectedRouteId) ?? proposals[0] ?? null
+
+  // The tab bar owns the bottom of the screen on iOS and content runs under it,
+  // so the strip is lifted clear by the same clearance the scroll container uses
+  // elsewhere. Android already receives a bottom inset from the navigator.
+  const bottomClearance = Platform.OS === 'ios' ? SCREEN_GUTTER + insets.bottom : SCREEN_GUTTER
 
   function updatePreferences(update: Partial<RoutePreferences>) {
     setSelectedRouteId(null)
+    setIsDetailOpen(false)
     setPreferences((current) => ({ ...current, ...update }))
   }
 
   return (
     <AppShell>
-      <AppScrollView>
-        <YStack gap="$7">
-          <AppScreenIntro
-            title="Explorer"
-            description="Prépare une sortie qui correspond à ton objectif et à l’envie du jour."
-          />
+      <YStack flex={1}>
+        <ExploreMap
+          routes={proposals}
+          selectedRouteId={selectedRoute?.id ?? null}
+          start={routeStart.start}
+        />
 
-          <GradntCard accent gap="$4">
-            <XStack alignItems="center" gap="$3">
-              <Compass size={21} color="$accentInk" />
-              <YStack flex={1} gap="$1">
-                <GradntText weight="semibold">Trouver une sortie</GradntText>
-                <GradntText muted fontSize={13}>
-                  Trois idées classées selon ta distance, ton dénivelé et ton intention.
-                </GradntText>
-              </YStack>
-            </XStack>
+        {/* Floating over the map, so the map is the screen rather than a block
+            in a column. */}
+        <YStack
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          padding="$3"
+          gap="$2"
+          pointerEvents="box-none"
+        >
+          <FilterSummary preferences={preferences} onPress={() => setIsFiltersOpen(true)} />
 
-            <PreferenceGroup label="TYPE DE PARCOURS">
-              {routeModes.map((mode) => (
-                <GradntChip
-                  key={mode.value}
-                  label={mode.label}
-                  selected={preferences.mode === mode.value}
-                  onPress={() => updatePreferences({ mode: mode.value })}
-                />
-              ))}
-            </PreferenceGroup>
-
-            <PreferenceGroup label="DISTANCE CIBLE">
-              {distanceOptions.map((distance) => (
-                <GradntChip
-                  key={distance}
-                  label={`${distance} km`}
-                  selected={preferences.targetDistanceKm === distance}
-                  onPress={() => updatePreferences({ targetDistanceKm: distance })}
-                />
-              ))}
-            </PreferenceGroup>
-
-            <PreferenceGroup label="DÉNIVELÉ CIBLE">
-              {elevationOptions.map((elevation) => (
-                <GradntChip
-                  key={elevation}
-                  label={`+${elevation} m`}
-                  selected={preferences.targetElevationGainMeters === elevation}
-                  onPress={() => updatePreferences({ targetElevationGainMeters: elevation })}
-                />
-              ))}
-            </PreferenceGroup>
-
-            <PreferenceGroup label="SURFACE">
-              {surfaceOptions.map((surface) => (
-                <GradntChip
-                  key={surface.value}
-                  label={surface.label}
-                  selected={preferences.surfacePreference === surface.value}
-                  onPress={() => updatePreferences({ surfacePreference: surface.value })}
-                />
-              ))}
-            </PreferenceGroup>
-
-            <PreferenceGroup label="INTENTION DE SÉANCE">
-              {intentOptions.map((intent) => (
-                <GradntChip
-                  key={intent.value}
-                  label={intent.label}
-                  selected={preferences.trainingIntent === intent.value}
-                  onPress={() =>
-                    updatePreferences({
-                      trainingIntent: intent.value,
-                      plannedWorkoutIntent: intent.value,
-                    })
-                  }
-                />
-              ))}
-            </PreferenceGroup>
-          </GradntCard>
-
-          <GradntCard padding="$4" gap="$3">
-            <XStack alignItems="center" gap="$3">
-              <MapPin size={19} color="$recovery" />
-              <YStack flex={1} gap="$1">
-                <GradntText weight="semibold">Départ local</GradntText>
-                <GradntText muted fontSize={13}>
-                  {routeStart.hasStart
-                    ? 'Les parcours partent de ta position actuelle.'
-                    : 'GRADNT a besoin de ta position pour proposer un départ près de chez toi.'}
-                </GradntText>
-              </YStack>
-            </XStack>
-            <XStack alignItems="center" gap="$2" flexWrap="wrap">
-              <GradntChip
-                label="Parcours plus calme"
-                selected={preferences.lowTraffic}
-                onPress={() => updatePreferences({ lowTraffic: !preferences.lowTraffic })}
-              />
-              <GradntButton
-                tone="secondary"
-                haptic={false}
-                disabled={routeStart.isRequesting}
-                onPress={() => void routeStart.requestCurrentLocation()}
-              >
-                {routeStart.isRequesting
-                  ? 'Localisation…'
-                  : routeStart.hasStart
-                    ? 'Position actuelle utilisée'
-                    : 'Utiliser ma position'}
-              </GradntButton>
-            </XStack>
-
-            {routeStart.error ? (
-              <GradntText color="$danger" fontSize={12} lineHeight={18}>
-                {routeStart.error}
+          {!routingConfigured ? (
+            <GradntCard padding="$3">
+              <GradntText muted fontSize={12} lineHeight={18}>
+                Le calcul d’itinéraire n’est pas configuré : GRADNT n’affiche rien plutôt que des
+                parcours inventés.
               </GradntText>
-            ) : null}
-          </GradntCard>
-
-          <YStack gap="$3">
-            <XStack alignItems="center" gap="$2">
-              <Sparkles size={19} color="$accentInk" />
-              <GradntHeading level={2}>Tes propositions</GradntHeading>
-            </XStack>
-            {!routingConfigured ? (
-              <GradntCard padding="$4" gap="$3">
-                <GradntText weight="semibold">Calcul d&apos;itinéraire indisponible</GradntText>
-                <GradntText muted fontSize={13} lineHeight={19}>
-                  GRADNT a besoin d&apos;une clé de routage pour proposer des parcours. Sans elle il
-                  n&apos;affiche rien, plutôt que des itinéraires inventés.
-                </GradntText>
-              </GradntCard>
-            ) : null}
-
-            {routingConfigured && !routeStart.hasStart ? (
-              <GradntCard padding="$4" gap="$3">
-                <GradntText weight="semibold">Commence par ta position</GradntText>
-                <GradntText muted fontSize={13} lineHeight={19}>
-                  Un parcours part d&apos;un point réel. Utilise ta position et GRADNT calculera
-                  trois propositions depuis chez toi.
-                </GradntText>
-                <GradntButton
-                  disabled={routeStart.isRequesting}
-                  onPress={() => void routeStart.requestCurrentLocation()}
-                >
-                  {routeStart.isRequesting ? 'Localisation…' : 'Utiliser ma position'}
-                </GradntButton>
-              </GradntCard>
-            ) : null}
-
-            {canPropose ? (
-              <>
-                <GradntText muted fontSize={13}>
-                  Le score GRADNT combine distance, relief, surface, discipline, calme des voies et
-                  intention d&apos;entraînement.
-                </GradntText>
-
-                {proposalsQuery.isPending ? (
-                  <GradntCard padding="$4">
-                    <GradntText muted>Recherche de parcours…</GradntText>
-                  </GradntCard>
-                ) : null}
-
-                {proposalsQuery.isError ? (
-                  <GradntCard padding="$4" gap="$3">
-                    <GradntText color="$danger" weight="semibold">
-                      Impossible de charger les parcours.
-                    </GradntText>
-                    <GradntText muted fontSize={13}>
-                      Vérifie ta connexion puis réessaie. Aucun parcours n&apos;est inventé lorsque
-                      le moteur de routing est indisponible.
-                    </GradntText>
-                    <GradntButton tone="secondary" onPress={() => void proposalsQuery.refetch()}>
-                      Réessayer
-                    </GradntButton>
-                  </GradntCard>
-                ) : null}
-
-                {!proposalsQuery.isPending && !proposalsQuery.isError && proposals.length === 0 ? (
-                  <GradntCard padding="$4">
-                    <GradntText muted>Aucun parcours ne correspond à ces préférences.</GradntText>
-                  </GradntCard>
-                ) : null}
-
-                {proposals.map((route) => (
-                  <RouteProposalCard
-                    key={route.id}
-                    route={route}
-                    selected={route.id === selectedRouteId}
-                    onPress={() => setSelectedRouteId(route.id)}
-                  />
-                ))}
-              </>
-            ) : null}
-          </YStack>
-
-          {selectedRoute ? (
-            <RouteDetailPanel route={selectedRoute} onClose={() => setSelectedRouteId(null)} />
+            </GradntCard>
           ) : null}
 
-          <XStack alignItems="center" gap="$2">
-            <Clock3 size={16} color="$textSecondary" />
-            <GradntText muted fontSize={12}>
-              Les durées sont estimées. Adapte toujours ta sortie aux conditions réelles.
-            </GradntText>
-          </XStack>
-        </YStack>
-      </AppScrollView>
-    </AppShell>
-  )
-}
+          {routingConfigured && !routeStart.hasStart ? (
+            <GradntCard padding="$3" gap="$2">
+              <GradntText muted fontSize={12} lineHeight={18}>
+                {routeStart.error ?? 'Recherche de ta position…'}
+              </GradntText>
 
-function PreferenceGroup({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <YStack gap="$2">
-      <GradntText muted fontSize={12} weight="semibold">
-        {label}
-      </GradntText>
-      <XStack gap="$2" flexWrap="wrap">
-        {children}
-      </XStack>
-    </YStack>
+              {!routeStart.isRequesting ? (
+                <GradntButton
+                  tone="secondary"
+                  onPress={() => void routeStart.requestCurrentLocation()}
+                >
+                  Utiliser ma position
+                </GradntButton>
+              ) : null}
+            </GradntCard>
+          ) : null}
+
+          {proposalsQuery.isError ? (
+            <GradntCard padding="$3" gap="$2">
+              <GradntText color="$danger" fontSize={12} lineHeight={18}>
+                Impossible de charger les parcours.
+              </GradntText>
+              <GradntButton tone="secondary" onPress={() => void proposalsQuery.refetch()}>
+                Réessayer
+              </GradntButton>
+            </GradntCard>
+          ) : null}
+        </YStack>
+
+        {/* Tapping anywhere else closes the detail. */}
+        {isDetailOpen && selectedRoute ? (
+          <Pressable
+            accessibilityLabel="Fermer le détail"
+            onPress={() => setIsDetailOpen(false)}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+        ) : null}
+
+        {/* The detail rises from the foot of the screen.
+            Hand-rolled rather than `@expo/ui`'s BottomSheet: the content is the
+            existing detail panel, and hosting a long React Native view inside a
+            native sheet needs a bridge for no gain. Native controls earn that
+            bridge; a scroll container does not. */}
+        <YStack
+          position="absolute"
+          left={0}
+          right={0}
+          bottom={0}
+          padding="$3"
+          gap="$2"
+          style={{ paddingBottom: bottomClearance }}
+          pointerEvents="box-none"
+        >
+          {isDetailOpen && selectedRoute ? (
+            <YStack
+              maxHeight={520}
+              backgroundColor="$backgroundElevated"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$border"
+              overflow="hidden"
+            >
+              <ScrollView contentContainerStyle={{ padding: SCREEN_GUTTER }}>
+                <RouteDetailPanel route={selectedRoute} onClose={() => setIsDetailOpen(false)} />
+              </ScrollView>
+            </YStack>
+          ) : selectedRoute ? (
+            <RouteResultStrip
+              route={selectedRoute}
+              totalCount={proposals.length}
+              onOpenDetail={() => setIsDetailOpen(true)}
+            />
+          ) : proposalsQuery.isPending && routeStart.hasStart ? (
+            <GradntCard padding="$4">
+              <XStack alignItems="center" justifyContent="center">
+                <GradntText muted>Recherche de parcours…</GradntText>
+              </XStack>
+            </GradntCard>
+          ) : null}
+        </YStack>
+      </YStack>
+
+      <ExploreFiltersSheet
+        isOpen={isFiltersOpen}
+        preferences={preferences}
+        onChange={updatePreferences}
+        onClose={() => setIsFiltersOpen(false)}
+      />
+    </AppShell>
   )
 }
