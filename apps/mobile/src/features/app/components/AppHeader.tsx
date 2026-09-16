@@ -2,7 +2,7 @@ import { Bell, Settings } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
-import { GradntIconButton, GradntText, SCREEN_GUTTER } from '@/design-system'
+import { GradntIconButton, GradntText, GradntWordmark, SCREEN_GUTTER } from '@/design-system'
 import { useTranslation } from '@/i18n'
 
 export function AppBrandHeader() {
@@ -16,14 +16,7 @@ export function AppBrandHeader() {
       paddingBottom="$2"
       alignItems="center"
     >
-      <XStack alignItems="center" gap="$2">
-        <GradntText color="$accent" weight="bold" fontSize={17}>
-          ▲
-        </GradntText>
-        <GradntText weight="bold" fontSize={18} letterSpacing={0.4}>
-          GRADNT
-        </GradntText>
-      </XStack>
+      <GradntWordmark />
 
       <XStack marginLeft="auto" gap="$2">
         <GradntIconButton accessibilityLabel={t('header.notifications')}>

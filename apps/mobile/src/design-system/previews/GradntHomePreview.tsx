@@ -13,6 +13,7 @@ import {
   GradntSectionHeader,
   GradntStatTile,
   GradntText,
+  GradntWordmark,
   GradntWorkoutCard,
 } from '@/design-system'
 
@@ -23,15 +24,7 @@ export function GradntHomePreview() {
         <GradntScrollView fadingEdgeLength={0}>
           <YStack gap="$7">
             <XStack justifyContent="space-between" alignItems="center">
-              <XStack alignItems="center" gap="$2">
-                <GradntText color="$accent" weight="bold" fontSize={17}>
-                  ▲
-                </GradntText>
-
-                <GradntText weight="bold" fontSize={18} letterSpacing={0.4}>
-                  GRADNT
-                </GradntText>
-              </XStack>
+              <GradntWordmark />
 
               <XStack gap="$2">
                 <GradntIconButton>

@@ -8,6 +8,7 @@ import {
   GradntScreen,
   GradntScrollView,
   GradntText,
+  GradntWordmark,
 } from '@/design-system'
 import { colors } from '@/design-system/tokens'
 
@@ -58,15 +59,7 @@ export function WelcomeScreen() {
         <YStack flex={1} justifyContent="space-between" gap="$8">
           <YStack gap="$7">
             <XStack justifyContent="space-between" alignItems="center">
-              <XStack alignItems="center" gap="$2">
-                <GradntText color="$accent" weight="bold" fontSize={18}>
-                  ▲
-                </GradntText>
-
-                <GradntText weight="bold" fontSize={18} letterSpacing={0.5}>
-                  GRADNT
-                </GradntText>
-              </XStack>
+              <GradntWordmark />
 
               <GradntText muted fontSize={12} weight="medium">
                 1 / 6
