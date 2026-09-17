@@ -56,5 +56,8 @@ export async function writeCloudDocument(
   })
   if (error) throw error
   const revision = z.number().int().positive().parse(data)
+  const current = await client.auth.getSession()
+  if (current.error) throw current.error
+  if (current.data.session?.user.id !== metadata.userId) throw new Error('cloud_account_changed')
   return { userId: metadata.userId, revision }
 }

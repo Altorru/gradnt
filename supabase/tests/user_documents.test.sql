@@ -20,11 +20,11 @@ select is(public.save_user_document('training_plan', '{"plan":"owner-1"}', 0),
 select results_eq($$select payload->>'plan' from public.user_documents$$,
   array['owner-1'], 'owner reads their own plan');
 select throws_ok($$select public.save_user_document('training_plan', '{"plan":"lost"}', 0)$$,
-  '40001', 'document_conflict', 'a second first writer cannot overwrite an existing plan');
+  'PT409', 'document_conflict', 'a second first writer cannot overwrite an existing plan');
 select is(public.save_user_document('training_plan', '{"plan":"owner-2"}', 1),
   2::bigint, 'current revision can update');
 select throws_ok($$select public.save_user_document('training_plan', '{"plan":"stale"}', 1)$$,
-  '40001', 'document_conflict', 'a stale phone cannot overwrite a newer revision');
+  'PT409', 'document_conflict', 'a stale phone cannot overwrite a newer revision');
 select results_eq($$select payload->>'plan' from public.user_documents$$,
   array['owner-2'], 'rejected writes preserve data');
 
