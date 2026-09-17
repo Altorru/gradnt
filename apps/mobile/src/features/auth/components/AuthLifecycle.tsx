@@ -66,6 +66,7 @@ export function AuthLifecycle() {
         void queryClient.invalidateQueries({
           predicate: (query) =>
             [
+              'ride-feedback',
               'training-plan',
               'upcoming-workouts',
               'training-plan-update',

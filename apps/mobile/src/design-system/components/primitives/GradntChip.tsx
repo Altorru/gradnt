@@ -5,6 +5,8 @@ import { GradntText } from './GradntText'
 
 type GradntChipProps = {
   label: string
+  accessibilityLabel?: string
+  disabled?: boolean
   selected?: boolean
   onPress?: () => void
 }
@@ -16,16 +18,28 @@ type GradntChipProps = {
  * selected" makes a screen reader say the same thing twice where "radio" gives
  * the role and the state in one.
  */
-export function GradntChip({ label, selected = false, onPress }: GradntChipProps) {
+export function GradntChip({
+  label,
+  accessibilityLabel = label,
+  disabled = false,
+  selected = false,
+  onPress,
+}: GradntChipProps) {
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityLabel={label}
-      accessibilityState={{ selected }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
       onPress={onPress}
     >
       {({ hovered, pressed }) => (
         <XStack
+          minWidth={48}
+          minHeight={48}
+          alignItems="center"
+          justifyContent="center"
+          opacity={disabled ? 0.6 : 1}
           paddingHorizontal="$4"
           paddingVertical="$3"
           borderRadius="$pill"

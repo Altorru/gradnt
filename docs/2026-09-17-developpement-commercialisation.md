@@ -8,7 +8,7 @@
 - Données privées par cycliste ; les activités de l’API Strava ne sont pas copiées dans les documents de sauvegarde des réglages et calendriers. Hugo maintient explicitement l’analyse IA des sorties Strava dans le périmètre malgré le risque contractuel identifié ; ce choix doit être réexaminé avant commercialisation, sans interrompre la conception de la boucle après-sortie.
 - Développement par lots cohérents, commits réguliers, lint et typecheck avant chaque commit.
 
-## Lot en cours — compte privé et calendrier durable
+## Lot réalisé — compte privé et calendrier durable
 
 - [x] Connexion email/mot de passe et confirmation email.
 - [x] Migration explicite des réglages de l’appareil vers un compte vide.
@@ -42,6 +42,32 @@
 - FTP, préférences et jetons Strava restent locaux dans ce lot ; leur migration et la liaison OAuth serveur sont à traiter séparément.
 - Le calendrier initial reste un générateur déterministe de démarrage, pas encore le moteur adaptatif validé avec un entraîneur.
 - Vérifier export/suppression du compte, rétention des archives, quotas et CI avant commercialisation.
+
+## Lot réalisé — sensations après sortie et détail exploitable
+
+- [x] Accès depuis les trois dernières sorties dans Progression ; actualisation disponible.
+- [x] Effort perçu, sensations, fatigue et note facultatifs ; validation vide refusée.
+- [x] Brouillon par compte et sortie, sauvegarde sur l’appareil, reprise et modification.
+- [x] Table Supabase privée `ride_feedback`, contenant uniquement les réponses renseignées par le cycliste et la référence de sortie.
+- [x] Écriture exclusivement via RPC avec révision attendue ; identité issue de la session, aucun utilisateur fourni par le client.
+- [x] Conflits entre appareils, erreurs visibles et retour au détail uniquement après succès.
+- [x] Brouillon ancien détecté ; abandon explicite avant rechargement.
+- [x] Vérification de la disponibilité de la sortie avant validation.
+- [x] Détail des chiffres, réponses personnelles et prochaine action fondée sur les sensations ; données des capteurs à la demande.
+- [x] Choix tactiles accessibles, labels lecteurs d’écran et traductions français/anglais.
+- [ ] Recette native et pilote cyclistes selon le [protocole de recette et pilote](2026-09-17-recette-et-pilote-apres-sortie.md).
+
+### Validation et limites
+
+- Vitest : 34 fichiers, 338 tests réussis ; lint et typecheck passent.
+- SQL : 38 assertions sur les documents et ressentis privés ; tests API avec deux comptes temporaires locaux et un second client du propriétaire.
+- Migration `20260917000300` appliquée au Supabase existant, sans modification des fonctions Strava ; aucune activité de performance copiée dans la table des ressentis.
+- Les exports iOS/Android/web passent ; ils ne prouvent pas l’ergonomie native du formulaire.
+- Les brouillons sont locaux, distincts par compte, mais pas synchronisés entre appareils. Ils ne constituent pas une réponse validée et ne sont pas effacés par une simple déconnexion ; prévoir rétention et purge avec l’export/suppression du compte.
+- Le mode sans compte reste local ; aucune migration des anciens ressentis vers un compte n’est faite silencieusement.
+- Les conflits exigent un rechargement ; aucune fusion automatique des notes concurrentes.
+- Le conseil est déterministe, fondé uniquement sur les sensations déclarées, sans IA et sans modification automatique du plan. La comparaison prévu/réel reste à développer.
+- Le listener et le push après sortie ne sont pas encore livrés. La connexion Strava reste locale à l’appareil et le détail couvre l’historique récent de 12 semaines.
 
 ## Priorité suivante — boucle après-sortie demandée par Hugo
 
@@ -86,7 +112,7 @@
 1. Liaison OAuth compte GRADNT ↔ athlète Strava, stockage serveur des secrets et révocation.
 2. Webhook validé + table d’événements + jobs idempotents + tests de créations/modifications/suppressions.
 3. Appareils push + préférences + reçus + notification et ouverture de la bonne sortie à froid.
-4. Modèle des ressentis + table privée + formulaire + brouillon + modification.
+4. Modèle des ressentis + table privée + formulaire + brouillon + modification : livré, recette native à faire.
 5. Détail après validation + affichage de la provenance et de l’état de l’analyse.
 6. Saisie manuelle et import original, puis analyse IA structurée avec limites et erreurs.
 7. Proposition d’adaptation + comparaison avant/après + confirmation + historique.

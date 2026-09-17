@@ -96,8 +96,63 @@ try {
   assert.equal(restored.error, null)
   assert.equal(restored.data.revision, 2)
   assert.deepEqual(restored.data.payload, changed)
+  console.log('Testing private ride feedback…')
+  assert.equal((await client().from('ride_feedback').select('activity_id')).error?.code, '42501')
+  const feedback = {
+    ride_id: 'strava-123',
+    effort: 7,
+    ride_feeling: 'good',
+    ride_fatigue: 'moderate',
+    ride_note: '  Real athlete answer  ',
+    expected_revision: 0,
+  }
+  const firstFeedback = await owner.device.rpc('save_ride_feedback', feedback)
+  assert.equal(firstFeedback.error, null)
+  assert.equal(firstFeedback.data.revision, 1)
+  assert.equal(firstFeedback.data.note, 'Real athlete answer')
+  assert.equal('user_id' in firstFeedback.data, false)
+  const otherFeedbackRead = await other.device.from('ride_feedback').select('note')
+  assert.equal(otherFeedbackRead.error, null)
+  assert.deepEqual(otherFeedbackRead.data, [])
+  const secondDeviceRead = await secondPhone
+    .from('ride_feedback')
+    .select('note, revision')
+    .eq('activity_id', feedback.ride_id)
+    .single()
+  assert.equal(secondDeviceRead.error, null)
+  assert.equal(secondDeviceRead.data.note, firstFeedback.data.note)
+  const changedFeedback = await owner.device.rpc('save_ride_feedback', {
+    ...feedback,
+    effort: 8,
+    expected_revision: 1,
+  })
+  assert.equal(changedFeedback.error, null)
+  assert.equal(changedFeedback.data.revision, 2)
+  const staleFeedback = await secondPhone.rpc('save_ride_feedback', {
+    ...feedback,
+    expected_revision: 1,
+  })
+  assert.equal(staleFeedback.status, 409)
+  assert.equal(staleFeedback.error?.code, 'PT409')
+  const bypassUpdate = await owner.device
+    .from('ride_feedback')
+    .update({ perceived_effort: 1 })
+    .eq('activity_id', feedback.ride_id)
+  assert.equal(bypassUpdate.error?.code, '42501')
+  const invalidFeedback = await owner.device.rpc('save_ride_feedback', {
+    ...feedback,
+    ride_id: 'strava-456',
+    effort: 11,
+  })
+  assert.equal(invalidFeedback.error?.code, '23514')
+  const latestFeedback = await secondPhone
+    .from('ride_feedback')
+    .select('perceived_effort, revision')
+    .single()
+  assert.equal(latestFeedback.error, null)
+  assert.deepEqual(latestFeedback.data, { perceived_effort: 8, revision: 2 })
   console.log(
-    'PASS: local authentication, private reads/writes, cross-device restore and stale-write protection.',
+    'PASS: local authentication, private reads/writes, cross-device restore, ride feedback and stale-write protection.',
   )
 } finally {
   for (const id of users) {

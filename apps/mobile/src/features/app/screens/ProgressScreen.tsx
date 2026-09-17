@@ -1,3 +1,4 @@
+import { RecentRides } from '@/features/rides/components/RecentRides'
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import { ArrowUpRight, CalendarDays } from '@tamagui/lucide-icons-2'
 import { format as formatDate } from 'date-fns'
@@ -191,6 +192,16 @@ export function ProgressScreen() {
               </YStack>
             </XStack>
           </GradntCard>
+
+          <RecentRides
+            activities={activities}
+            refreshing={activitiesQuery.isFetching}
+            refresh={() => {
+              void activitiesQuery.refetch()
+              void metricsQuery.refetch()
+              void currentValueQuery.refetch()
+            }}
+          />
 
           <YStack gap="$3">
             <GradntChartCard

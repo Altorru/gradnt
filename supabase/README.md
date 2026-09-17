@@ -202,3 +202,19 @@ node infra/scripts/test-private-workspace.mjs
 
 The API smoke test refuses remote endpoints, creates two confirmed temporary
 users, verifies isolation and stale-write protection, then deletes them.
+
+## Private ride feedback
+
+`ride_feedback` stores athlete-entered effort, feelings, fatigue and notes, with
+an opaque activity reference. It contains no Strava performance payload. RLS
+limits reads and deletion to the owner. Direct client inserts/updates are
+revoked: `save_ride_feedback` uses the authenticated caller and an expected
+revision, returning HTTP 409 for a stale write. The narrowly scoped function
+uses `SECURITY DEFINER`, a fixed empty search path and fully qualified objects.
+It accepts no user identifier and cannot write another user's answers.
+
+Drafts stay on each device under account/ride-specific keys. Guest answers are
+local only. Cloud errors never silently fall back to guest storage. Original
+file import, server-side Strava association, webhooks and after-ride push are
+still separate development steps. See the
+[pilot and native acceptance protocol](../docs/2026-09-17-recette-et-pilote-apres-sortie.md).

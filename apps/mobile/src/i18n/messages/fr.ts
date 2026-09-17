@@ -28,6 +28,91 @@ export const fr = {
       'La sauvegarde a échoué. Vérifie ta connexion puis réessaie. Si les données ont changé sur un autre appareil, recharge cet écran.',
   },
 
+  rides: {
+    recentTitle: 'Après tes dernières sorties',
+    recentDescription:
+      'Tes chiffres racontent une partie de la sortie. Ajoute tes sensations pour préparer la suite.',
+    open: 'Voir ma sortie',
+    refresh: 'Actualiser les sorties',
+    detailTitle: 'Ta sortie, et la suite',
+    unavailable: 'Impossible de charger cette sortie. Vérifie ta connexion et réessaie.',
+    notFound:
+      'Cette sortie n’est pas disponible dans l’historique récent. Elle peut avoir été supprimée ou la connexion Strava retirée.',
+    distance: 'Distance',
+    duration: 'Temps en mouvement',
+    elevation: 'Dénivelé',
+    minutes: 'min',
+    sourceStrava: 'Données de sortie : Strava. Sensations : tes réponses dans GRADNT.',
+    nextStep: 'Que faire ensuite ?',
+    viewPlan: 'Voir mon plan',
+    showAdvanced: 'Comprendre les données des capteurs',
+    hideAdvanced: 'Masquer les données des capteurs',
+    sensors: 'Les mesures disponibles',
+    power: 'Puissance moyenne : {{value}} W',
+    heartRate: 'Fréquence cardiaque moyenne : {{value}} bpm',
+    missingSensors:
+      'Un tiret signifie que la mesure manque. Sans les données nécessaires, GRADNT n’estime pas ta FTP ni ta puissance normalisée.',
+    guidance: {
+      recover:
+        'Tu décris un effort très exigeant ou beaucoup de fatigue. Prévois de récupérer avant ta prochaine séance intense et réévalue tes sensations.',
+      easy: 'Tes sensations invitent à rester souple : privilégie une prochaine sortie facile si la fatigue est encore présente.',
+      continue:
+        'Tes sensations sont encourageantes. Consulte la prochaine séance et vérifie que ton énergie et tes disponibilités sont toujours adaptées.',
+      insufficient:
+        'Tes réponses sont enregistrées. Ajoute ton effort perçu ou ta fatigue pour obtenir un conseil plus précis sur la suite.',
+      explanation:
+        'Conseil basé uniquement sur les sensations que tu as renseignées. Ce n’est pas une analyse IA ni un diagnostic. Ton plan n’a pas été modifié.',
+    },
+    feedback: {
+      title: 'Comment t’es-tu senti ?',
+      description: 'Quelques réponses suffisent. Tu peux tout modifier plus tard.',
+      privateCloud: 'Tes réponses sont sauvegardées dans ton compte privé GRADNT.',
+      privateLocal:
+        'Tes réponses restent sur cet appareil. La sauvegarde dans un compte nécessite une connexion GRADNT.',
+      effort: 'Effort perçu · de 1 à 10',
+      effortExplanation:
+        'Évalue la sortie dans son ensemble, pas seulement le passage le plus dur.',
+      effortOption: '{{value}} · {{label}}',
+      effortBands: {
+        easy: 'Très facile',
+        moderate: 'Modéré',
+        hard: 'Soutenu',
+        veryHard: 'Très difficile',
+        maximum: 'Maximal',
+      },
+      feeling: 'Tes sensations générales',
+      feelings: {
+        difficult: 'Difficiles',
+        okay: 'Moyennes',
+        good: 'Bonnes',
+        excellent: 'Excellentes',
+      },
+      fatigue: 'Ta fatigue après la sortie',
+      fatigueLevels: { low: 'Faible', moderate: 'Modérée', high: 'Élevée' },
+      note: 'Un détail à retenir ? · facultatif',
+      notePlaceholder: 'Jambes, sommeil, motivation, météo…',
+      optional:
+        'Tout est facultatif. Touche un choix sélectionné pour l’effacer. Renseigne au moins une réponse pour sauvegarder.',
+      save: 'Enregistrer et voir ma sortie',
+      later: 'Plus tard',
+      add: 'Ajouter mes sensations',
+      edit: 'Modifier mes sensations',
+      summaryTitle: 'Tes sensations',
+      invitation:
+        'Comment as-tu vécu cette sortie ? Tes sensations complètent les chiffres, même sans capteur.',
+      savedAt: 'Réponses sauvegardées · {{date}}',
+      effortSummary: 'Effort perçu : {{value}}/10',
+      feelingSummary: 'Sensations : {{value}}',
+      fatigueSummary: 'Fatigue : {{value}}',
+      saveError:
+        'La sauvegarde a échoué. Tes réponses restent dans le formulaire. Réessaie ; si un autre appareil a répondu, recharge les réponses enregistrées.',
+      readError: 'Impossible de charger tes sensations. Rien n’a été remplacé.',
+      staleDraft:
+        'Ce brouillon est plus ancien que les réponses sauvegardées. Il ne les remplacera pas automatiquement.',
+      reload: 'Abandonner le brouillon et recharger les réponses',
+    },
+  },
+
   tabs: {
     home: 'Accueil',
     plan: 'Plan',

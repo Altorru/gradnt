@@ -26,6 +26,85 @@ export const en = {
       'Saving failed. Check your connection and try again. If another device changed the data, reload this screen.',
   },
 
+  rides: {
+    recentTitle: 'After your latest rides',
+    recentDescription:
+      'Numbers tell part of the story. Add how you felt to prepare what comes next.',
+    open: 'View my ride',
+    refresh: 'Refresh rides',
+    detailTitle: 'Your ride, and what’s next',
+    unavailable: 'This ride could not be loaded. Check your connection and try again.',
+    notFound:
+      'This ride is not available in your recent history. It may have been deleted or your Strava connection removed.',
+    distance: 'Distance',
+    duration: 'Moving time',
+    elevation: 'Elevation gain',
+    minutes: 'min',
+    sourceStrava: 'Ride data: Strava. Feelings: your answers in GRADNT.',
+    nextStep: 'What should I do next?',
+    viewPlan: 'View my plan',
+    showAdvanced: 'Understand sensor data',
+    hideAdvanced: 'Hide sensor data',
+    sensors: 'Available measurements',
+    power: 'Average power: {{value}} W',
+    heartRate: 'Average heart rate: {{value}} bpm',
+    missingSensors:
+      'A dash means the measurement is missing. Without the necessary data, GRADNT does not estimate your FTP or normalized power.',
+    guidance: {
+      recover:
+        'You reported a very demanding effort or high fatigue. Allow recovery before your next intense session and reassess how you feel.',
+      easy: 'Your feelings suggest staying flexible: choose an easy next ride if fatigue is still present.',
+      continue:
+        'Your feelings are encouraging. Check your next session and make sure your energy and availability still fit.',
+      insufficient:
+        'Your answers are saved. Add your perceived effort or fatigue for more specific guidance on what comes next.',
+      explanation:
+        'Guidance uses only the feelings you entered. It is not AI analysis or a diagnosis. Your plan has not changed.',
+    },
+    feedback: {
+      title: 'How did you feel?',
+      description: 'A few answers are enough. You can change everything later.',
+      privateCloud: 'Your answers are saved in your private GRADNT account.',
+      privateLocal:
+        'Your answers stay on this device. Account backup requires signing in to GRADNT.',
+      effort: 'Perceived effort · from 1 to 10',
+      effortExplanation: 'Rate the whole ride, not just its hardest section.',
+      effortOption: '{{value}} · {{label}}',
+      effortBands: {
+        easy: 'Very easy',
+        moderate: 'Moderate',
+        hard: 'Hard',
+        veryHard: 'Very hard',
+        maximum: 'Maximal',
+      },
+      feeling: 'Your overall feelings',
+      feelings: { difficult: 'Difficult', okay: 'Okay', good: 'Good', excellent: 'Excellent' },
+      fatigue: 'Your fatigue after the ride',
+      fatigueLevels: { low: 'Low', moderate: 'Moderate', high: 'High' },
+      note: 'Anything to remember? · optional',
+      notePlaceholder: 'Legs, sleep, motivation, weather…',
+      optional:
+        'Everything is optional. Tap a selected choice to clear it. Add at least one answer to save.',
+      save: 'Save and view my ride',
+      later: 'Later',
+      add: 'Add how I felt',
+      edit: 'Edit how I felt',
+      summaryTitle: 'How you felt',
+      invitation:
+        'How did you experience this ride? Your feelings complement the numbers, even without sensors.',
+      savedAt: 'Answers saved · {{date}}',
+      effortSummary: 'Perceived effort: {{value}}/10',
+      feelingSummary: 'Feelings: {{value}}',
+      fatigueSummary: 'Fatigue: {{value}}',
+      saveError:
+        'Saving failed. Your answers remain in the form. Try again; if another device answered, reload the saved answers.',
+      readError: 'Your feelings could not be loaded. Nothing has been replaced.',
+      staleDraft:
+        'This draft is older than the saved answers. It will not automatically replace them.',
+      reload: 'Discard draft and reload saved answers',
+    },
+  },
+
   tabs: {
     home: 'Home',
     plan: 'Plan',
