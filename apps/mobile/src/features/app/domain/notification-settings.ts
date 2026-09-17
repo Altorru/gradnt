@@ -9,6 +9,25 @@
 export type PermissionState = 'undetermined' | 'granted' | 'denied'
 
 /**
+ * The OS's answer, as the three states the screens distinguish.
+ *
+ * Flags rather than expo's status object, so the iOS subtlety is testable
+ * without the native module: `PROVISIONAL` — quiet delivery, no prompt — is
+ * authorised even though the root status does not say `granted`.
+ */
+export function permissionStateOf(
+  granted: boolean,
+  provisional: boolean,
+  canAskAgain: boolean,
+): PermissionState {
+  if (granted || provisional) {
+    return 'granted'
+  }
+
+  return canAskAgain ? 'undetermined' : 'denied'
+}
+
+/**
  * Whether reaching for a feature is the moment to ask for consent.
  *
  * Only when the switch is going on, and only while the OS is still undecided:

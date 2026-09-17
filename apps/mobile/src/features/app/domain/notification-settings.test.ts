@@ -1,6 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
-import { shouldRequestPermission, stepReminderTime } from './notification-settings'
+import {
+  permissionStateOf,
+  shouldRequestPermission,
+  stepReminderTime,
+} from './notification-settings'
+
+describe('permissionStateOf', () => {
+  it('reads a plain grant, and a grant the rider can still be asked for', () => {
+    expect(permissionStateOf(true, false, false)).toBe('granted')
+    expect(permissionStateOf(false, false, true)).toBe('undetermined')
+  })
+
+  it('counts iOS provisional as authorised, which the root status does not say', () => {
+    expect(permissionStateOf(false, true, false)).toBe('granted')
+  })
+
+  it('is denied once the OS stops offering the prompt', () => {
+    expect(permissionStateOf(false, false, false)).toBe('denied')
+  })
+})
 
 describe('shouldRequestPermission', () => {
   it('asks when a switch is turned on and consent is undecided', () => {
