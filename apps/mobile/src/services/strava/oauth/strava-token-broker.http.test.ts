@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HttpStravaTokenBroker } from './strava-token-broker.http'
 
+vi.mock('@/services/supabase/client', () => ({ getSupabaseClient: () => null }))
+
 const { replaceStravaTokens } = vi.hoisted(() => ({ replaceStravaTokens: vi.fn(async () => true) }))
 
 vi.mock('./strava-token.persistence', () => ({ replaceStravaTokens, getStravaTokenEpoch: () => 0 }))

@@ -7,6 +7,8 @@ import {
   saveStravaTokens,
 } from '../oauth/strava-token.persistence'
 
+vi.mock('@/services/supabase/client', () => ({ getSupabaseClient: () => null }))
+
 const {
   clearStravaTokensMock,
   loadStravaTokensMock,

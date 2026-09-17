@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 import { useTranslation } from '@/i18n'
 import { ensureChannels } from '@/services/notifications/notification.scheduler'
+import { registerPushDevice } from '@/services/notifications/push-registration'
 
 import { permissionStateOf, type PermissionState } from '../domain/notification-settings'
 
@@ -45,6 +46,10 @@ export function useNotificationPermission(): {
       status.granted || status.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
 
     setPermission(permissionStateOf(granted, false, status.canAskAgain))
+
+    if (granted) {
+      await registerPushDevice().catch(() => false)
+    }
 
     return granted
   }

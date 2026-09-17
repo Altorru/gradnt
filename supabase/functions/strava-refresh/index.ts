@@ -15,6 +15,7 @@
  */
 
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
+import { authenticatedUser, serviceClient } from '../_shared/supabase.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -93,6 +94,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (typeof token.access_token !== 'string' || typeof token.expires_at !== 'number') {
     console.error('Strava returned an unexpected refresh payload')
     return json({ error: 'strava_unexpected_response' }, 502)
+  }
+
+  const user = await authenticatedUser(req)
+  if (user) {
+    const client = serviceClient()
+    await client
+      .from('strava_connections')
+      .update({
+        access_token: token.access_token,
+        refresh_token: typeof token.refresh_token === 'string' ? token.refresh_token : refreshToken,
+        expires_at: new Date(token.expires_at * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', user.id)
   }
 
   return json(

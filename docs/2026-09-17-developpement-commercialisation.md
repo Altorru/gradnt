@@ -28,7 +28,7 @@
 - `supabase test db` : 15 assertions SQL, utilisateurs isolés et révisions protégées.
 - `node infra/scripts/test-private-workspace.mjs` : connexion réelle via l’API locale, isolation, restauration dans un second client et conflit HTTP 409 vérifiés ; comptes temporaires supprimés.
 - Exports des bundles iOS, Android et web réussis. Il ne remplace pas une recette sur téléphone.
-- Les deux migrations `20260917000100` et `20260917000200` sont appliquées au projet Supabase existant ; seules les tables et fonctions de documents produit sont ajoutées. Les fonctions Strava existantes ne sont pas modifiées.
+- Les migrations `20260917000100` à `20260917000500` sont appliquées au projet Supabase existant ; elles ajoutent les documents privés, les ressentis, l'association Strava serveur, les appareils push et l'idempotence webhook.
 - Vérification distante anonyme : lectures et écritures refusées ; aucun compte de test distant créé, aucune donnée utilisateur lue.
 - Le correctif HTTP 409 évite les relances de PostgREST déclenchées par un conflit métier signalé à tort comme erreur de sérialisation. [Documentation du problème](https://supabase.com/docs/guides/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions-77326b).
 
@@ -45,7 +45,9 @@
 
 ## Lot réalisé — sensations après sortie et détail exploitable
 
-- [x] Carte contextuelle dans le cockpit après la dernière sortie terminée des 48 dernières heures ; demande de sensations ou conseil déjà enregistré. Aucun push et aucun rappel pour les anciens imports.
+- [x] Carte contextuelle dans le cockpit après la dernière sortie terminée des 48 dernières heures ; demande de sensations ou conseil déjà enregistré.
+- [x] Association Strava privée côté serveur, webhook Edge Function idempotent et traitement différé.
+- [x] Enregistrement des tokens Expo après permission et notification ouvrant directement le formulaire de sensations.
 - [x] Actualisation des activités et des ressentis au retour de l’app au premier plan.
 - [x] Accès depuis les trois dernières sorties dans Progression ; actualisation disponible.
 - [x] Effort perçu, sensations, fatigue et note facultatifs ; validation vide refusée.
@@ -57,7 +59,7 @@
 - [x] Vérification de la disponibilité de la sortie avant validation.
 - [x] Détail des chiffres, réponses personnelles et prochaine action fondée sur les sensations ; données des capteurs à la demande.
 - [x] Choix tactiles accessibles, labels lecteurs d’écran et traductions français/anglais.
-- [ ] Recette native et pilote cyclistes selon le [protocole de recette et pilote](2026-09-17-recette-et-pilote-apres-sortie.md).
+- [ ] Recette native et pilote cyclistes selon le [protocole de recette et pilote](2026-09-17-recette-et-pilote-apres-sortie.md), avec abonnement Strava réel.
 
 ### Validation et limites
 
@@ -69,7 +71,7 @@
 - Le mode sans compte reste local ; aucune migration des anciens ressentis vers un compte n’est faite silencieusement.
 - Les conflits exigent un rechargement ; aucune fusion automatique des notes concurrentes.
 - Le conseil est déterministe, fondé uniquement sur les sensations déclarées, sans IA et sans modification automatique du plan. La comparaison prévu/réel reste à développer.
-- Le listener et le push après sortie ne sont pas encore livrés. La connexion Strava reste locale à l’appareil et le détail couvre l’historique récent de 12 semaines.
+- Le push réel exige encore la configuration de `STRAVA_WEBHOOK_VERIFY_TOKEN`, `STRAVA_WEBHOOK_SUBSCRIPTION_ID` et `EXPO_PUBLIC_EAS_PROJECT_ID`. Le mobile conserve son cache local Strava pour la continuité ; l'association serveur est créée lorsque l'échange OAuth porte une session Supabase.
 
 ## Correctif réalisé — requêtes Strava isolées par session
 

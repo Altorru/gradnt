@@ -18,6 +18,7 @@
  */
 
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
+import { authenticatedUser, serviceClient } from '../_shared/supabase.ts'
 
 /**
  * Where the OS hands the authorization response back to the app. Fixed, never
@@ -133,6 +134,31 @@ Deno.serve(async (req: Request): Promise<Response> => {
     [athlete.firstname, athlete.lastname]
       .filter((part): part is string => typeof part === 'string' && part !== '')
       .join(' ') || null
+
+  const user = await authenticatedUser(req)
+  if (user && typeof athlete.id === 'number') {
+    const client = serviceClient()
+    const { error } = await client.from('strava_connections').upsert(
+      {
+        user_id: user.id,
+        athlete_id: String(athlete.id),
+        display_name: displayName,
+        scopes: String(token.scope ?? '')
+          .split(/[\s,]+/)
+          .filter(Boolean),
+        access_token: token.access_token,
+        refresh_token: token.refresh_token,
+        expires_at: new Date(token.expires_at * 1000).toISOString(),
+        revoked_at: null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    )
+    if (error) {
+      console.error('Could not persist Strava connection', error)
+      return json({ error: 'connection_persistence_failed' }, 500)
+    }
+  }
 
   return json(
     {

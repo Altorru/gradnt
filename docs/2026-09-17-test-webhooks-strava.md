@@ -22,7 +22,11 @@ Ce message ne contient pas toute l’activité. Le backend doit répondre `200 O
 
 Le callback doit être public et accessible en HTTPS. `localhost` ne peut pas recevoir l’appel de Strava ; utiliser une Edge Function Supabase déployée ou un tunnel HTTPS temporaire pendant le développement.
 
-Le callback doit être côté serveur : le `client_secret` Strava ne doit jamais être envoyé dans l’application mobile. Il faut aussi avoir une association serveur fiable entre `owner_id` Strava et le compte GRADNT. L’application actuelle conserve encore la connexion Strava sur l’appareil ; le listener et cette association serveur sont donc des travaux à implémenter avant le test bout en bout.
+Le callback doit être côté serveur : le `client_secret` Strava ne doit jamais être envoyé dans l’application mobile. GRADNT possède désormais une association serveur privée `athlete_id → user_id` dans Supabase, alimentée lors de l'échange OAuth authentifié. Les tokens Expo sont enregistrés via `register_push_device` après accord de permission.
+
+Le flux livré est : `POST Strava → strava-webhook → strava_webhook_events (idempotence) → EdgeRuntime.waitUntil → vérification de l'activité → Expo Push → /rides/<activityId>/feedback`. Le webhook ne conserve pas le payload complet de l'activité ; il le lit pour valider l'événement puis l'app recharge le détail.
+
+Avant l'activation réelle, définir `STRAVA_WEBHOOK_VERIFY_TOKEN` et `STRAVA_WEBHOOK_SUBSCRIPTION_ID` dans Supabase. Le premier doit être identique au `verify_token` de la souscription unique Strava. Pour le mobile, définir aussi `EXPO_PUBLIC_EAS_PROJECT_ID` dans l'environnement de build afin de permettre la création du token Expo.
 
 ## Étape 1 — tester la validation du callback
 
@@ -111,4 +115,4 @@ La création d’une sortie dans Strava est donc le déclencheur réel. Le mobil
 - Un callback lent ne bloque jamais Strava : l’accusé est immédiat et le job est séparé.
 - Les logs contiennent des identifiants techniques et des statuts, pas les tokens, notes personnelles, coordonnées ou contenu inutile de l’activité.
 
-La fonctionnalité n’est pas encore activée dans le dépôt. Les étapes ci-dessus sont le protocole de test à appliquer une fois le callback, l’association serveur et le job idempotent implémentés.
+Le callback, l'association serveur, le job idempotent et le chemin de notification sont déployés. Les étapes ci-dessus restent le protocole de recette bout en bout à appliquer avec un compte Strava de test et les deux secrets webhook configurés.

@@ -5,6 +5,7 @@ import { AppState, Platform } from 'react-native'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { getSupabaseClient } from '@/services/supabase/client'
 import { clearDeviceStravaConnection } from '@/features/onboarding/services/onboarding.persistence'
+import { unregisterPushDevices } from '@/services/notifications/push-registration'
 import { enqueueAuthTransition } from '@/services/auth/auth-transition'
 import { useAppLanguage, useTranslation } from '@/i18n'
 import { expoScheduler, reconcile } from '@/services/notifications/notification.scheduler'
@@ -49,6 +50,7 @@ export function AuthLifecycle() {
         }
         await clearStravaTokens()
         await clearPendingStravaState()
+        if (previousId) await unregisterPushDevices()
         if (previousId) await clearDeviceStravaConnection(previousId)
         if (userId !== nextId) return
         await useOnboardingStore.getState().hydrate()

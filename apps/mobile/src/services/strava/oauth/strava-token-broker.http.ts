@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { isStravaScope } from './strava-scopes'
 import { getStravaTokenEpoch, replaceStravaTokens } from './strava-token.persistence'
+import { getSupabaseClient } from '@/services/supabase/client'
 import type { StravaConnection, StravaTokenBroker } from './strava-token-broker'
 
 /**
@@ -41,9 +42,15 @@ export class HttpStravaTokenBroker implements StravaTokenBroker {
     let response: Response
 
     try {
+      const session = await getSupabaseClient()?.auth.getSession()
       response = await fetch(this.exchangeUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.data.session?.access_token
+            ? { Authorization: `Bearer ${session.data.session.access_token}` }
+            : {}),
+        },
         body: JSON.stringify({ code }),
       })
     } catch (error) {

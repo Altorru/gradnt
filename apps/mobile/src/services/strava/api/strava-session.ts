@@ -1,4 +1,5 @@
 import { readStravaRefreshUrl } from '../oauth/strava-config'
+import { getSupabaseClient } from '@/services/supabase/client'
 import {
   getStravaTokenEpoch,
   replaceStravaTokens,
@@ -67,9 +68,15 @@ async function performRefresh(current: StravaTokens, epoch: number): Promise<Str
   let response: Response
 
   try {
+    const session = await getSupabaseClient()?.auth.getSession()
     response = await fetch(refreshUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.data.session?.access_token
+          ? { Authorization: `Bearer ${session.data.session.access_token}` }
+          : {}),
+      },
       body: JSON.stringify({ refreshToken: current.refreshToken }),
     })
   } catch (error) {
