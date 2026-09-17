@@ -20,12 +20,14 @@ async function getBasePlan(): Promise<TrainingPlan> {
     return gradntRepository.getTrainingPlan()
   }
 
-  const workouts = generateFirstPlan({
+  const weeks = generateFirstPlan({
     profile: snapshot.profile,
     goal: snapshot.goal,
     availability: snapshot.availability,
     startDate: new Date(),
   })
+
+  const workouts = weeks.flatMap((week) => week.workouts)
 
   if (workouts.length === 0) {
     return gradntRepository.getTrainingPlan()
@@ -34,9 +36,9 @@ async function getBasePlan(): Promise<TrainingPlan> {
   return {
     id: 'plan-local-first',
     startDate: new Date().toISOString(),
-    endDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
+    endDate: workouts.at(-1)?.date ?? new Date().toISOString(),
     goalId: 'goal-local-first',
-    weeks: [{ weekNumber: 1, workouts }],
+    weeks,
     version: 1,
     status: 'active',
   }

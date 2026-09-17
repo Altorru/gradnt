@@ -100,12 +100,14 @@ async function getGeneratedTrainingPlan(): Promise<TrainingPlan | null> {
     return null
   }
 
-  const workouts = generateFirstPlan({
+  const weeks = generateFirstPlan({
     profile: snapshot.profile,
     goal: snapshot.goal,
     availability: snapshot.availability,
     startDate: new Date(),
   })
+
+  const workouts = weeks.flatMap((week) => week.workouts)
 
   if (workouts.length === 0) {
     return null
@@ -114,9 +116,9 @@ async function getGeneratedTrainingPlan(): Promise<TrainingPlan | null> {
   return trainingPlanSchema.parse({
     id: 'plan-local-first',
     startDate: new Date().toISOString(),
-    endDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
+    endDate: workouts.at(-1)?.date ?? new Date().toISOString(),
     goalId: 'goal-local-first',
-    weeks: [{ weekNumber: 1, workouts }],
+    weeks,
     version: 1,
     status: 'active',
   })

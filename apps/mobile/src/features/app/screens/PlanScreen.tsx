@@ -49,10 +49,27 @@ export function PlanScreen() {
   const skipWorkout = useSkipWorkoutMutation()
   const moveWorkout = useMoveWorkoutMutation()
   const workouts = workoutsQuery.data ?? []
-  const plannedWorkouts = workouts.filter((workout) => workout.status === 'planned')
-  const completedWorkouts = workouts.filter((workout) => workout.status === 'completed')
-  const trackedWorkouts = workouts.filter((workout) => workout.status !== 'planned')
-  const completionPercentage = getPlanCompletionPercentage(workouts)
+  /**
+   * The summary card covers the plan's own first week, not all four.
+   *
+   * The plan is written four weeks ahead so a reminder can outlive a gap between
+   * opens, and this card said "this week" while counting every session in it.
+   *
+   * The window comes from the plan rather than from the clock — a date read
+   * during render is impure, and the first week is the earliest session plus
+   * seven days by construction.
+   */
+  const firstWeekStart = workouts.reduce(
+    (earliest, workout) => Math.min(earliest, Date.parse(workout.date)),
+    Number.POSITIVE_INFINITY,
+  )
+  const thisWeek = workouts.filter(
+    (workout) => Date.parse(workout.date) < firstWeekStart + 7 * 24 * 60 * 60 * 1000,
+  )
+  const plannedWorkouts = thisWeek.filter((workout) => workout.status === 'planned')
+  const completedWorkouts = thisWeek.filter((workout) => workout.status === 'completed')
+  const trackedWorkouts = thisWeek.filter((workout) => workout.status !== 'planned')
+  const completionPercentage = getPlanCompletionPercentage(thisWeek)
   const plannedMinutes = plannedWorkouts.reduce(
     (total, workout) => total + workout.durationMinutes,
     0,
@@ -84,7 +101,7 @@ export function PlanScreen() {
                 <GradntText muted fontSize={13}>
                   {workoutsQuery.isPending
                     ? t('common.loading')
-                    : workouts.length
+                    : thisWeek.length
                       ? `${t('plan.upcoming', { count: plannedWorkouts.length })} · ${plural('plan.completed', completedWorkouts.length)}`
                       : t('plan.nonePlanned')}
                 </GradntText>
@@ -93,7 +110,7 @@ export function PlanScreen() {
                 {workoutsQuery.isPending ? '—' : `${completionPercentage}%`}
               </GradntBadge>
             </XStack>
-            {!workoutsQuery.isPending && workouts.length ? (
+            {!workoutsQuery.isPending && thisWeek.length ? (
               <YStack gap="$2">
                 <XStack justifyContent="space-between">
                   <GradntText muted fontSize={12}>
@@ -102,7 +119,7 @@ export function PlanScreen() {
                   <GradntText muted fontSize={12}>
                     {t('plan.tracked', {
                       tracked: trackedWorkouts.length,
-                      total: workouts.length,
+                      total: thisWeek.length,
                     })}
                   </GradntText>
                 </XStack>

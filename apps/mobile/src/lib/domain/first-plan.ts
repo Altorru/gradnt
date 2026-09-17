@@ -2,7 +2,25 @@ import type { WeeklyAvailabilityForm } from '../../features/onboarding/domain/av
 import type { CyclistGoalForm } from '../../features/onboarding/domain/goal.schema'
 import type { CyclistProfileForm } from '../../features/onboarding/domain/profile.schema'
 
-import { plannedWorkoutSchema, type PlannedWorkout, type WorkoutType } from './schemas'
+import {
+  plannedWorkoutSchema,
+  type PlannedWorkout,
+  type TrainingPlan,
+  type WorkoutType,
+} from './schemas'
+
+/**
+ * How far ahead the plan is written.
+ *
+ * A week was not enough for a reminder to be reliable. The plan is regenerated
+ * from the onboarding snapshot on every read, so nothing past its end exists
+ * until the app is opened again — and a rider who stopped opening it stopped
+ * being reminded. Four weeks fits the notification cap with room to spare: the
+ * cap counts sessions, and three a week is twelve.
+ */
+export const PLAN_WEEKS = 4
+
+type PlanWeek = TrainingPlan['weeks'][number]
 
 export type FirstPlanInput = {
   profile: CyclistProfileForm
@@ -67,14 +85,20 @@ function getIntensityTemplate(index: number, availableCount: number) {
   return workoutTemplates[1]
 }
 
-export function generateFirstPlan(input: FirstPlanInput): PlannedWorkout[] {
-  const availableSlots = input.availability
-    .filter((slot) => slot.available && slot.durationMinutes !== null)
-    .sort(
-      (left, right) =>
-        getDaysUntilTarget(input.startDate, weekdayIndex[left.day]) -
-        getDaysUntilTarget(input.startDate, weekdayIndex[right.day]),
-    )
+/**
+ * One week of the plan, seven days on from the last.
+ *
+ * The volume cap is weekly — it is a share of the band the rider declared — so
+ * it applies to each week rather than to the four together. Which is also why
+ * the intensity progression restarts: a fresh week is not a continuation.
+ */
+function weekWorkouts(
+  input: FirstPlanInput,
+  availableSlots: FirstPlanInput['availability'],
+  week: number,
+): PlannedWorkout[] {
+  const weekStart = new Date(input.startDate)
+  weekStart.setDate(weekStart.getDate() + week * 7)
 
   const maxMinutes = Math.round(weeklyVolumeMinutes[input.profile.weeklyVolume] * 1.1)
   let scheduledMinutes = 0
@@ -92,10 +116,13 @@ export function generateFirstPlan(input: FirstPlanInput): PlannedWorkout[] {
     }
 
     const template = getIntensityTemplate(index, availableSlots.length)
-    const date = getNextDate(input.startDate, weekdayIndex[slot.day])
+    const date = getNextDate(weekStart, weekdayIndex[slot.day])
 
     const workout = plannedWorkoutSchema.parse({
-      id: `first-plan-${index + 1}`,
+      // The week and the slot, not the date: the plan shifts with the day it is
+      // read on, and an entry a rider skipped has to keep the identity it was
+      // skipped under.
+      id: `first-plan-${week + 1}-${index + 1}`,
       date: date.toISOString(),
       type: template.type,
       durationMinutes,
@@ -107,4 +134,20 @@ export function generateFirstPlan(input: FirstPlanInput): PlannedWorkout[] {
     workouts.push(workout)
     return workouts
   }, [])
+}
+
+/** The weeks of a first plan, in the shape the schema models them. */
+export function generateFirstPlan(input: FirstPlanInput): PlanWeek[] {
+  const availableSlots = input.availability
+    .filter((slot) => slot.available && slot.durationMinutes !== null)
+    .sort(
+      (left, right) =>
+        getDaysUntilTarget(input.startDate, weekdayIndex[left.day]) -
+        getDaysUntilTarget(input.startDate, weekdayIndex[right.day]),
+    )
+
+  return Array.from({ length: PLAN_WEEKS }, (_, week) => ({
+    weekNumber: week + 1,
+    workouts: weekWorkouts(input, availableSlots, week),
+  }))
 }
