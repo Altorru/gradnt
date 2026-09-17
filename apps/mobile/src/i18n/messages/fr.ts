@@ -438,6 +438,13 @@ export const fr = {
       },
     },
 
+    notifications: {
+      title: 'Ce que GRADNT peut te dire',
+      subtitle:
+        'Choisis ce que tu veux recevoir, et quand. Tout se règle à nouveau dans les réglages, quand tu veux.',
+      later: 'Configurer plus tard',
+    },
+
     review: {
       title: 'Ton point de départ',
       subtitle:

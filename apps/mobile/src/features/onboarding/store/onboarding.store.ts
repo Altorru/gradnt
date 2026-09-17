@@ -24,6 +24,14 @@ type OnboardingState = {
   setGoal: (goal: CyclistGoalForm) => void
   setAvailability: (availability: WeeklyAvailabilityForm) => void
   setStrava: (strava: StravaConnection) => void
+  /**
+   * Records that the rider got past the notifications step.
+   *
+   * That step owns no data of its own — the switches write straight to the
+   * preferences store — so all this keeps is the resume point. Without it a
+   * rider killed on the review screen would come back to Strava.
+   */
+  setNotificationsSeen: () => void
   complete: () => void
   hydrate: () => Promise<void>
   reset: () => Promise<void>
@@ -91,9 +99,17 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     })
   },
 
+  setNotificationsSeen: () => {
+    set((state) => {
+      const nextState = { ...state, currentStep: Math.max(state.currentStep, 6) }
+      persist(nextState)
+      return nextState
+    })
+  },
+
   complete: () => {
     set((state) => {
-      const nextState = { ...state, currentStep: 6, completed: true }
+      const nextState = { ...state, currentStep: 7, completed: true }
       persist(nextState)
       return nextState
     })
@@ -123,6 +139,7 @@ export function getOnboardingResumeRoute(
   | '/onboarding/goal'
   | '/onboarding/availability'
   | '/onboarding/strava'
+  | '/onboarding/notifications'
   | '/onboarding/review' {
   if (step <= 2) {
     return '/onboarding/profile'
@@ -138,6 +155,10 @@ export function getOnboardingResumeRoute(
 
   if (step === 5) {
     return '/onboarding/strava'
+  }
+
+  if (step === 6) {
+    return '/onboarding/notifications'
   }
 
   return '/onboarding/review'

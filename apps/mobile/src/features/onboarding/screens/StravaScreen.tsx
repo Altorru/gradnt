@@ -59,7 +59,7 @@ export function StravaScreen() {
   const connected = connection.status === 'connected'
   const deferConnection = () => {
     setStrava(deferredStravaConnection)
-    router.push('/onboarding/review')
+    router.push('/onboarding/notifications')
   }
 
   return (
@@ -72,11 +72,11 @@ export function StravaScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              5 / 6
+              5 / 7
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={5} total={6} />
+          <OnboardingProgress step={5} total={7} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.strava.title')}</GradntHeading>
@@ -169,7 +169,7 @@ export function StravaScreen() {
                 tone="secondary"
                 iconAfter={<ArrowRight size={18} color={'$textPrimary'} />}
                 onPress={() => {
-                  router.push('/onboarding/review')
+                  router.push('/onboarding/notifications')
                 }}
               >
                 {t('common.continue')}

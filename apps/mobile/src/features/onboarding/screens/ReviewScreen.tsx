@@ -76,11 +76,11 @@ export function ReviewScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              6 / 6
+              7 / 7
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={6} total={6} />
+          <OnboardingProgress step={7} total={7} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.review.title')}</GradntHeading>

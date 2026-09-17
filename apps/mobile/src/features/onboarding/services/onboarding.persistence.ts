@@ -14,7 +14,7 @@ export const onboardingSnapshotSchema = z.object({
   goal: cyclistGoalSchema.nullable(),
   availability: weeklyAvailabilitySchema.nullable(),
   strava: stravaConnectionSchema.nullable(),
-  currentStep: z.number().int().min(1).max(6),
+  currentStep: z.number().int().min(1).max(7),
   completed: z.boolean(),
 })
 

@@ -414,6 +414,13 @@ export const en = {
       },
     },
 
+    notifications: {
+      title: 'What GRADNT may tell you',
+      subtitle:
+        'Choose what you want to hear, and when. You can change any of this again in settings.',
+      later: 'Set up later',
+    },
+
     review: {
       title: 'Your starting point',
       subtitle: 'This is the context GRADNT will use to build a coherent first block.',

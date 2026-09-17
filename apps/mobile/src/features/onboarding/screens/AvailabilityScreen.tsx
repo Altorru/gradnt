@@ -85,11 +85,11 @@ export function AvailabilityScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              4 / 6
+              4 / 7
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={4} total={6} />
+          <OnboardingProgress step={4} total={7} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.availability.title')}</GradntHeading>
