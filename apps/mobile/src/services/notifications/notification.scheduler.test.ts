@@ -238,6 +238,25 @@ describe('reconcile', () => {
     expect(cancel).not.toHaveBeenCalled()
   })
 
+  /**
+   * The caller can run two passes at once.
+   *
+   * The effect that drives this re-runs on every preference and query change
+   * during boot, and each run reads `list()` before it writes anything — so
+   * without a queue both passes see an empty pending list and both schedule.
+   * On a device that is three identical alarms for one weekly digest.
+   */
+  it('writes once when two passes overlap', async () => {
+    const { scheduler, schedule } = port()
+
+    await Promise.all([
+      reconcile([session], translation, 'fr', scheduler),
+      reconcile([session], translation, 'fr', scheduler),
+    ])
+
+    expect(schedule).toHaveBeenCalledTimes(1)
+  })
+
   it('never touches a notification that is not ours', async () => {
     const { scheduler, cancel } = port([
       { key: 'gradnt:session:gone', identifier: 'ours-but-unwanted' },

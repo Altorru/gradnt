@@ -101,6 +101,21 @@ export async function ensureChannels(translation: Translation): Promise<void> {
 }
 
 /**
+ * The passes in flight, chained end to end.
+ *
+ * Serialised rather than run in parallel. Every pass reads the pending list
+ * before it writes anything, so two at once both see the desired set missing
+ * and both schedule it — three identical alarms for one weekly digest, which a
+ * device produces from a single launch. Chaining makes the last pass the one
+ * that decides, which is the answer the passes would have agreed on anyway.
+ *
+ * ponytail: every queued pass still runs. Coalescing to the newest would save
+ * native calls during a boot that fires the effect several times, but it would
+ * also resolve a caller's promise without having done its work.
+ */
+let queue: Promise<void> = Promise.resolve()
+
+/**
  * Makes the OS hold exactly what we want, and nothing else.
  *
  * Written against a port rather than `expo-notifications` so the ways this can
@@ -108,12 +123,30 @@ export async function ensureChannels(translation: Translation): Promise<void> {
  * reminder a rider was owed, cancelling one that was never ours — are decisions
  * a test can observe.
  *
- * Idempotent, not deduplicating: identity is the key alone, so a second pass over
- * the same wanted set writes nothing and cancels nothing. Two OS entries carrying
- * one key are both left alone rather than healed — nothing we schedule can
- * produce that, so it is not worth the pass.
+ * Idempotent, not deduplicating: identity is the key alone, so a later pass over
+ * the same wanted set writes nothing and cancels nothing. Two OS entries
+ * carrying one key are left alone rather than healed — this queue is what stops
+ * us producing them, not a repair pass.
  */
-export async function reconcile(
+export function reconcile(
+  desired: DesiredNotification[],
+  translation: Translation,
+  language: Language,
+  scheduler: SchedulerPort,
+): Promise<void> {
+  const pass = queue.then(() => reconcileOnce(desired, translation, language, scheduler))
+
+  // The chain survives a failed pass, or one rejection would wedge every pass
+  // after it.
+  queue = pass.then(
+    () => undefined,
+    () => undefined,
+  )
+
+  return pass
+}
+
+async function reconcileOnce(
   desired: DesiredNotification[],
   translation: Translation,
   language: Language,
