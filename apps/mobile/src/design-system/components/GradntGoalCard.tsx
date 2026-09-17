@@ -12,6 +12,8 @@ type GradntGoalCardProps = {
   targetLabel: string
   statusLabel: string
   changeLabel: string
+  /** Whether the change is an improvement, and so worth an upward glyph. */
+  changeRising: boolean
   currentValue: number | null
   progressPercentage: number
 }
@@ -30,6 +32,7 @@ export function GradntGoalCard({
   targetLabel,
   statusLabel,
   changeLabel,
+  changeRising,
   currentValue,
   progressPercentage,
 }: GradntGoalCardProps) {
@@ -98,7 +101,12 @@ export function GradntGoalCard({
             {changeLabel}
           </GradntText>
 
-          <ArrowUpRight size={14} color="$accentInk" />
+          {/*
+            Only when there is a rise to point at. The arrow used to be fixed,
+            so "After your first rides" arrived with a climbing glyph beside it
+            — a claim about progress on a card that had measured none.
+          */}
+          {changeRising ? <ArrowUpRight size={14} color="$accentInk" /> : null}
         </XStack>
       </YStack>
     </GradntCard>

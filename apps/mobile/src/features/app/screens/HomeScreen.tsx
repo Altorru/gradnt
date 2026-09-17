@@ -164,6 +164,7 @@ export function HomeScreen() {
                   ? t('home.afterFirstRides')
                   : t('home.observedProgress')
             }
+            changeRising={goal?.type === 'ftp' && ftpDelta !== null && ftpDelta > 0}
           />
 
           <YStack gap="$4">
