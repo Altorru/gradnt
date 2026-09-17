@@ -303,9 +303,14 @@ function FilterRow({
       return (
         <GradntGlassSurface borderRadius={radius[5]} style={{ padding: 16 }}>
           <GradntRangeSlider
-            label={t('explore.filters.distance')}
             unit="km"
             value={preferences.distanceRangeKm}
+            caption={t('explore.filters.rangeBetween', {
+              label: t('explore.filters.distance'),
+              min: preferences.distanceRangeKm.min,
+              max: preferences.distanceRangeKm.max,
+              unit: 'km',
+            })}
             bounds={DISTANCE_KM.bounds}
             step={DISTANCE_KM.step}
             accessibilityLabel={t('explore.filters.distanceRange')}
@@ -317,9 +322,14 @@ function FilterRow({
       return (
         <GradntGlassSurface borderRadius={radius[5]} style={{ padding: 16 }}>
           <GradntRangeSlider
-            label={t('explore.filters.elevation')}
             unit="m"
             value={preferences.elevationRangeM}
+            caption={t('explore.filters.rangeBetween', {
+              label: t('explore.filters.elevation'),
+              min: preferences.elevationRangeM.min,
+              max: preferences.elevationRangeM.max,
+              unit: 'm',
+            })}
             bounds={ELEVATION_M.bounds}
             step={ELEVATION_M.step}
             accessibilityLabel={t('explore.filters.elevationRange')}

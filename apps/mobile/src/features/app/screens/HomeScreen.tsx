@@ -266,7 +266,10 @@ export function HomeScreen() {
               {/* No destination exists for this section, so it carries no action
                   rather than a chevron that goes nowhere. */}
               <GradntSectionHeader title={t('home.intensities')} />
-              <GradntIntensityBreakdown distribution={intensity} />
+              <GradntIntensityBreakdown
+                distribution={intensity}
+                caption={(hours) => t('home.intensityPoweredHours', { hours })}
+              />
             </YStack>
           ) : null}
 

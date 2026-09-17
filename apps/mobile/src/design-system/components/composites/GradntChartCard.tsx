@@ -22,7 +22,13 @@ type GradntChartCardProps = {
    */
   secondary?: { data: number[]; unit: string }
   /** Names the window a point covers, e.g. "du 12 au 18 août". */
-  windowLabel?: (index: number) => string
+  windowLabel: (index: number) => string
+  /** What the whole series spans, shown until a point is selected. */
+  spanLabel: string
+  /** Marks the newest point on the right-hand side. */
+  todayLabel: string
+  /** How to get back out of a selected point. */
+  closeHintLabel: string
 }
 
 /**
@@ -47,6 +53,9 @@ export function GradntChartCard({
   height = 64,
   secondary,
   windowLabel,
+  spanLabel,
+  todayLabel,
+  closeHintLabel,
 }: GradntChartCardProps) {
   const [selected, setSelected] = useState<number | null>(null)
 
@@ -55,7 +64,6 @@ export function GradntChartCard({
   }
 
   const max = Math.max(...data)
-  const weeks = data.length
 
   const select = (index: number) => {
     setSelected((current) => (current === index ? null : index))
@@ -108,14 +116,12 @@ export function GradntChartCard({
 
         <XStack justifyContent="space-between" gap="$3">
           <GradntText muted fontSize={10} numberOfLines={1}>
-            {selected === null
-              ? `il y a ${weeks} sem.`
-              : (windowLabel?.(selected) ?? `Point ${selected + 1}`)}
+            {selected === null ? spanLabel : windowLabel(selected)}
           </GradntText>
 
           {selected === null ? (
             <GradntText muted fontSize={10}>
-              aujourd’hui
+              {todayLabel}
             </GradntText>
           ) : (
             <GradntText color="$accentInk" weight="semibold" fontSize={10}>
@@ -126,7 +132,7 @@ export function GradntChartCard({
 
         {selected !== null ? (
           <GradntText muted fontSize={10}>
-            Touche à nouveau pour fermer.
+            {closeHintLabel}
           </GradntText>
         ) : null}
       </YStack>

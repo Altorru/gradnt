@@ -197,6 +197,9 @@ export function ProgressScreen() {
               data={volumeSeries}
               secondary={{ data: rideSeries, unit: t('progress.ridesUnit') }}
               windowLabel={windowLabel}
+              spanLabel={t('progress.spanWeeks', { weeks: volumeSeries.length })}
+              todayLabel={t('progress.today')}
+              closeHintLabel={t('progress.tapAgainToClose')}
               description={
                 metricsQuery.isPending
                   ? t('common.loading')
@@ -219,6 +222,9 @@ export function ProgressScreen() {
               data={rideSeries}
               secondary={{ data: volumeSeries, unit: 'h' }}
               windowLabel={windowLabel}
+              spanLabel={t('progress.spanWeeks', { weeks: rideSeries.length })}
+              todayLabel={t('progress.today')}
+              closeHintLabel={t('progress.tapAgainToClose')}
               description={
                 activitiesQuery.isPending
                   ? t('common.loading')

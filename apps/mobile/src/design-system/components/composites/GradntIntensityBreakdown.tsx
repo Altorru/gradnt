@@ -6,6 +6,13 @@ import { GradntCard, GradntText } from '../primitives'
 
 type GradntIntensityBreakdownProps = {
   distribution: IntensityShare[]
+  /**
+   * States the base the shares are percentages of.
+   *
+   * A function of the hours, not a string: this component is the one that knows
+   * them, and the caller is the one that knows the language.
+   */
+  caption: (hours: number) => string
 }
 
 const ZONE_LABELS: Record<IntensityZone, string> = {
@@ -39,18 +46,17 @@ const ZONE_OPACITY: Record<IntensityZone, number> = {
  * claimed a choice that did not exist. It also showed four of the seven real
  * bands as though that were the whole scale.
  */
-export function GradntIntensityBreakdown({ distribution }: GradntIntensityBreakdownProps) {
+export function GradntIntensityBreakdown({ distribution, caption }: GradntIntensityBreakdownProps) {
   const totalHours = distribution.reduce((sum, entry) => sum + entry.hours, 0)
 
   return (
     <GradntCard padding="$4" gap="$3">
       {/* No title of its own: the section it sits in already carries one, and
           two headings over one block is one too many. */}
+      {/* Without this the split looks like it covers everything the rider has
+          ever done, when it only covers the rides that recorded power. */}
       <GradntText muted fontSize={12} lineHeight={17}>
-        {/* States the base the shares are percentages of. Without it the split
-            looks like it covers everything the rider has ever done, when it
-            only covers the rides that recorded power. */}
-        {Math.round(totalHours * 10) / 10} h avec capteur de puissance
+        {caption(Math.round(totalHours * 10) / 10)}
       </GradntText>
 
       <XStack height={12} borderRadius="$pill" overflow="hidden" gap={2}>

@@ -126,7 +126,7 @@ export function GoalSettingsScreen() {
               render={({ field, fieldState }) => (
                 <YStack gap="$2">
                   <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-                    ÉVÉNEMENT
+                    {t('settings.eventLabel')}
                   </GradntText>
 
                   <GradntInput
@@ -152,11 +152,11 @@ export function GoalSettingsScreen() {
               render={({ field, fieldState }) => (
                 <YStack gap="$2">
                   <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-                    DATE
+                    {t('settings.dateLabel')}
                   </GradntText>
 
                   <GradntText muted fontSize={12} lineHeight={18}>
-                    Au format AAAA-MM-JJ. L’app en tire le compte à rebours.
+                    {t('settings.dateHint')}
                   </GradntText>
 
                   <GradntInput
@@ -186,7 +186,7 @@ export function GoalSettingsScreen() {
               render={({ field }) => (
                 <YStack gap="$3">
                   <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-                    COMMENT LE MESURER
+                    {t('settings.measureLabel')}
                   </GradntText>
 
                   <XStack gap="$2" flexWrap="wrap">

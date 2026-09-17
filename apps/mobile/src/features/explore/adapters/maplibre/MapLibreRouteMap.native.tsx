@@ -3,6 +3,7 @@ import type { FeatureCollection, LineString, Point } from 'geojson'
 import { YStack } from 'tamagui'
 
 import { GradntText, useThemeColor } from '@/design-system'
+import { useTranslation } from '@/i18n'
 import { colors } from '@/design-system/tokens'
 
 import type { Route } from '../../domain'
@@ -52,6 +53,7 @@ function toStartFeatureCollection(route: Route): FeatureCollection<Point> {
 }
 
 export function MapLibreRouteMap({ route }: RouteMapProps) {
+  const { t } = useTranslation()
   const longitudes = route.geometry.map((point) => point.longitude)
   const latitudes = route.geometry.map((point) => point.latitude)
   const routeBounds: [number, number, number, number] = [
@@ -123,7 +125,7 @@ export function MapLibreRouteMap({ route }: RouteMapProps) {
         borderRadius="$2"
       >
         <GradntText muted fontSize={10}>
-          Parcours sélectionné · OpenFreeMap · MapLibre · HeiGIT
+          {`${t('explore.map.selectedRoute')} · OpenFreeMap · MapLibre · HeiGIT`}
         </GradntText>
       </YStack>
     </YStack>

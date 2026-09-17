@@ -70,7 +70,7 @@ export function WelcomeScreen() {
 
             <YStack gap="$3" paddingTop="$4">
               <GradntHeading fontSize={40} lineHeight={43} letterSpacing={-1.6}>
-                Ride what&apos;s next.
+                {t('onboarding.welcome.headline')}
               </GradntHeading>
 
               <GradntText muted fontSize={17} lineHeight={25}>

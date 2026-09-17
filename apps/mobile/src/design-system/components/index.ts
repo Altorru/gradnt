@@ -3,7 +3,6 @@ export * from './composites'
 export * from './layout'
 export * from './primitives'
 
-export * from './GradntBottomNav'
 export * from './GradntGoalCard'
 export * from './GradntSectionHeader'
 export * from './GradntStatTile'

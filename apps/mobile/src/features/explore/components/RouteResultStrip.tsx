@@ -53,7 +53,7 @@ export function RouteResultStrip({
 
           <GradntText muted fontSize={13}>
             {formatDistance(route.distanceMeters)} · {formatElevation(route.elevationGainMeters)} ·
-            score {route.score}/100
+            {t('explore.detail.score', { score: route.score })}
           </GradntText>
         </YStack>
 

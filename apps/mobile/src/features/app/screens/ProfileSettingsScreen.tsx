@@ -74,7 +74,7 @@ export function ProfileSettingsScreen() {
             render={({ field }) => (
               <YStack gap="$3">
                 <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-                  DISCIPLINE
+                  {t('settings.discipline')}
                 </GradntText>
 
                 {disciplines(t).map((discipline) => (
@@ -97,7 +97,7 @@ export function ProfileSettingsScreen() {
             render={({ field }) => (
               <YStack gap="$3">
                 <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-                  EXPÉRIENCE
+                  {t('settings.experience')}
                 </GradntText>
 
                 <XStack gap="$2" flexWrap="wrap">
@@ -120,7 +120,7 @@ export function ProfileSettingsScreen() {
             render={({ field }) => (
               <YStack gap="$3">
                 <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-                  VOLUME HEBDOMADAIRE
+                  {t('settings.weeklyVolume')}
                 </GradntText>
 
                 <XStack gap="$2" flexWrap="wrap">

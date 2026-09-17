@@ -35,6 +35,7 @@ type ChartPoint = {
 }
 
 function ElevationProfile({ route }: { route: RouteWithScore }) {
+  const { t } = useTranslation()
   const width = 320
   const height = 110
   const padding = 8
@@ -80,10 +81,10 @@ function ElevationProfile({ route }: { route: RouteWithScore }) {
     <YStack gap="$2">
       <XStack justifyContent="space-between" alignItems="center">
         <GradntText weight="semibold" fontSize={13}>
-          Profil d&apos;altitude
+          {t('explore.detail.elevationProfile')}
         </GradntText>
         <GradntText muted fontSize={12}>
-          Orange = montée détectée
+          {t('explore.detail.elevationLegend')}
         </GradntText>
       </XStack>
       <YStack backgroundColor="$backgroundSubtle" borderRadius="$3" padding="$2">
@@ -206,7 +207,7 @@ export function RouteDetailPanel({
         <XStack alignItems="center" gap="$2">
           <TrendingUp size={16} color="$recovery" />
           <GradntText muted fontSize={13}>
-            +{route.elevationGainMeters} m D+
+            {t('explore.detail.elevationGain', { value: route.elevationGainMeters })}
           </GradntText>
         </XStack>
         <XStack alignItems="center" gap="$2">
@@ -292,14 +293,14 @@ export function RouteDetailPanel({
         </GradntText>
         <XStack justifyContent="space-between">
           <GradntText muted fontSize={13}>
-            Intention {route.trainingIntent}
+            {t('explore.detail.intention', { intent: route.trainingIntent })}
           </GradntText>
           <GradntText color="$positive" weight="semibold" fontSize={13}>
             {route.trainingIntentFit}/100
           </GradntText>
         </XStack>
         <GradntText muted fontSize={12}>
-          Adéquation déterministe selon la durée, le relief et l&apos;intention déclarée.
+          {t('explore.detail.fitNote')}
         </GradntText>
       </GradntCard>
 
@@ -308,7 +309,7 @@ export function RouteDetailPanel({
         iconAfter={<ChevronUp size={17} color="$color" />}
         onPress={onClose}
       >
-        Réduire le détail
+        {t('explore.detail.collapse')}
       </GradntButton>
     </GradntCard>
   )

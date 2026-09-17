@@ -38,6 +38,13 @@ export const en = {
     dataSection: 'YOUR DATA',
     profileRow: 'Cycling profile',
     goalRow: 'Goal',
+    discipline: 'DISCIPLINE',
+    experience: 'EXPERIENCE',
+    weeklyVolume: 'WEEKLY VOLUME',
+    eventLabel: 'EVENT',
+    dateLabel: 'DATE',
+    dateHint: 'In YYYY-MM-DD format. The app counts down from it.',
+    measureLabel: 'HOW TO MEASURE IT',
     theme: 'Theme',
     themeSystem: 'System',
     themeLight: 'Light',
@@ -214,6 +221,9 @@ export const en = {
     fromYourRides: 'Taken from your rides',
     toSetAfterFirstRides: 'To set after your first rides',
     lastSevenDays: 'Last 7 days',
+    spanWeeks: '{{weeks}} weeks ago',
+    today: 'today',
+    tapAgainToClose: 'Tap again to close.',
     recentVolume: 'Recent volume',
     regularity: 'Consistency',
     ridesUnit: 'rides',
@@ -295,6 +305,7 @@ export const en = {
       distance: '7-day distance',
     },
     intensities: 'Intensities',
+    intensityPoweredHours: '{{hours}} h with a power meter',
     basedOnProfile: 'Based on the profile you declared',
     basedOnActivities: 'Based on observed activities',
 
@@ -326,6 +337,7 @@ export const en = {
 
   onboarding: {
     welcome: {
+      headline: 'Ride what’s next.',
       subtitle: 'Turn your rides into clear, personal progress you can actually act on.',
       benefits: {
         goal: {
@@ -523,6 +535,7 @@ export const en = {
       distance: 'Distance',
       elevation: 'Elevation',
       distanceRange: 'Distance range in kilometres',
+      rangeBetween: '{{label}} · between {{min}} and {{max}} {{unit}}',
       elevationRange: 'Elevation range in metres',
       surface: 'Surface',
       intent: 'Intent',
@@ -583,6 +596,11 @@ export const en = {
       sessionFit: 'Fit with the session',
       elevationProfile: 'Elevation profile',
       elevationLegend: 'Orange = detected climb',
+      elevationGain: '+{{value}} m',
+      intention: 'Intent {{intent}}',
+      fitNote: 'Deterministic fit from the duration, the relief and the declared intent.',
+      score: 'score {{score}}/100',
+      collapse: 'Collapse the detail',
       exposureRationale: {
         scored:
           'Road exposure calculated from HeiGIT OSM data. The score is based on cycle suitability and the way types present.',
@@ -622,6 +640,7 @@ export const en = {
     },
 
     map: {
+      selectedRoute: 'Selected route',
       tapRoute: 'Tap a route to see its line.',
       nativeOnly: 'The map needs the native version of the app.',
       schematic: 'Schematic web preview. The real map shows on iOS and Android.',

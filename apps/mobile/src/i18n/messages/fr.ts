@@ -41,6 +41,14 @@ export const fr = {
     dataSection: 'TES DONNÉES',
     profileRow: 'Profil cycliste',
     goalRow: 'Objectif',
+    /** The editors' own field headings, terser than the onboarding labels. */
+    discipline: 'DISCIPLINE',
+    experience: 'EXPÉRIENCE',
+    weeklyVolume: 'VOLUME HEBDOMADAIRE',
+    eventLabel: 'ÉVÉNEMENT',
+    dateLabel: 'DATE',
+    dateHint: 'Au format AAAA-MM-JJ. L’app en tire le compte à rebours.',
+    measureLabel: 'COMMENT LE MESURER',
     theme: 'Thème',
     /** `system` is a choice, so it is named like one in both catalogues. */
     themeSystem: 'Système',
@@ -248,6 +256,9 @@ export const fr = {
     fromYourRides: 'Valeur issue de tes sorties',
     toSetAfterFirstRides: 'À préciser après tes premières sorties',
     lastSevenDays: '7 derniers jours',
+    spanWeeks: 'il y a {{weeks}} sem.',
+    today: 'aujourd’hui',
+    tapAgainToClose: 'Touche à nouveau pour fermer.',
     recentVolume: 'Volume récent',
     regularity: 'Régularité',
     ridesUnit: 'sorties',
@@ -329,6 +340,7 @@ export const fr = {
       distance: 'Distance 7 j',
     },
     intensities: 'Intensités',
+    intensityPoweredHours: '{{hours}} h avec capteur de puissance',
     basedOnProfile: 'Basé sur ton profil déclaré',
     basedOnActivities: 'Basé sur des activités observées',
 
@@ -366,6 +378,7 @@ export const fr = {
 
   onboarding: {
     welcome: {
+      headline: 'Roule ce qui vient ensuite.',
       subtitle:
         'Transforme tes sorties vélo en une progression claire, personnelle et réellement actionnable.',
       benefits: {
@@ -569,6 +582,7 @@ export const fr = {
       distance: 'Distance',
       elevation: 'Dénivelé',
       distanceRange: 'Fourchette de distance en kilomètres',
+      rangeBetween: '{{label}} · entre {{min}} et {{max}} {{unit}}',
       elevationRange: 'Fourchette de dénivelé en mètres',
       surface: 'Surface',
       intent: 'Intention',
@@ -629,6 +643,11 @@ export const fr = {
       sessionFit: 'Compatibilité avec la séance',
       elevationProfile: 'Profil d’altitude',
       elevationLegend: 'Orange = montée détectée',
+      elevationGain: '+{{value}} m D+',
+      intention: 'Intention {{intent}}',
+      fitNote: 'Adéquation déterministe selon la durée, le relief et l’intention déclarée.',
+      score: 'score {{score}}/100',
+      collapse: 'Réduire le détail',
       exposureRationale: {
         scored:
           'Exposition routière calculée à partir des données OSM HeiGIT. Score basé sur la compatibilité cyclable et les types de voies disponibles.',
@@ -674,6 +693,7 @@ export const fr = {
     },
 
     map: {
+      selectedRoute: 'Parcours sélectionné',
       tapRoute: 'Touche un parcours pour en voir le tracé.',
       nativeOnly: 'La carte nécessite la version native de l’application.',
       schematic: 'Aperçu web schématique. La carte réelle s’affiche sur iOS et Android.',

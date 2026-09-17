@@ -19,7 +19,14 @@ type GradntRangeSliderProps = {
   bounds: { min: number; max: number }
   step: number
   onValueChange: (value: { min: number; max: number }) => void
-  label?: string
+  /**
+   * The sentence above the track, composed by the caller.
+   *
+   * A string and not a label plus a range: "entre 20 et 60 km" puts the unit
+   * inside the phrase, and word order is the language's business.
+   */
+  caption?: string
+  /** The unit the bounds are read in, as a symbol — `km`, `m`. */
   unit?: string
   accessibilityLabel?: string
 }
@@ -50,7 +57,7 @@ export function GradntRangeSlider({
   bounds,
   step,
   onValueChange,
-  label,
+  caption,
   unit,
   accessibilityLabel,
 }: GradntRangeSliderProps) {
@@ -150,18 +157,16 @@ export function GradntRangeSlider({
 
   return (
     <YStack gap="$2">
-      {label ? (
+      {caption ? (
         <GradntText muted fontSize={12} weight="semibold">
-          {unit
-            ? `${label} · entre ${value.min} et ${value.max} ${unit}`
-            : `${label} · entre ${value.min} et ${value.max}`}
+          {caption}
         </GradntText>
       ) : null}
 
       <GestureDetector gesture={pan}>
         <View
           accessibilityRole="adjustable"
-          accessibilityLabel={accessibilityLabel ?? label}
+          accessibilityLabel={accessibilityLabel}
           accessibilityValue={{ min: value.min, max: value.max, now: value.max }}
           onLayout={(event: LayoutChangeEvent) => setTrackWidth(event.nativeEvent.layout.width)}
           // Taller than the track so the whole control is a comfortable target.

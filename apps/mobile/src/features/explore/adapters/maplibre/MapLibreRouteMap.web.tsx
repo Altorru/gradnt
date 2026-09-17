@@ -2,6 +2,7 @@ import Svg, { Circle, Polyline } from 'react-native-svg'
 import { YStack } from 'tamagui'
 
 import { GradntText } from '@/design-system'
+import { useTranslation } from '@/i18n'
 import { colors } from '@/design-system/tokens'
 
 import type { Route } from '../../domain'
@@ -11,6 +12,7 @@ type RouteMapProps = {
 }
 
 export function MapLibreRouteMap({ route }: RouteMapProps) {
+  const { t } = useTranslation()
   const width = 320
   const height = 220
   const longitudes = route.geometry.map((point) => point.longitude)
@@ -62,7 +64,7 @@ export function MapLibreRouteMap({ route }: RouteMapProps) {
         </Svg>
       </YStack>
       <GradntText muted fontSize={11}>
-        Aperçu web schématique · MapLibre natif disponible sur iOS/Android
+        {t('explore.map.schematic')}
       </GradntText>
     </YStack>
   )
