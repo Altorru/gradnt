@@ -49,6 +49,7 @@ function input(over: Partial<PlanInput> = {}): PlanInput {
       reminderMinute: 0,
       weeklySummary: false,
       inactivityNudge: false,
+      celebratedThresholds: {},
     },
     lastActivityAt: null,
     lastSyncedAt: null,

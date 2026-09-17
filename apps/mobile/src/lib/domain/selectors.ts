@@ -243,6 +243,13 @@ export function getWeeklyDistanceSeries(activities: Activity[], weeks = 8): numb
   ).map((km) => Math.round(km * 10) / 10)
 }
 
+/** Metres climbed per week, as whole numbers. */
+export function getWeeklyElevationSeries(activities: Activity[], weeks = 8): number[] {
+  return bucketActivitiesByWeek(activities, weeks, (activity) => activity.elevationGainMeters).map(
+    (metres) => Math.round(metres),
+  )
+}
+
 /**
  * The newest window against the one before it.
  *

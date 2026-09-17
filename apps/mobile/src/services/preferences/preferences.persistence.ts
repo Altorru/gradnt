@@ -27,6 +27,12 @@ export const preferencesSchema = z.object({
   reminderMinute: z.number().int().min(0).max(59).default(0),
   weeklySummary: z.boolean().default(true),
   inactivityNudge: z.boolean().default(false),
+
+  // The highest milestone already announced, per goal key. Kept so a rider is
+  // not congratulated twice for one threshold: raising a goal lowers the
+  // computed progress, and without this the next pass would announce the same
+  // palier over again.
+  celebratedThresholds: z.record(z.string(), z.number()).default({}),
 })
 
 export type LanguagePreference = z.infer<typeof languagePreferenceSchema>
@@ -41,6 +47,7 @@ export const defaultPreferences: Preferences = {
   reminderMinute: 0,
   weeklySummary: true,
   inactivityNudge: false,
+  celebratedThresholds: {},
 }
 
 export type NotificationPreferences = Preferences

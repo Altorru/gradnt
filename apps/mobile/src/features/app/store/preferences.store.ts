@@ -14,6 +14,11 @@ type PreferencesState = Preferences & {
 
   setLanguage: (language: LanguagePreference) => void
   setAppearance: (appearance: AppearancePreference) => void
+  setSessionReminder: (sessionReminder: boolean) => void
+  setWeeklySummary: (weeklySummary: boolean) => void
+  setInactivityNudge: (inactivityNudge: boolean) => void
+  setReminderTime: (reminderHour: number, reminderMinute: number) => void
+  setCelebrated: (goalKey: string, threshold: number) => void
   hydrate: () => Promise<void>
 }
 
@@ -40,6 +45,7 @@ function persist(state: PreferencesState): void {
     reminderMinute: state.reminderMinute,
     weeklySummary: state.weeklySummary,
     inactivityNudge: state.inactivityNudge,
+    celebratedThresholds: state.celebratedThresholds,
   })
 }
 
@@ -69,6 +75,59 @@ export const usePreferencesStore = create<PreferencesState>((set) => ({
   setAppearance: (appearance) => {
     set((state) => {
       const next = { ...state, appearance }
+      persist(next)
+      return next
+    })
+  },
+
+  setSessionReminder: (sessionReminder) => {
+    set((state) => {
+      const next = { ...state, sessionReminder }
+      persist(next)
+      return next
+    })
+  },
+
+  setWeeklySummary: (weeklySummary) => {
+    set((state) => {
+      const next = { ...state, weeklySummary }
+      persist(next)
+      return next
+    })
+  },
+
+  setInactivityNudge: (inactivityNudge) => {
+    set((state) => {
+      const next = { ...state, inactivityNudge }
+      persist(next)
+      return next
+    })
+  },
+
+  setReminderTime: (reminderHour, reminderMinute) => {
+    set((state) => {
+      const next = { ...state, reminderHour, reminderMinute }
+      persist(next)
+      return next
+    })
+  },
+
+  /**
+   * Records the highest milestone announced for a goal.
+   *
+   * The highest rather than the latest: progress can go down — a goal edited
+   * upward — and a rider who has already been told about 50 % should not hear
+   * about it a second time on the way back up.
+   */
+  setCelebrated: (goalKey, threshold) => {
+    set((state) => {
+      const next = {
+        ...state,
+        celebratedThresholds: {
+          ...state.celebratedThresholds,
+          [goalKey]: Math.max(state.celebratedThresholds[goalKey] ?? 0, threshold),
+        },
+      }
       persist(next)
       return next
     })

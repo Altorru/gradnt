@@ -3,9 +3,24 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { OnboardingHydration } from '@/features/onboarding/components/OnboardingHydration'
+import { NotificationObserver } from '@/features/app/components/NotificationObserver'
 import { PreferencesHydration } from '@/features/app/components/PreferencesHydration'
 import { GradntFontProvider, GradntQueryProvider, GradntThemeProvider } from '@/design-system'
 import { useResolvedScheme } from '@/hooks/use-resolved-scheme'
+import { useNotificationSync } from '@/features/app/hooks/use-notification-sync'
+
+/**
+ * Brings the scheduled notifications in step with the plan, and renders nothing.
+ *
+ * A component rather than a call in `RootLayout`, because it has to sit inside
+ * both the hydration and the query provider — and a hook cannot be mounted
+ * conditionally in the middle of a tree that has not rendered yet.
+ */
+function GradntNotificationSync() {
+  useNotificationSync()
+
+  return null
+}
 
 export default function RootLayout() {
   const scheme = useResolvedScheme()
@@ -19,6 +34,10 @@ export default function RootLayout() {
           <GradntFontProvider>
             <OnboardingHydration>
               <GradntQueryProvider>
+                {/* Inside the query provider, which the sync reads through, and
+                    inside hydration, without which it would schedule defaults. */}
+                <GradntNotificationSync />
+
                 <GradntThemeProvider scheme={scheme}>
                   <Stack
                     screenOptions={{
@@ -30,6 +49,8 @@ export default function RootLayout() {
             </OnboardingHydration>
           </GradntFontProvider>
         </PreferencesHydration>
+
+        <NotificationObserver />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )
