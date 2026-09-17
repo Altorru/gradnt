@@ -52,21 +52,21 @@ export function NotificationSettingsSection() {
         lands on the list rather than this app's own toggle.
       */}
       {Platform.OS === 'android' && preferences.sessionReminder ? (
-        <XStack gap="$2" alignItems="center">
-          <GradntText muted fontSize={13} flex={1}>
+        <YStack gap="$2">
+          <GradntText muted fontSize={13} lineHeight={19}>
             {t('notifications.settings.exactAlarmsNote')}
           </GradntText>
 
           <GradntButton
             tone="secondary"
-            minHeight={40}
+            minHeight={44}
             onPress={() =>
               void ExpoLinking.sendIntent('android.settings.REQUEST_SCHEDULE_EXACT_ALARM')
             }
           >
             {t('notifications.settings.exactAlarmsAction')}
           </GradntButton>
-        </XStack>
+        </YStack>
       ) : null}
 
       {permission === 'denied' ? (
