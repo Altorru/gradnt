@@ -1,3 +1,4 @@
+import * as Notifications from 'expo-notifications'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { Translation } from '@/i18n'
@@ -6,7 +7,12 @@ import type { Translation } from '@/i18n'
 import { translate, translatePlural } from '@/i18n/translate'
 import type { DesiredNotification } from '@/lib/domain/notification-plan'
 
-import { reconcile, type SchedulerPort } from './notification.scheduler'
+import {
+  CHANNEL_FOR_KIND,
+  ensureChannels,
+  reconcile,
+  type SchedulerPort,
+} from './notification.scheduler'
 
 // Hoisted above the imports by vitest. `expoScheduler` lives in the module
 // under test and imports `expo-notifications` at module scope, so without this
@@ -16,8 +22,19 @@ vi.mock('expo-notifications', () => ({
   getAllScheduledNotificationsAsync: vi.fn(),
   cancelScheduledNotificationAsync: vi.fn(),
   scheduleNotificationAsync: vi.fn(),
+  setNotificationChannelAsync: vi.fn(),
+  setNotificationHandler: vi.fn(),
   SchedulableTriggerInputTypes: { DATE: 'date' },
+  // The real numeric values, so an assertion on an importance is a statement
+  // about Android rather than about this stub's spelling.
+  AndroidImportance: { LOW: 4, DEFAULT: 5, HIGH: 6 },
 }))
+
+// Mutable, so one file can drive both platforms: `ensureChannels` reads
+// `Platform.OS` when it is called, and this is the same object it reads.
+const platform = vi.hoisted(() => ({ OS: 'ios' as 'ios' | 'android' }))
+
+vi.mock('react-native', () => ({ Platform: platform }))
 
 const translation: Translation = {
   t: (key, params) => translate('fr', key, params),
@@ -76,6 +93,97 @@ const session: DesiredNotification = {
     reason: 'Base',
   },
 }
+
+describe('channels', () => {
+  it('has one per kind, so an OS-level mute maps to one of our switches', () => {
+    expect(new Set(Object.values(CHANNEL_FOR_KIND))).toEqual(
+      new Set(['sessions', 'weekly', 'nudges']),
+    )
+  })
+
+  /**
+   * The three ids, read off the calls rather than the source.
+   *
+   * A channel created under an id `CHANNEL_FOR_KIND` does not point at is one no
+   * notification ever lands in, and Android's fallback is silence — no error, no
+   * crash, just a rider who never hears about tomorrow's session.
+   */
+  async function createdChannels() {
+    platform.OS = 'android'
+
+    await ensureChannels(translation)
+
+    const calls = vi.mocked(Notifications.setNotificationChannelAsync).mock.calls
+
+    return { calls, byId: new Map(calls.map(([id, options]) => [id, options])) }
+  }
+
+  it('creates one on Android, id per kind, derived from the map the scheduler reads', async () => {
+    const { calls, byId } = await createdChannels()
+
+    expect(calls).toHaveLength(3)
+    expect(new Set(byId.keys())).toEqual(new Set(Object.values(CHANNEL_FOR_KIND)))
+  })
+
+  it('gives each channel the interruption level its kind is meant to carry', async () => {
+    const { byId } = await createdChannels()
+
+    // AndroidImportance: HIGH = 6, DEFAULT = 5, LOW = 4.
+    expect(byId.get(CHANNEL_FOR_KIND.session)?.importance).toBe(6)
+    expect(byId.get(CHANNEL_FOR_KIND.weekly)?.importance).toBe(5)
+    expect(byId.get(CHANNEL_FOR_KIND.inactivity)?.importance).toBe(4)
+  })
+
+  it('names each channel from the catalogue, in the language it is handed', async () => {
+    const { calls } = await createdChannels()
+
+    expect(calls.map(([, options]) => options.name)).toEqual([
+      translate('fr', 'notifications.settings.channelSessions'),
+      translate('fr', 'notifications.settings.channelWeekly'),
+      translate('fr', 'notifications.settings.channelNudges'),
+    ])
+  })
+
+  it('creates nothing on iOS, where a channel is a concept that does not exist', async () => {
+    platform.OS = 'ios'
+
+    await ensureChannels(translation)
+
+    expect(Notifications.setNotificationChannelAsync).not.toHaveBeenCalled()
+  })
+})
+
+describe('the notification handler', () => {
+  // Read while the modules are still being evaluated, not inside a test: vitest
+  // wipes a mock's call history before every test, so a registration that
+  // happens at import time is long gone by the time a test body runs. That the
+  // read happens here at all is the assertion — `setNotificationHandler` must
+  // run at module scope, because a notification arriving before React mounts is
+  // handed to whatever handler exists then, and with none it is dropped without
+  // a word.
+  const registered = vi.mocked(Notifications.setNotificationHandler).mock.calls[0]?.[0]
+
+  it('is registered by the time the module finishes loading', () => {
+    expect(registered?.handleNotification).toBeTypeOf('function')
+  })
+
+  it('shows the banner and the list entry, and asks for no badge', async () => {
+    const behavior = await registered?.handleNotification({} as Notifications.Notification)
+
+    expect(behavior).toEqual({
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      // No badge: there is no history, so a count would announce unread things
+      // that do not exist.
+      shouldShowBanner: true,
+      shouldShowList: true,
+    })
+    // `shouldShowAlert` was removed in SDK 57 — a handler still returning it, and
+    // only it, shows nothing at all. Nothing else in this repo can notice that
+    // without a device in hand.
+    expect(behavior).not.toHaveProperty('shouldShowAlert')
+  })
+})
 
 describe('reconcile', () => {
   it('schedules what is missing', async () => {

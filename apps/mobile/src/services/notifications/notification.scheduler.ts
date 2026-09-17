@@ -1,7 +1,8 @@
 import * as Notifications from 'expo-notifications'
+import { Platform } from 'react-native'
 
 import { colors } from '@/design-system/tokens/colors'
-import type { Language, Translation } from '@/i18n'
+import type { Language, MessageKey, Translation } from '@/i18n'
 import { describeNotification, type DesiredNotification } from '@/lib/domain/notification-plan'
 
 /** Ours, and only ours. Anything without this prefix is left alone. */
@@ -42,6 +43,62 @@ export const CHANNEL_FOR_KIND = {
   inactivity: 'nudges',
   milestone: 'weekly',
 } as const
+
+/**
+ * The Android channels, one per kind.
+ *
+ * The ids are read off `CHANNEL_FOR_KIND` rather than retyped. A channel created
+ * under an id the map does not point at is one no notification ever lands in,
+ * and Android's fallback for that is silence — no error, no crash.
+ *
+ * The importance is the interruption the rider gets. Android lets an app change
+ * only a channel's name after creation, so what is set here is set for the life
+ * of the install — which is the point: the rider can lower it themselves, per
+ * channel, in system settings, and that survives everything we do.
+ */
+const CHANNELS = [
+  {
+    id: CHANNEL_FOR_KIND.session,
+    nameKey: 'notifications.settings.channelSessions',
+    importance: Notifications.AndroidImportance.HIGH,
+  },
+  {
+    id: CHANNEL_FOR_KIND.weekly,
+    nameKey: 'notifications.settings.channelWeekly',
+    importance: Notifications.AndroidImportance.DEFAULT,
+  },
+  {
+    id: CHANNEL_FOR_KIND.inactivity,
+    nameKey: 'notifications.settings.channelNudges',
+    importance: Notifications.AndroidImportance.LOW,
+  },
+] as const satisfies readonly {
+  id: string
+  nameKey: MessageKey
+  importance: Notifications.AndroidImportance
+}[]
+
+/**
+ * Creates the channels, and is safe to call on every launch.
+ *
+ * Before the permission request, not after: on Android 13 the system prompt does
+ * not appear until at least one channel exists. Idempotent by nature — creating
+ * a channel that already exists is a no-op — so calling it on every launch costs
+ * nothing and needs no state to know whether it has run.
+ */
+export async function ensureChannels(translation: Translation): Promise<void> {
+  if (Platform.OS !== 'android') {
+    return
+  }
+
+  for (const channel of CHANNELS) {
+    await Notifications.setNotificationChannelAsync(channel.id, {
+      name: translation.t(channel.nameKey),
+      importance: channel.importance,
+      lightColor: colors.lime,
+    })
+  }
+}
 
 /**
  * Makes the OS hold exactly what we want, and nothing else.
@@ -136,3 +193,25 @@ export const expoScheduler: SchedulerPort = {
           : { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fireAt, channelId },
     }),
 }
+
+/**
+ * Registered at module scope, not inside a component.
+ *
+ * A notification that arrives before React mounts is handed to whatever handler
+ * exists at that moment — and with none, it is dropped without a word, which is
+ * exactly the case a reminder for the ride you are about to leave for falls into.
+ *
+ * `shouldShowBanner` and `shouldShowList` rather than the old `shouldShowAlert`,
+ * which SDK 57 removed: a handler still answering with the old shape shows
+ * nothing, and reports nothing.
+ */
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    // No badge: there is no history, so a count would announce unread things
+    // that do not exist.
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+})
