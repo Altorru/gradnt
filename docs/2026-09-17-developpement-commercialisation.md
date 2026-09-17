@@ -45,6 +45,8 @@
 
 ## Lot réalisé — sensations après sortie et détail exploitable
 
+- [x] Carte contextuelle dans le cockpit après la dernière sortie terminée des 48 dernières heures ; demande de sensations ou conseil déjà enregistré. Aucun push et aucun rappel pour les anciens imports.
+- [x] Actualisation des activités et des ressentis au retour de l’app au premier plan.
 - [x] Accès depuis les trois dernières sorties dans Progression ; actualisation disponible.
 - [x] Effort perçu, sensations, fatigue et note facultatifs ; validation vide refusée.
 - [x] Brouillon par compte et sortie, sauvegarde sur l’appareil, reprise et modification.
@@ -76,6 +78,16 @@
 - Les écritures et suppressions de jetons natifs sont sérialisées. Le rafraîchissement et l’échange OAuth remplacent les jetons uniquement si leur génération initiale est encore active.
 - Une réponse de rafraîchissement rejetée ne supprime pas les identifiants d’une connexion plus récente ; une réussite ancienne ne rétablit pas une session déconnectée.
 - Validation : 36 fichiers, 355 tests, incluant les courses entre lecture, écriture, déconnexion et changement de session. Aucun changement des fonctions serveur Strava.
+
+## Validation actuelle et prochaine étape
+
+- 37 fichiers Vitest, 360 tests réussis ; lint et typecheck passent.
+- 38 assertions SQL et test API local à deux cyclistes réussis. Trois migrations présentes sur le Supabase existant.
+- Bundles iOS, Android et web exportés avec les deux nouvelles routes de sortie.
+- Le cockpit affiche une seule carte après sortie récente, sans devenir un fil d’activités ; les réponses sauvegardées deviennent un conseil expliqué.
+- Le formulaire dispose d’actions accessibles avec clavier ouvert ; les choix sélectionnés portent une coche en plus de la couleur. Recette sur téléphone encore nécessaire.
+- Le [pilote de deux semaines](2026-09-17-recette-et-pilote-apres-sortie.md) fixe des hypothèses de temps de saisie, compréhension, réutilisation et valeur distincte ; aucun de ces résultats n’est encore revendiqué.
+- Prochain lot fonctionnel : saisie manuelle puis fichiers originaux ; liaison Strava authentifiée côté serveur, listener et push ensuite. IA, comparaison prévu/réel et adaptations restent distinctes des conseils actuels.
 
 ## Priorité suivante — boucle après-sortie demandée par Hugo
 

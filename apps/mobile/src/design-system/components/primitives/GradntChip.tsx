@@ -1,3 +1,4 @@
+import { Check } from '@tamagui/lucide-icons-2'
 import { Pressable } from 'react-native'
 import { XStack } from 'tamagui'
 
@@ -49,6 +50,11 @@ export function GradntChip({
           borderWidth={1}
           borderColor={selected ? '$accent' : hovered || pressed ? '$borderStrong' : '$border'}
         >
+          {selected ? (
+            <XStack position="absolute" top={2} right={2}>
+              <Check size={12} color="$onAccent" />
+            </XStack>
+          ) : null}
           <GradntText color={selected ? '$onAccent' : '$color'} weight="semibold" fontSize={14}>
             {label}
           </GradntText>

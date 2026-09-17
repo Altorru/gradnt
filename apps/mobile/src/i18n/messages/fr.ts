@@ -29,6 +29,13 @@ export const fr = {
   },
 
   rides: {
+    prompt: {
+      title: 'Et tes sensations ?',
+      answered: 'Tes sensations préparent la suite',
+      rideDate: 'Sortie du {{date}}',
+      basedOnFeelings: 'Conseil issu de tes réponses. Ton plan reste sous ton contrôle.',
+    },
+
     recentTitle: 'Après tes dernières sorties',
     recentDescription:
       'Tes chiffres racontent une partie de la sortie. Ajoute tes sensations pour préparer la suite.',

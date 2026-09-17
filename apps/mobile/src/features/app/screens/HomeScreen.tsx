@@ -1,3 +1,5 @@
+import { AfterRidePrompt } from '@/features/rides/components/AfterRidePrompt'
+import { getAfterRideActivity } from '@/features/rides/domain/after-ride'
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import { format as formatDate } from 'date-fns'
 import { useRouter, type Href } from 'expo-router'
@@ -64,6 +66,7 @@ export function HomeScreen() {
   const currentGoalValue = currentValueQuery.data?.value ?? null
   const nextWorkout = getNextWorkout(workoutsQuery.data ?? [])
   const activities = activitiesQuery.data ?? []
+  const afterRideActivity = getAfterRideActivity(activities)
   const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
   const activityState = getActivityDataState(activities)
 
@@ -168,6 +171,10 @@ export function HomeScreen() {
             }
             changeRising={goal?.type === 'ftp' && ftpDelta !== null && ftpDelta > 0}
           />
+
+          {connected && afterRideActivity ? (
+            <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
+          ) : null}
 
           <YStack gap="$4">
             <GradntSectionHeader

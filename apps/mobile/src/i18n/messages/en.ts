@@ -27,6 +27,13 @@ export const en = {
   },
 
   rides: {
+    prompt: {
+      title: 'And how did you feel?',
+      answered: 'Your feelings help prepare what’s next',
+      rideDate: 'Ride on {{date}}',
+      basedOnFeelings: 'Guidance from your answers. Your plan stays under your control.',
+    },
+
     recentTitle: 'After your latest rides',
     recentDescription:
       'Numbers tell part of the story. Add how you felt to prepare what comes next.',

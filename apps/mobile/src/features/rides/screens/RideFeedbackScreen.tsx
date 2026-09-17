@@ -311,7 +311,11 @@ export function RideFeedbackScreen() {
     draftQuery.isFetching
   return (
     <GradntScreen>
-      <GradntScrollView>
+      <GradntScrollView
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
         <YStack gap="$5">
           <OnboardingSaveFeedback />
           <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
@@ -337,8 +341,6 @@ export function RideFeedbackScreen() {
             <GradntText muted>{t('rides.notFound')}</GradntText>
           ) : loading ? (
             <GradntText muted>{t('common.loading')}</GradntText>
-          ) : !activity ? (
-            <GradntText muted>{t('rides.notFound')}</GradntText>
           ) : feedbackQuery.data ? (
             <FeedbackForm
               key={`${scope ?? 'local'}.${activityId}`}

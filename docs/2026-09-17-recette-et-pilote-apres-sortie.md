@@ -2,7 +2,7 @@
 
 ## Ce qui peut être essayé aujourd’hui
 
-Depuis Progression, les trois dernières sorties permettent d’ajouter des sensations et d’ouvrir le détail. Le formulaire demande un effort perçu de 1 à 10, les sensations générales, la fatigue et une note facultative. Aucune réponse n’est préremplie comme un fait réel.
+Dans le cockpit, la dernière sortie terminée des 48 dernières heures propose d’ajouter les sensations, puis affiche un conseil fondé sur les réponses enregistrées. Cela apparaît lorsque l’app récupère les sorties, sans notification push. Les anciens imports ne déclenchent pas cette carte. Depuis Progression, les trois dernières sorties permettent d’ajouter des sensations et d’ouvrir le détail. Le formulaire demande un effort perçu de 1 à 10, les sensations générales, la fatigue et une note facultative. Aucune réponse n’est préremplie comme un fait réel.
 
 Un compte GRADNT connecté sauvegarde les réponses dans Supabase ; sans compte, elles restent sur l’appareil. Un brouillon distinct par compte et sortie permet de reprendre une saisie. Une révision ancienne est refusée, et le rechargement des réponses exige un abandon explicite du brouillon.
 
