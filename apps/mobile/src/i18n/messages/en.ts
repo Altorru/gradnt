@@ -166,7 +166,6 @@ export const en = {
   },
 
   header: {
-    notifications: 'Open notifications',
     settings: 'Open settings',
   },
 
@@ -203,6 +202,8 @@ export const en = {
     settings: {
       sessionReminder: 'Session reminder',
       reminderHour: 'Reminder time',
+      earlier: '15 minutes earlier',
+      later: '15 minutes later',
       weeklySummary: 'Weekly summary',
       inactivityNudge: 'Inactivity nudge',
       permissionDenied: 'Notifications are turned off in your system settings.',

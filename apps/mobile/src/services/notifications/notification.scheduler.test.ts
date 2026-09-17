@@ -28,6 +28,10 @@ vi.mock('expo-notifications', () => ({
   // The real numeric values, so an assertion on an importance is a statement
   // about Android rather than about this stub's spelling.
   AndroidImportance: { LOW: 4, DEFAULT: 5, HIGH: 6 },
+  getInitialNotificationResponse: vi.fn(),
+  addNotificationResponseReceivedListener: vi.fn(),
+  getPermissionsAsync: vi.fn().mockResolvedValue({ status: 'granted' }),
+  requestPermissionsAsync: vi.fn().mockResolvedValue({ status: 'granted' }),
 }))
 
 // Mutable, so one file can drive both platforms: `ensureChannels` reads

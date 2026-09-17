@@ -186,7 +186,6 @@ export const fr = {
   },
 
   header: {
-    notifications: 'Ouvrir les notifications',
     settings: 'Ouvrir les réglages',
   },
 
@@ -223,6 +222,8 @@ export const fr = {
     settings: {
       sessionReminder: 'Rappel de séance',
       reminderHour: 'Heure du rappel',
+      earlier: '15 minutes plus tôt',
+      later: '15 minutes plus tard',
       weeklySummary: 'Bilan de semaine',
       inactivityNudge: 'Relance d’inactivité',
       permissionDenied: 'Les notifications sont coupées dans les réglages du système.',

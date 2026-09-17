@@ -17,6 +17,8 @@ import { Pressable } from 'react-native'
 import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated'
 import { XStack, YStack } from 'tamagui'
 
+import { NotificationSettingsSection } from '@/features/app/screens/NotificationSettingsSection'
+
 import {
   GradntButton,
   GradntCard,
@@ -503,6 +505,8 @@ export function SettingsScreen() {
               )}
             </GradntCard>
           </YStack>
+
+          <NotificationSettingsSection />
 
           <YStack gap="$4">
             <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>

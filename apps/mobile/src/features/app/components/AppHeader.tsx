@@ -1,4 +1,4 @@
-import { Bell, Settings } from '@tamagui/lucide-icons-2'
+import { Settings } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
 
@@ -19,9 +19,6 @@ export function AppBrandHeader() {
       <GradntWordmark />
 
       <XStack marginLeft="auto" gap="$2">
-        <GradntIconButton accessibilityLabel={t('header.notifications')}>
-          <Bell size={18} color="$textPrimary" />
-        </GradntIconButton>
         {/*
           Settings is pushed rather than given a tab: native tabs cap at five on
           Android, and the app already has five.
