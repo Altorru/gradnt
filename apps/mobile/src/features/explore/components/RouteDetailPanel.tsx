@@ -15,7 +15,12 @@ import { colors } from '@/design-system/tokens'
 import { useTranslation, type MessageKey } from '@/i18n'
 
 import { RouteMap } from './RouteMap'
-import type { RouteWithScore, SurfaceGroupCode, WayTypeCode } from '../domain'
+import {
+  intentLabels,
+  type RouteWithScore,
+  type SurfaceGroupCode,
+  type WayTypeCode,
+} from '../domain'
 
 /** Where each exposure level's word lives. */
 const EXPOSURE_KEYS: Record<RouteWithScore['trafficExposure']['label'], MessageKey> = {
@@ -293,7 +298,7 @@ export function RouteDetailPanel({
         </GradntText>
         <XStack justifyContent="space-between">
           <GradntText muted fontSize={13}>
-            {t('explore.detail.intention', { intent: route.trainingIntent })}
+            {t('explore.detail.intention', { intent: intentLabels(t)[route.trainingIntent] })}
           </GradntText>
           <GradntText color="$positive" weight="semibold" fontSize={13}>
             {route.trainingIntentFit}/100

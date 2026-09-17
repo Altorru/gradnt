@@ -15,6 +15,7 @@ import { useTranslation, type Translate } from '@/i18n'
 
 import {
   defaultRoutePreferences,
+  intentLabels,
   routeModeSchema,
   surfacePreferenceSchema,
   trainingIntentSchema,
@@ -52,16 +53,6 @@ function surfaceLabels(t: Translate) {
     mixed: t('explore.surfaces.mixed'),
     gravel: t('explore.surfaces.gravel'),
     trail: t('explore.surfaces.trail'),
-  }
-}
-
-function intentLabels(t: Translate) {
-  return {
-    none: t('explore.filters.noPreference'),
-    endurance: t('explore.intents.endurance'),
-    recovery: t('explore.intents.recovery'),
-    climbing: t('explore.intents.climbing'),
-    tempo: t('explore.intents.tempo'),
   }
 }
 

@@ -407,7 +407,8 @@ export const en = {
       },
       fitness: {
         title: 'Improve overall',
-        description: 'Ride regularly and build your form with no figure to hit.',
+        description:
+          'Ride regularly and build your form, with no figure to enter: GRADNT tracks your volume.',
       },
     },
 
@@ -596,7 +597,7 @@ export const en = {
       elevationProfile: 'Elevation profile',
       elevationLegend: 'Orange = detected climb',
       elevationGain: '+{{value}} m',
-      intention: 'Intent {{intent}}',
+      intention: 'Intent: {{intent}}',
       fitNote: 'Deterministic fit from the duration, the relief and the declared intent.',
       score: 'score {{score}}/100',
       collapse: 'Collapse the detail',

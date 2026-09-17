@@ -1,3 +1,5 @@
+import type { Translate } from '@/i18n'
+
 import { z } from 'zod'
 
 export const routeModeSchema = z.enum(['road', 'gravel', 'mtb'])
@@ -46,6 +48,24 @@ export const routePreferencesSchema = z.object({
 
 export type RouteMode = z.infer<typeof routeModeSchema>
 export type TrainingIntent = z.infer<typeof trainingIntentSchema>
+
+/**
+ * What each intent is called, for the filter chips and for the route panel.
+ *
+ * One map because there were two, and the panel did not use either: it printed
+ * the code, so a rider read "Intention climbing" while the words sat in the
+ * catalogue. `none` is a real value — it is what a rider who picked no intent
+ * has — so the map covers it.
+ */
+export function intentLabels(t: Translate): Record<TrainingIntent, string> {
+  return {
+    none: t('explore.filters.noPreference'),
+    endurance: t('explore.intents.endurance'),
+    recovery: t('explore.intents.recovery'),
+    climbing: t('explore.intents.climbing'),
+    tempo: t('explore.intents.tempo'),
+  }
+}
 export type SurfacePreference = z.infer<typeof surfacePreferenceSchema>
 export type RoutePreferences = z.infer<typeof routePreferencesSchema>
 

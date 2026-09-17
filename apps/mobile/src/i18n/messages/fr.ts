@@ -451,7 +451,8 @@ export const fr = {
       },
       fitness: {
         title: 'Progresser globalement',
-        description: 'Rouler régulièrement et améliorer ta forme sans objectif chiffré précis.',
+        description:
+          'Rouler régulièrement et améliorer ta forme, sans chiffre à saisir : GRADNT suit ton volume.',
       },
     },
 
@@ -643,7 +644,7 @@ export const fr = {
       elevationProfile: 'Profil d’altitude',
       elevationLegend: 'Orange = montée détectée',
       elevationGain: '+{{value}} m D+',
-      intention: 'Intention {{intent}}',
+      intention: 'Intention : {{intent}}',
       fitNote: 'Adéquation déterministe selon la durée, le relief et l’intention déclarée.',
       score: 'score {{score}}/100',
       collapse: 'Réduire le détail',
