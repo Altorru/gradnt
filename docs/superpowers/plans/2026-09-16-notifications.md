@@ -2164,8 +2164,17 @@ servi — donc le plan ne porte plus que des codes. Vingt-cinq autres textes en 
 dans dix fichiers, sont passés au catalogue, et un test le vérifie désormais
 (`src/i18n/hardcoded-text.test.ts`).
 
-**Le bilan hebdomadaire répète** au lieu de tomber à une date absolue, et ne cite
-donc plus de chiffres. Task 13 étape 3, qui vérifie le déclencheur `WEEKLY` avec
-`getNextTriggerDateAsync`, redevient d'actualité : le planificateur utilise bien ce
-déclencheur maintenant. Elle était notée comme périmée parce que l'implémentation
-programmait des dates absolues ; c'était l'implémentation qui s'écartait.
+**Le bilan hebdomadaire ne cite plus de chiffres**, et porte un déclencheur
+répétant sur iOS. Task 13 étape 3, qui vérifie le déclencheur `WEEKLY` avec
+`getNextTriggerDateAsync`, n'est donc plus périmée — mais elle vaut pour iOS
+seulement : sur Android `expo-notifications` programme une alarme exacte unique
+qu'il ne reprogramme jamais, et rien ne retire la requête de son store quand elle
+sonne. Le planificateur y remet donc la date de la prochaine occurrence, et la clé
+la porte (`weekly:<dimanche>`) — sans quoi la réconciliation croirait l'entrée
+encore en attente et ne la réarmerait jamais.
+
+La leçon vaut d'être notée : le déclencheur a été choisi sur la foi de la
+documentation et des types. C'est la lecture du code natif d'`expo-notifications`,
+puis `dumpsys alarm` sur l'émulateur (`repeatInterval=0` sur toutes les alarmes de
+l'app), qui a montré que « sonne tous les dimanches sans ouvrir l'app » n'était
+tenable que sur iOS. Aucun test à port simulé ne pouvait le voir.
