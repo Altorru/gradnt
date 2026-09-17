@@ -99,9 +99,11 @@ const session: DesiredNotification = {
 /**
  * The digest, as the planner builds it: a repeat, so no instant to carry.
  *
- * The weekday matters and is unchecked elsewhere — 1 is Sunday in
- * `expo-notifications` numbering, and a one-off error here rings the digest on
- * Monday with nothing in the code to say so.
+ * The weekday matters: 1 is Sunday in `expo-notifications` numbering, and a
+ * one-off error would ring the digest on Monday with nothing to say so. Both
+ * native implementations agree on it — Android sets `Calendar.DAY_OF_WEEK`,
+ * which runs 1..7 from Sunday, and iOS builds `DateComponents(weekday:)`, same
+ * numbering — so this fixture is the one place the value is pinned.
  */
 const digest: DesiredNotification = {
   // Dated, because Android's alarm cannot be repeated and the next open has to

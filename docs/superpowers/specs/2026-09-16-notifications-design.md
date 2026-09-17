@@ -126,8 +126,17 @@ N'importe **rien** d'`expo-notifications`. C'est ce qui permet de tester « le r
 déplace sa séance, l'ancien rappel disparaît » en trois lignes, comme
 `selectors.ts` aujourd'hui.
 
-Les clés sont **déterministes** : `session:<workoutId>`, `weekly:<dimanche>`,
-`inactivity:<date>`. C'est ce qui rend la réconciliation exacte.
+Les clés sont **déterministes** : `session:<workoutId>@<instant>`,
+`weekly:<dimanche>`, `inactivity:<date>@<instant>`. C'est ce qui rend la
+réconciliation exacte.
+
+L'**instant** fait partie de l'identité, et ce n'est pas cosmétique : l'identité
+étant la clé seule, une clé qui ne nommerait que la séance laisserait un rider
+passer son rappel de 07:00 à 14:30 et garder l'alarme de 07:00 — la réconciliation
+retrouve la clé qu'elle détient déjà et la laisse en place. Le changement ne
+prendrait effet qu'une fois l'ancienne alarme sonnée. Vérifié : après correction,
+l'ancienne alarme est annulée et remplacée à la première ouverture. Le bilan n'a
+pas besoin de l'instant : son heure est une constante.
 
 Celle du bilan porte la **date** du prochain dimanche, et non un identifiant fixe,
 pour une raison de plateforme : `expo-notifications` programme sur Android une
@@ -322,6 +331,20 @@ disponible tous les jours — les plus lointaines sont alors perdues.
 
 La garantie est donc « **au moins trois semaines** sans ouvrir l'app », et non
 « pour toujours ». C'est la borne à connaître avant de promettre l'inverse.
+
+**Le droit aux alarmes exactes ne s'obtient pas en le déclarant.** Le manifeste
+déclare `SCHEDULE_EXACT_ALARM` (vérifié dans le manifeste généré), mais sur
+Android 12+ la permission est une _app-op_ refusée par défaut : `appops get
+com.altorru.gradnt SCHEDULE_EXACT_ALARM` répond « Default mode: default », pas
+`allow`. `canScheduleExactAlarms()` est donc faux, et `expo-notifications` bascule
+sur `setAndAllowWhileIdle` — une alarme **inexacte**, dont `dumpsys alarm` montre
+la fenêtre : `window=+1h0m0s0ms`.
+
+Conséquence produit : un rappel de 07:00 peut arriver n'importe quand jusqu'à
+08:00. Pour un rappel d'entraînement c'est acceptable ; si l'heure exacte devient
+une exigence, il faut demander la permission
+(`ACTION_REQUEST_SCHEDULE_EXACT_ALARM`) ou déclarer `USE_EXACT_ALARM`, que le Play
+Store réserve aux réveils et aux horloges.
 
 **Le web n'a pas de notifications.** `expo-notifications` ne supporte qu'Android et
 iOS, et l'app se lance aussi sur web (`pnpm web`). La réconciliation et la section

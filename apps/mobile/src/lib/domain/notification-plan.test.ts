@@ -63,10 +63,31 @@ describe('session reminders', () => {
 
     const [reminder] = result
 
-    expect(reminder).toMatchObject({ key: 'session:w1', kind: 'session' })
+    expect(reminder).toMatchObject({ kind: 'session' })
+    // The instant is in the key too, which is what makes moving the hour take.
+    expect(reminder?.key.startsWith('session:w1@')).toBe(true)
     // `in`, because the digest in this union has no instant to read.
     expect('fireAt' in reminder && reminder.fireAt.getHours()).toBe(7)
     expect('fireAt' in reminder && reminder.fireAt.getMinutes()).toBe(0)
+  })
+
+  /**
+   * The bug this key shape exists to prevent.
+   *
+   * With the instant left out, a rider who moved their reminder from 07:00 to
+   * 14:30 kept the 07:00 alarm: the reconcile found the key it already held and
+   * left it alone, so the change took effect only once the old one had fired.
+   */
+  it('gives a moved reminder a different key, so the old alarm is replaced', () => {
+    const atSeven = planNotifications(input({ workouts: [workout()] }))[0]
+    const atFourteen = planNotifications(
+      input({
+        workouts: [workout()],
+        preferences: { ...input().preferences, reminderHour: 14, reminderMinute: 30 },
+      }),
+    )[0]
+
+    expect(atFourteen.key).not.toBe(atSeven.key)
   })
 
   it('says nothing about a session already completed, skipped or moved', () => {
@@ -207,7 +228,7 @@ describe('inactivity nudge', () => {
     const second = plan()
 
     expect(first[0].key).toBe(second[0].key)
-    expect(first[0].key).toBe(`inactivity:${lastActivityAt.slice(0, 10)}`)
+    expect(first[0].key.startsWith(`inactivity:${lastActivityAt.slice(0, 10)}@`)).toBe(true)
   })
 })
 
@@ -257,7 +278,7 @@ describe('the scheduling cap', () => {
     const result = planNotifications(input({ workouts: many }))
 
     expect(result).toHaveLength(SCHEDULE_CAP)
-    expect(result[0].key).toBe('session:w0')
+    expect(result[0].key.startsWith('session:w0@')).toBe(true)
   })
 
   it('never drops a milestone, which fires now rather than later', () => {

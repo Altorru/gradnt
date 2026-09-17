@@ -68,6 +68,22 @@ function fireAtOnDay(workoutDate: string, hour: number, minute: number): Date {
   return new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute, 0, 0)
 }
 
+/**
+ * A key that carries when the notification fires, not only what it is about.
+ *
+ * Identity is the key alone, so a key naming just the session would let a rider
+ * move their reminder from 07:00 to 14:30 and keep the 07:00 alarm until it
+ * fired: the reconcile finds the key it already holds and leaves it alone. The
+ * instant is therefore part of the identity — a reminder that moved is a
+ * different reminder.
+ *
+ * The digest does not need it: its time is a constant, and its key already
+ * carries the Sunday it lands on.
+ */
+function keyAt(prefix: string, subject: string, fireAt: Date): string {
+  return `${prefix}:${subject}@${fireAt.toISOString()}`
+}
+
 function sessionNotifications(input: PlanInput): DesiredNotification[] {
   const { preferences, now } = input
 
@@ -77,12 +93,16 @@ function sessionNotifications(input: PlanInput): DesiredNotification[] {
 
   return input.workouts
     .filter((workout) => workout.status === 'planned')
-    .map((workout) => ({
-      key: `session:${workout.id}`,
-      kind: 'session' as const,
-      workout,
-      fireAt: fireAtOnDay(workout.date, preferences.reminderHour, preferences.reminderMinute),
-    }))
+    .map((workout) => {
+      const fireAt = fireAtOnDay(workout.date, preferences.reminderHour, preferences.reminderMinute)
+
+      return {
+        key: keyAt('session', workout.id, fireAt),
+        kind: 'session' as const,
+        workout,
+        fireAt,
+      }
+    })
     .filter((notification) => notification.fireAt > now)
 }
 
@@ -203,7 +223,11 @@ function inactivityNotifications(input: PlanInput): DesiredNotification[] {
       // idle rider who keeps opening the app is nudged at most once per launch.
       // ponytail: no persisted "nudged" flag; the spec asks for deterministic
       // keys, not once-per-stretch.
-      key: `inactivity:${lastActivityAt.slice(0, 10)}`,
+      key: keyAt(
+        'inactivity',
+        lastActivityAt.slice(0, 10),
+        nextDailyFire(now, preferences.reminderHour, preferences.reminderMinute),
+      ),
       kind: 'inactivity',
       fireAt: nextDailyFire(now, preferences.reminderHour, preferences.reminderMinute),
     },
