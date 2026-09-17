@@ -72,7 +72,8 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-sqlite"
     ],
     "locales": {
       "en": "./locales/en.json",
