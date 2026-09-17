@@ -126,8 +126,16 @@ N'importe **rien** d'`expo-notifications`. C'est ce qui permet de tester « le r
 déplace sa séance, l'ancien rappel disparaît » en trois lignes, comme
 `selectors.ts` aujourd'hui.
 
-Les clés sont **déterministes** : `session:<workoutId>`, `weekly:<année>-<semaine>`,
+Les clés sont **déterministes** : `session:<workoutId>`, `weekly:<dimanche>`,
 `inactivity:<date>`. C'est ce qui rend la réconciliation exacte.
+
+Celle du bilan porte la **date** du prochain dimanche, et non un identifiant fixe,
+pour une raison de plateforme : `expo-notifications` programme sur Android une
+alarme exacte unique qu'il ne reprogramme jamais, et rien ne retire la requête de
+son store quand elle sonne. Une clé fixe serait donc relue comme « encore en
+attente » à chaque ouverture et ne serait jamais réarmée — le bilan sonnerait une
+fois, à vie. Datée, elle laisse l'ouverture suivante reconnaître l'entrée qu'elle
+remplace et annuler la précédente.
 
 ### `src/services/notifications/notification.scheduler.ts` — impur
 
@@ -304,6 +312,16 @@ séance dépasse la limite : les dernières séances ne seraient jamais rappelé
 aucun signe. L'ensemble désiré est donc **tronqué aux plus proches**, plafond nommé
 à **20** — de quoi couvrir plusieurs semaines à trois séances, en gardant de la
 marge sous la limite système. Le plafond compte toutes les catégories.
+
+**Ce que le plan et le plafond garantissent — et ce qu'ils ne garantissent pas.**
+Le plan est écrit **quatre semaines** d'avance, précisément pour qu'un rappel
+survive à une absence : la réconciliation ne tourne qu'à l'ouverture, donc rien
+au-delà du plan n'existe tant que le rider n'ouvre pas. Le plafond de 20, lui,
+compte les séances, et le plan en produit jusqu'à vingt-huit pour un rider
+disponible tous les jours — les plus lointaines sont alors perdues.
+
+La garantie est donc « **au moins trois semaines** sans ouvrir l'app », et non
+« pour toujours ». C'est la borne à connaître avant de promettre l'inverse.
 
 **Le web n'a pas de notifications.** `expo-notifications` ne supporte qu'Android et
 iOS, et l'app se lance aussi sur web (`pnpm web`). La réconciliation et la section
