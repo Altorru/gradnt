@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
-import { Linking } from 'react-native'
+import { Linking, Platform } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -15,6 +15,7 @@ import { colors } from '@/design-system/tokens'
 import { NotificationPreferenceCard } from '@/features/app/components/NotificationPreferenceCard'
 import { useNotificationPermission } from '@/features/app/hooks/use-notification-permission'
 import { useTranslation } from '@/i18n'
+import { openExactAlarmSettings } from '@/services/notifications/exact-alarm-settings'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { useOnboardingStore } from '../store/onboarding.store'
@@ -47,6 +48,12 @@ export function NotificationsScreen() {
       await request()
     }
 
+    // Android needs a second grant for the reminder to be exact — its alarm
+    // permission is refused by default, and an inexact one can arrive an hour
+    // late. The two asks belong together, on the step where the rider has just
+    // chosen a time, rather than one here and one in Settings.
+    await openExactAlarmSettings()
+
     leave()
   }
 
@@ -73,6 +80,15 @@ export function NotificationsScreen() {
           </YStack>
 
           <NotificationPreferenceCard />
+
+          {/* Android only, and before the action rather than beside it: the
+              screen opens by itself on Continue, so this is where the rider
+              learns what it is for. */}
+          {Platform.OS === 'android' ? (
+            <GradntText muted fontSize={13} lineHeight={19}>
+              {t('notifications.settings.exactAlarmsNote')}
+            </GradntText>
+          ) : null}
 
           {permission === 'denied' ? (
             <XStack gap="$2" alignItems="center">

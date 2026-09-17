@@ -1,4 +1,3 @@
-import * as ExpoLinking from 'expo-linking'
 import { Linking, Platform } from 'react-native'
 import { XStack, YStack } from 'tamagui'
 
@@ -7,6 +6,7 @@ import { NotificationPreferenceCard } from '@/features/app/components/Notificati
 import { shouldRequestPermission } from '@/features/app/domain/notification-settings'
 import { useNotificationPermission } from '@/features/app/hooks/use-notification-permission'
 import { usePreferencesStore } from '@/features/app/store/preferences.store'
+import { openExactAlarmSettings } from '@/services/notifications/exact-alarm-settings'
 import { useTranslation } from '@/i18n'
 
 export function NotificationSettingsSection() {
@@ -48,8 +48,7 @@ export function NotificationSettingsSection() {
 
         Shown on every Android device with a reminder on, because nothing in JS
         can read the app-op, and the system screen simply says it is already
-        allowed. The action takes no data URI — `sendIntent` has none — so it
-        lands on the list rather than this app's own toggle.
+        allowed.
       */}
       {Platform.OS === 'android' && preferences.sessionReminder ? (
         <YStack gap="$2">
@@ -60,9 +59,7 @@ export function NotificationSettingsSection() {
           <GradntButton
             tone="secondary"
             minHeight={44}
-            onPress={() =>
-              void ExpoLinking.sendIntent('android.settings.REQUEST_SCHEDULE_EXACT_ALARM')
-            }
+            onPress={() => void openExactAlarmSettings()}
           >
             {t('notifications.settings.exactAlarmsAction')}
           </GradntButton>
