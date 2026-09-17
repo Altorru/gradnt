@@ -314,6 +314,9 @@ export const fr = {
       inactivityNudge: 'Relance d’inactivité',
       permissionDenied: 'Les notifications sont coupées dans les réglages du système.',
       openSystemSettings: 'Ouvrir les réglages',
+      exactAlarmsNote:
+        'Android peut retarder un rappel jusqu’à une heure. Autorise les alarmes exactes pour qu’il sonne à l’heure.',
+      exactAlarmsAction: 'Ouvrir « Alarmes et rappels »',
       channelSessions: 'Rappels de séance',
       channelWeekly: 'Bilan de semaine',
       channelNudges: 'Relances',

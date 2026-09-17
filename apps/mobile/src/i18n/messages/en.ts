@@ -279,6 +279,9 @@ export const en = {
       inactivityNudge: 'Inactivity nudge',
       permissionDenied: 'Notifications are turned off in your system settings.',
       openSystemSettings: 'Open settings',
+      exactAlarmsNote:
+        'Android can delay a reminder by up to an hour. Allow exact alarms so it lands on time.',
+      exactAlarmsAction: 'Open “Alarms & reminders”',
       channelSessions: 'Session reminders',
       channelWeekly: 'Weekly summary',
       channelNudges: 'Nudges',
