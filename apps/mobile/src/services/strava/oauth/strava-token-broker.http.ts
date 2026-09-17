@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { isStravaScope } from './strava-scopes'
-import { saveStravaTokens } from './strava-token.persistence'
+import { getStravaTokenEpoch, replaceStravaTokens } from './strava-token.persistence'
 import type { StravaConnection, StravaTokenBroker } from './strava-token-broker'
 
 /**
@@ -31,9 +31,13 @@ const stravaExchangeResponseSchema = z.object({
  * tokens would otherwise be lost.
  */
 export class HttpStravaTokenBroker implements StravaTokenBroker {
+  private readonly epoch = getStravaTokenEpoch()
   constructor(private readonly exchangeUrl: string) {}
 
   async exchangeCode(code: string): Promise<StravaConnection> {
+    if (this.epoch !== getStravaTokenEpoch()) {
+      throw new Error('Cannot connect to Strava: session changed during authorization')
+    }
     let response: Response
 
     try {
@@ -58,7 +62,9 @@ export class HttpStravaTokenBroker implements StravaTokenBroker {
       throw new Error('Cannot connect to Strava: exchange endpoint returned an unexpected payload')
     }
 
-    await saveStravaTokens(parsed.data.tokens)
+    if (!(await replaceStravaTokens(this.epoch, parsed.data.tokens))) {
+      throw new Error('Cannot connect to Strava: session changed during authorization')
+    }
 
     return {
       athleteId: parsed.data.athleteId,

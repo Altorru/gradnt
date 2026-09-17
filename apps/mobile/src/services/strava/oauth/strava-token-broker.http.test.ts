@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HttpStravaTokenBroker } from './strava-token-broker.http'
 
-const { saveStravaTokens } = vi.hoisted(() => ({ saveStravaTokens: vi.fn(async () => {}) }))
+const { replaceStravaTokens } = vi.hoisted(() => ({ replaceStravaTokens: vi.fn(async () => true) }))
 
-vi.mock('./strava-token.persistence', () => ({ saveStravaTokens }))
+vi.mock('./strava-token.persistence', () => ({ replaceStravaTokens, getStravaTokenEpoch: () => 0 }))
 
 const EXCHANGE_URL = 'https://project.supabase.co/functions/v1/strava-exchange'
 
@@ -31,7 +31,8 @@ function stubFetch(response: unknown, ok = true, status = 200) {
 
 describe('HttpStravaTokenBroker', () => {
   beforeEach(() => {
-    saveStravaTokens.mockClear()
+    replaceStravaTokens.mockReset()
+    replaceStravaTokens.mockResolvedValue(true)
     vi.unstubAllGlobals()
   })
 
@@ -64,7 +65,15 @@ describe('HttpStravaTokenBroker', () => {
 
     await new HttpStravaTokenBroker(EXCHANGE_URL).exchangeCode('code-abc')
 
-    expect(saveStravaTokens).toHaveBeenCalledWith(validPayload.tokens)
+    expect(replaceStravaTokens).toHaveBeenCalledWith(0, validPayload.tokens)
+  })
+
+  it('rejects an exchange completed after the credential session changed', async () => {
+    stubFetch(validPayload)
+    replaceStravaTokens.mockResolvedValueOnce(false)
+    await expect(new HttpStravaTokenBroker(EXCHANGE_URL).exchangeCode('old-code')).rejects.toThrow(
+      'session changed during authorization',
+    )
   })
 
   it('throws when the endpoint responds with an error status', async () => {
@@ -73,7 +82,7 @@ describe('HttpStravaTokenBroker', () => {
     await expect(new HttpStravaTokenBroker(EXCHANGE_URL).exchangeCode('code-abc')).rejects.toThrow(
       'exchange endpoint returned 502',
     )
-    expect(saveStravaTokens).not.toHaveBeenCalled()
+    expect(replaceStravaTokens).not.toHaveBeenCalled()
   })
 
   it('throws when the payload does not match the contract', async () => {
@@ -82,7 +91,7 @@ describe('HttpStravaTokenBroker', () => {
     await expect(new HttpStravaTokenBroker(EXCHANGE_URL).exchangeCode('code-abc')).rejects.toThrow(
       'unexpected payload',
     )
-    expect(saveStravaTokens).not.toHaveBeenCalled()
+    expect(replaceStravaTokens).not.toHaveBeenCalled()
   })
 
   it('throws a descriptive error when the endpoint is unreachable', async () => {

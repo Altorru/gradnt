@@ -2,6 +2,7 @@ import type { Activity } from '@/lib/domain'
 
 import { fetchStravaActivities } from './strava-activity.api'
 import { normalizeStravaActivity } from './strava-activity.normalize'
+import { getStravaTokenEpoch } from '../oauth/strava-token.persistence'
 import { getValidAccessToken } from './strava-session'
 
 /**
@@ -36,7 +37,7 @@ export type StravaActivitiesResult =
   | { status: 'error'; error: unknown }
 
 /**
- * Fetches in flight, keyed by window.
+ * Fetches in flight, keyed by credential generation and history boundary.
  *
  * Three separate queries need activities — the list itself, the metrics and the
  * goal value — and TanStack Query treats them as unrelated, so a screen load
@@ -46,37 +47,37 @@ export type StravaActivitiesResult =
  * Only concurrent calls are shared; nothing is cached here, so a real re-sync
  * still reaches Strava.
  */
-const inFlight = new Map<number, Promise<StravaActivitiesResult>>()
+const inFlight = new Map<string, Promise<StravaActivitiesResult>>()
 
-export function fetchRecentActivities(
+export async function fetchRecentActivities(
   options: { weeks?: number; now?: Date } = {},
 ): Promise<StravaActivitiesResult> {
   const weeks = options.weeks ?? HISTORY_WEEKS
-  const existing = inFlight.get(weeks)
-
-  if (existing !== undefined) {
-    return existing
-  }
-
-  const request = performFetch(weeks, options.now).finally(() => {
-    inFlight.delete(weeks)
-  })
-
-  inFlight.set(weeks, request)
-
+  const session = await getValidAccessToken()
+  if (session.status !== 'ready') return session
+  if (session.sessionEpoch !== getStravaTokenEpoch()) return { status: 'disconnected' }
+  const sinceEpochSeconds = Math.floor(
+    ((options.now ?? new Date()).getTime() - weeks * WEEK_MS) / 1000,
+  )
+  const key = `${session.sessionEpoch}:${weeks}:${sinceEpochSeconds}`
+  const existing = inFlight.get(key)
+  if (existing) return existing
+  const request = performFetch(
+    session.accessToken,
+    session.sessionEpoch,
+    sinceEpochSeconds,
+  ).finally(() => inFlight.delete(key))
+  inFlight.set(key, request)
   return request
 }
 
-async function performFetch(weeks: number, now: Date | undefined): Promise<StravaActivitiesResult> {
-  const session = await getValidAccessToken()
-
-  if (session.status !== 'ready') {
-    return session
-  }
-
-  const sinceEpochSeconds = Math.floor(((now ?? new Date()).getTime() - weeks * WEEK_MS) / 1000)
-
-  const response = await fetchStravaActivities(session.accessToken, sinceEpochSeconds)
+async function performFetch(
+  accessToken: string,
+  epoch: number,
+  sinceEpochSeconds: number,
+): Promise<StravaActivitiesResult> {
+  const response = await fetchStravaActivities(accessToken, sinceEpochSeconds)
+  if (epoch !== getStravaTokenEpoch()) return { status: 'disconnected' }
 
   switch (response.status) {
     case 'ok':

@@ -7,13 +7,23 @@ import {
   saveStravaTokens,
 } from '../oauth/strava-token.persistence'
 
-const { clearStravaTokensMock, loadStravaTokensMock, saveStravaTokensMock } = vi.hoisted(() => ({
+const {
+  clearStravaTokensMock,
+  loadStravaTokensMock,
+  saveStravaTokensMock,
+  replaceStravaTokensMock,
+  epochMock,
+} = vi.hoisted(() => ({
+  epochMock: { value: 0 },
+  replaceStravaTokensMock: vi.fn(),
   clearStravaTokensMock: vi.fn(async () => {}),
   loadStravaTokensMock: vi.fn(),
-  saveStravaTokensMock: vi.fn(async () => {}),
+  saveStravaTokensMock: vi.fn(async (_tokens: unknown) => {}),
 }))
 
 vi.mock('../oauth/strava-token.persistence', () => ({
+  getStravaTokenEpoch: () => epochMock.value,
+  replaceStravaTokens: replaceStravaTokensMock,
   clearStravaTokens: clearStravaTokensMock,
   loadStravaTokens: loadStravaTokensMock,
   saveStravaTokens: saveStravaTokensMock,
@@ -62,6 +72,15 @@ function stubFetch(response: unknown, status = 200) {
 beforeEach(() => {
   vi.stubEnv('EXPO_PUBLIC_STRAVA_CLIENT_ID', 'client-123')
   vi.stubEnv('EXPO_PUBLIC_STRAVA_ENDPOINT_URL', ENDPOINT)
+  epochMock.value = 0
+  replaceStravaTokensMock.mockReset()
+  replaceStravaTokensMock.mockImplementation(async (epoch: number, tokens: unknown) => {
+    if (epoch !== epochMock.value) return false
+    epochMock.value++
+    if (tokens === null) await clearStravaTokensMock()
+    else await saveStravaTokensMock(tokens)
+    return true
+  })
   clearStravaTokensMock.mockClear()
   loadStravaTokensMock.mockClear()
   saveStravaTokensMock.mockClear()
@@ -85,6 +104,7 @@ describe('getValidAccessToken', () => {
     await expect(getValidAccessToken()).resolves.toEqual({
       status: 'ready',
       accessToken: 'access-fresh',
+      sessionEpoch: 0,
     })
     expect(saveStravaTokensMock).not.toHaveBeenCalled()
   })
@@ -96,6 +116,7 @@ describe('getValidAccessToken', () => {
     await expect(getValidAccessToken()).resolves.toEqual({
       status: 'ready',
       accessToken: 'access-new',
+      sessionEpoch: 1,
     })
 
     expect(fetchMock.mock.calls[0]?.[0]).toBe(REFRESH_URL)
@@ -113,6 +134,7 @@ describe('getValidAccessToken', () => {
     await expect(getValidAccessToken()).resolves.toEqual({
       status: 'ready',
       accessToken: 'access-new',
+      sessionEpoch: 1,
     })
   })
 
@@ -130,7 +152,7 @@ describe('getValidAccessToken', () => {
     // would spend the same token twice and lock the rider out.
     expect(fetchMock).toHaveBeenCalledTimes(1)
     for (const result of results) {
-      expect(result).toEqual({ status: 'ready', accessToken: 'access-new' })
+      expect(result).toEqual({ status: 'ready', accessToken: 'access-new', sessionEpoch: 1 })
     }
   })
 
@@ -176,6 +198,7 @@ describe('getValidAccessToken', () => {
     await expect(getValidAccessToken()).resolves.toEqual({
       status: 'ready',
       accessToken: 'access-new',
+      sessionEpoch: 1,
     })
     // A promise left in flight after a rejection would have hung here instead.
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -189,6 +212,36 @@ describe('getValidAccessToken', () => {
     await expect(getValidAccessToken()).resolves.toMatchObject({ status: 'error' })
     // Posting a refresh at the exchange endpoint would fail silently.
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('session boundaries during refresh', () => {
+  it('does not restore a session cleared while a successful refresh was in flight', async () => {
+    loadStravaTokensMock.mockResolvedValue(stale)
+    const fetchMock = stubFetch(refreshPayload)
+    fetchMock.mockImplementationOnce(async () => {
+      epochMock.value++
+      return { ok: true, status: 200, json: async () => refreshPayload }
+    })
+    await expect(getValidAccessToken()).resolves.toEqual({ status: 'disconnected' })
+    expect(saveStravaTokensMock).not.toHaveBeenCalled()
+  })
+  it('does not erase new credentials when an older refresh is rejected', async () => {
+    loadStravaTokensMock.mockResolvedValue(stale)
+    const fetchMock = stubFetch({ error: 'rejected' }, 401)
+    fetchMock.mockImplementationOnce(async () => {
+      epochMock.value++
+      return { ok: false, status: 401, json: async () => ({ error: 'rejected' }) }
+    })
+    await expect(getValidAccessToken()).resolves.toEqual({ status: 'disconnected' })
+    expect(clearStravaTokensMock).not.toHaveBeenCalled()
+  })
+  it('does not return credentials read across a concurrent session change', async () => {
+    loadStravaTokensMock.mockImplementationOnce(async () => {
+      epochMock.value++
+      return fresh
+    })
+    await expect(getValidAccessToken()).resolves.toEqual({ status: 'disconnected' })
   })
 })
 

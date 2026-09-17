@@ -69,6 +69,14 @@
 - Le conseil est déterministe, fondé uniquement sur les sensations déclarées, sans IA et sans modification automatique du plan. La comparaison prévu/réel reste à développer.
 - Le listener et le push après sortie ne sont pas encore livrés. La connexion Strava reste locale à l’appareil et le détail couvre l’historique récent de 12 semaines.
 
+## Correctif réalisé — requêtes Strava isolées par session
+
+- Les requêtes concurrentes sont maintenant partagées uniquement dans la même génération de jetons et pour la même fenêtre historique.
+- Une réponse reçue après un changement de jetons est ignorée ; les données d’une ancienne connexion ne rejoignent pas la nouvelle session.
+- Les écritures et suppressions de jetons natifs sont sérialisées. Le rafraîchissement et l’échange OAuth remplacent les jetons uniquement si leur génération initiale est encore active.
+- Une réponse de rafraîchissement rejetée ne supprime pas les identifiants d’une connexion plus récente ; une réussite ancienne ne rétablit pas une session déconnectée.
+- Validation : 36 fichiers, 355 tests, incluant les courses entre lecture, écriture, déconnexion et changement de session. Aucun changement des fonctions serveur Strava.
+
 ## Priorité suivante — boucle après-sortie demandée par Hugo
 
 **Parcours cible :** sortie terminée → Strava synchronisé → notification → sensations en quelques secondes → validation → détail de la sortie → analyse compréhensible → prochaine action proposée.

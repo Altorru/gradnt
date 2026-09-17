@@ -23,44 +23,58 @@ export type StravaTokens = z.infer<typeof stravaTokensSchema>
 let webSessionTokens: StravaTokens | null = null
 let webPendingState: string | null = null
 
-export async function saveStravaTokens(tokens: StravaTokens): Promise<void> {
-  const parsedTokens = stravaTokensSchema.parse(tokens)
-
+// An in-memory generation invalidates every request started before credentials changed.
+// Serialize native writes so a queued clear always wins over an older refresh write.
+let tokenEpoch = 0
+let tokenWrites: Promise<void> = Promise.resolve()
+export function getStravaTokenEpoch(): number {
+  return tokenEpoch
+}
+function enqueueTokenWrite(operation: () => Promise<void>): Promise<void> {
+  const result = tokenWrites.then(operation, operation)
+  tokenWrites = result.catch(() => undefined)
+  return result
+}
+async function writeTokens(tokens: StravaTokens | null): Promise<void> {
   if (Platform.OS === 'web') {
-    webSessionTokens = parsedTokens
+    webSessionTokens = tokens
     return
   }
-
-  await SecureStore.setItemAsync(stravaTokensStorageKey, JSON.stringify(parsedTokens))
+  if (tokens === null) await SecureStore.deleteItemAsync(stravaTokensStorageKey)
+  else await SecureStore.setItemAsync(stravaTokensStorageKey, JSON.stringify(tokens))
 }
-
+export function saveStravaTokens(tokens: StravaTokens): Promise<void> {
+  const parsed = stravaTokensSchema.parse(tokens)
+  tokenEpoch++
+  return enqueueTokenWrite(() => writeTokens(parsed))
+}
 export async function loadStravaTokens(): Promise<StravaTokens | null> {
-  if (Platform.OS === 'web') {
-    return webSessionTokens
-  }
-
+  await tokenWrites
+  const epoch = tokenEpoch
+  if (Platform.OS === 'web') return webSessionTokens
   try {
     const storedValue = await SecureStore.getItemAsync(stravaTokensStorageKey)
-
-    if (!storedValue) {
-      return null
-    }
-
+    if (epoch !== tokenEpoch || !storedValue) return null
     const result = stravaTokensSchema.safeParse(JSON.parse(storedValue))
     return result.success ? result.data : null
   } catch {
     return null
   }
 }
-
-export async function clearStravaTokens(): Promise<void> {
-  webSessionTokens = null
-
-  if (Platform.OS === 'web') {
-    return
-  }
-
-  await SecureStore.deleteItemAsync(stravaTokensStorageKey)
+export function clearStravaTokens(): Promise<void> {
+  tokenEpoch++
+  return enqueueTokenWrite(() => writeTokens(null))
+}
+/** Conditional rotation/clear. A late response cannot restore or erase another session. */
+export async function replaceStravaTokens(
+  expectedEpoch: number,
+  tokens: StravaTokens | null,
+): Promise<boolean> {
+  const parsed = tokens === null ? null : stravaTokensSchema.parse(tokens)
+  if (tokenEpoch !== expectedEpoch) return false
+  const nextEpoch = ++tokenEpoch
+  await enqueueTokenWrite(() => writeTokens(parsed))
+  return tokenEpoch === nextEpoch
 }
 
 /**

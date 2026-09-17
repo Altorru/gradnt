@@ -1,8 +1,8 @@
 import { readStravaRefreshUrl } from '../oauth/strava-config'
 import {
-  clearStravaTokens,
+  getStravaTokenEpoch,
+  replaceStravaTokens,
   loadStravaTokens,
-  saveStravaTokens,
   type StravaTokens,
 } from '../oauth/strava-token.persistence'
 
@@ -13,22 +13,22 @@ import {
 const EXPIRY_SKEW_MS = 5 * 60 * 1000
 
 export type StravaSessionResult =
-  | { status: 'ready'; accessToken: string }
+  | { status: 'ready'; accessToken: string; sessionEpoch: number }
   | { status: 'disconnected' }
   | { status: 'expired' }
   | { status: 'error'; error: unknown }
 
 /**
- * The refresh currently in flight, shared by every caller.
+ * Refreshes in flight, shared only by callers from the same credential generation.
  *
  * Strava rotates the refresh token on each call, so two concurrent refreshes
  * would spend the same token twice: the second would be rejected and the rider
- * would have to authorize again. One promise, awaited by everyone.
+ * would have to authorize again. One promise per generation, awaited by its callers.
  *
  * Cleared in `finally` rather than on success only — a rejection that left this
  * set would hang every later request until the app was relaunched.
  */
-let refreshInFlight: Promise<StravaSessionResult> | null = null
+const refreshInFlight = new Map<number, Promise<StravaSessionResult>>()
 
 /**
  * Returns an access token that is valid now, refreshing it first when needed.
@@ -38,24 +38,26 @@ let refreshInFlight: Promise<StravaSessionResult> | null = null
  * token must not look retryable.
  */
 export async function getValidAccessToken(): Promise<StravaSessionResult> {
+  const epoch = getStravaTokenEpoch()
   const tokens = await loadStravaTokens()
+  if (getStravaTokenEpoch() !== epoch) return { status: 'disconnected' }
 
   if (tokens === null) {
     return { status: 'disconnected' }
   }
 
   if (Date.parse(tokens.expiresAt) - EXPIRY_SKEW_MS > Date.now()) {
-    return { status: 'ready', accessToken: tokens.accessToken }
+    return { status: 'ready', accessToken: tokens.accessToken, sessionEpoch: epoch }
   }
 
-  refreshInFlight ??= performRefresh(tokens).finally(() => {
-    refreshInFlight = null
-  })
-
-  return refreshInFlight
+  const existing = refreshInFlight.get(epoch)
+  if (existing) return existing
+  const request = performRefresh(tokens, epoch).finally(() => refreshInFlight.delete(epoch))
+  refreshInFlight.set(epoch, request)
+  return request
 }
 
-async function performRefresh(current: StravaTokens): Promise<StravaSessionResult> {
+async function performRefresh(current: StravaTokens, epoch: number): Promise<StravaSessionResult> {
   const refreshUrl = readStravaRefreshUrl()
 
   if (refreshUrl === null) {
@@ -85,7 +87,7 @@ async function performRefresh(current: StravaTokens): Promise<StravaSessionResul
   // response was lost. Nothing short of authorizing again recovers it, so the
   // stored tokens go and the rider is asked to reconnect.
   if (response.status === 401) {
-    await clearStravaTokens()
+    if (!(await replaceStravaTokens(epoch, null))) return { status: 'disconnected' }
     return { status: 'expired' }
   }
 
@@ -101,9 +103,9 @@ async function performRefresh(current: StravaTokens): Promise<StravaSessionResul
 
   // Persisted before the token is handed out: Strava has already spent the old
   // refresh token, so losing this write would end the session.
-  await saveStravaTokens(parsed)
+  if (!(await replaceStravaTokens(epoch, parsed))) return { status: 'disconnected' }
 
-  return { status: 'ready', accessToken: parsed.accessToken }
+  return { status: 'ready', accessToken: parsed.accessToken, sessionEpoch: epoch + 1 }
 }
 
 function parseRefreshResponse(payload: unknown): StravaTokens | null {
