@@ -65,7 +65,7 @@ C'est la tâche la plus risquée du plan : `loadPreferences` fait un `safeParse`
 
 - Produces: `NotificationPreferences`, et `preferencesSchema` acceptant cinq champs neufs avec défauts.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -104,12 +104,12 @@ describe('preferencesSchema', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- preferences.persistence`
 Expected: FAIL — `result.data.sessionReminder` is `undefined`, and the schema strips the unknown keys.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `preferences.persistence.ts`, add the fields **flat**, each with `.default()`. Not nested in a `notifications` object: in zod, `.default({})` on an object does **not** apply its fields' defaults — `ZodDefault` returns the default without reparsing it, so the nested fields would be `undefined` instead of `true`/`7`.
 
@@ -138,12 +138,12 @@ export type NotificationPreferences = Pick<
 
 `savePreferences` calls `preferencesSchema.parse`, which now fills the defaults, so a rider who never opens the section still writes a complete record.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- preferences.persistence`
 Expected: PASS, three tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/services/preferences/
@@ -164,7 +164,7 @@ git commit -m "✨ feat(app): store the notification choices without resetting t
 - Consumes: `NotificationPreferences` (Task 1), `PlannedWorkout` from `./schemas`
 - Produces: `DesiredNotification`, `planNotifications`, et les constantes `FRESHNESS_WINDOW_MS`, `SCHEDULE_CAP`, `INACTIVITY_DAYS`, `WEEKLY_HOUR`, `WEEKLY_MINUTE`, `WEEKLY_WEEKDAY`, `MILESTONE_THRESHOLDS`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -247,12 +247,12 @@ describe('session reminders', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- notification-plan`
 Expected: FAIL — cannot resolve `./notification-plan`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 import type { NotificationPreferences } from '../../services/preferences/preferences.persistence'
@@ -350,12 +350,12 @@ export function planNotifications(input: PlanInput): DesiredNotification[] {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- notification-plan`
 Expected: PASS, four tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/lib/domain/notification-plan.ts apps/mobile/src/lib/domain/notification-plan.test.ts
@@ -375,7 +375,7 @@ git commit -m "✨ feat(app): decide which session reminders should exist"
 
 - Produces: `isFresh(lastSyncedAt, now)`, et les entrées `kind: 'weekly'` dans l'ensemble désiré.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 describe('weekly summary', () => {
@@ -444,12 +444,12 @@ describe('isFresh', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- notification-plan`
 Expected: FAIL — no `weekly` notification is produced, and `isFresh` is not exported.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 /**
@@ -511,12 +511,12 @@ function weeklyNotifications(input: PlanInput): DesiredNotification[] {
 
 Add `...weeklyNotifications(input)` to the array in `planNotifications`, and export `isFresh`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- notification-plan`
 Expected: PASS. The stale cases produce `summary: null` — that is what makes the second wording reachable in Task 7.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/lib/domain/
@@ -536,7 +536,7 @@ git commit -m "✨ feat(app): quote weekly figures only while they can be vouche
 
 - Produces: les entrées `kind: 'inactivity'`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 describe('inactivity nudge', () => {
@@ -590,12 +590,12 @@ describe('inactivity nudge', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- notification-plan`
 Expected: FAIL — no `inactivity` notification is produced.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 /**
@@ -648,12 +648,12 @@ function inactivityNotifications(input: PlanInput): DesiredNotification[] {
 
 Add `...inactivityNotifications(input)` to `planNotifications`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- notification-plan`
 Expected: PASS, four tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/lib/domain/
@@ -673,7 +673,7 @@ git commit -m "✨ feat(app): notice when a rider has stopped riding"
 
 - Produces: les entrées `kind: 'milestone'`, et l'application de `SCHEDULE_CAP`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 describe('goal milestones', () => {
@@ -742,12 +742,12 @@ describe('the scheduling cap', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- notification-plan`
 Expected: FAIL — milestones are not produced and the cap is not applied.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 function milestoneNotifications(input: PlanInput): DesiredNotification[] {
@@ -805,12 +805,12 @@ export function planNotifications(input: PlanInput): DesiredNotification[] {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- notification-plan`
 Expected: PASS, six more tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/lib/domain/
@@ -833,7 +833,7 @@ git commit -m "✨ feat(app): mark the levels reached, and cap what we schedule"
 
 Le texte est composé ici et **recopié dans la notification au moment de la programmation**. C'est pourquoi un changement de langue doit redéclencher la réconciliation.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { translate, translatePlural } from '@/i18n'
@@ -910,12 +910,12 @@ describe('describeNotification', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- notification-plan`
 Expected: FAIL — `describeNotification` is not exported.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 import type { MessageKey, Translation } from '@/i18n'
@@ -985,12 +985,12 @@ export function describeNotification(
 
 Note : `durationMinutes` se dit en heures et minutes ; la clé de catalogue reçoit des minutes et le texte français/anglais les met en forme. Ajouter `minutesToWords` dans `src/i18n/format.ts` si les deux langues divergent — elles ne divergent pas ici (« 1 h 30 » / « 1 h 30 »), donc une seule clé suffit.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- notification-plan`
 Expected: PASS, cinq tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/lib/domain/
@@ -1013,7 +1013,7 @@ git commit -m "✨ feat(app): word the notifications from the catalogue"
 
 `en.ts` est typé `satisfies typeof fr` : une clé oubliée d'un côté **ne compile pas**. C'est le filet.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Le test de parité existe déjà (`i18n.test.ts`, « define exactly the same keys »). Il échouera tant que les deux catalogues ne sont pas d'accord, mais il ne vérifie pas que les clés _existent_. Ajouter :
 
@@ -1044,12 +1044,12 @@ describe('notification copy', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- i18n`
 Expected: FAIL — `translate` falls back to the key itself, so the string contains `notifications.`.
 
-- [ ] **Step 3: Write the copy**
+- [x] **Step 3: Write the copy**
 
 Ajouter à `fr.ts` (et l'équivalent anglais à `en.ts`) :
 
@@ -1100,12 +1100,12 @@ notifications: {
 
 Retirer `header.notifications` des deux catalogues : plus aucun bouton cloche ne l'emploie, et une clé morte est une clé que quelqu'un réintroduira.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- i18n`
 Expected: PASS, et le test de parité aussi.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/i18n/
@@ -1128,7 +1128,7 @@ git commit -m "📝 docs(app): write the notification copy in both languages"
 
 Le service est écrit pour être testable : il reçoit les primitives d'`expo-notifications` en paramètre plutôt que de les importer directement, ce qui permet un faux ordonnanceur en test.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it, vi } from 'vitest'
@@ -1219,12 +1219,12 @@ describe('reconcile', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- notification.scheduler`
 Expected: FAIL — cannot resolve `./notification.scheduler`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 import type { Translation } from '@/i18n'
@@ -1355,12 +1355,12 @@ export const expoScheduler: SchedulerPort = {
 
 **Important :** le déclencheur `DATE` prend un `Date` local ; `fireAt` est déjà construit en composants locaux (Task 2), donc rien à convertir.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- notification.scheduler`
 Expected: PASS, cinq tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/services/notifications/
@@ -1381,7 +1381,7 @@ git commit -m "✨ feat(app): reconcile what is scheduled against what is wanted
 
 Les canaux doivent exister **avant** la demande de permission : sur Android 13, le prompt système n'apparaît pas tant qu'aucun canal n'existe.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `ensureChannels` ne fait qu'appeler la plateforme ; son intérêt est d'exister avant la demande. Le test vérifie l'intention, pas l'appel natif :
 
@@ -1397,12 +1397,12 @@ describe('channels', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- notification.scheduler`
 Expected: FAIL si `CHANNEL_FOR_KIND` n'est pas exporté.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 import { Platform } from 'react-native'
@@ -1464,12 +1464,12 @@ Notifications.setNotificationHandler({
 })
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- notification.scheduler`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/src/services/notifications/
@@ -1490,7 +1490,7 @@ git commit -m "✨ feat(app): give each kind its own Android channel"
 - Consumes: `planNotifications`, `reconcile`, `expoScheduler`, `ensureChannels`, `useActivitiesQuery`, `useUpcomingWorkoutsQuery`, `useGoalQuery`, `useCurrentGoalValueQuery`, `usePreferencesStore`, `useTranslation`
 - Produces: le hook `useNotificationSync()`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Ce hook est un assemblage ; ce qui se teste, c'est que **les cinq déclencheurs** sont bien dans la liste des dépendances. Un test de comportement demanderait un renderer. On teste donc la fonction pure qui décide si l'on doit réconcilier :
 
@@ -1535,12 +1535,12 @@ describe('syncFingerprint', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- use-notification-sync`
 Expected: FAIL — module absent.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ts
 import { useEffect, useMemo } from 'react'
@@ -1712,12 +1712,12 @@ Ce qui est dans les dépendances et ce qui n'y est pas est délibéré : tout pa
 
 Ajouter `celebratedThresholds: z.record(z.string(), z.number()).default({})` au schéma de la Task 1, et au store un `setCelebrated(goalKey, threshold)` qui garde **le plus haut** atteint : `Math.max(existing, threshold)`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm test -- use-notification-sync`
 Expected: PASS, trois tests.
 
-- [ ] **Step 5: Mount it**
+- [x] **Step 5: Mount it**
 
 Dans `src/app/_layout.tsx`, sous `PreferencesHydration` (sans préférences hydratées, on programmerait avec les défauts) et à l'intérieur de `GradntQueryProvider` (le hook lit des requêtes) :
 
@@ -1727,12 +1727,12 @@ Dans `src/app/_layout.tsx`, sous `PreferencesHydration` (sans préférences hydr
 
 un petit composant qui appelle le hook et rend `null`, comme `PreferencesHydration` rend ses enfants. Il doit être sous `PreferencesHydration` : sans préférences hydratées, on programmerait avec les défauts.
 
-- [ ] **Step 6: Run everything**
+- [x] **Step 6: Run everything**
 
 Run: `pnpm --filter @gradnt/mobile exec tsc --noEmit && pnpm test`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/mobile/src/features/app/ apps/mobile/src/app/_layout.tsx
@@ -1755,7 +1755,7 @@ git commit -m "✨ feat(app): reconcile from one place, on five triggers"
 
 Le lien froid compte autant que le chaud : un tap qui lance l'app depuis l'arrêt total passe par `getLastNotificationResponse()`, pas par le listener.
 
-- [ ] **Step 1: Write the implementation**
+- [x] **Step 1: Write the implementation**
 
 Le code suit le motif que la doc Expo Router donne pour ce cas exact :
 
@@ -1800,11 +1800,11 @@ export function NotificationObserver() {
 }
 ```
 
-- [ ] **Step 2: Mount it**
+- [x] **Step 2: Mount it**
 
 Dans `src/app/_layout.tsx`, sous le `Stack`.
 
-- [ ] **Step 3: Verify by hand**
+- [x] **Step 3: Verify by hand**
 
 Build et installe, puis :
 
@@ -1814,7 +1814,7 @@ adb shell cmd notification post -S bigtext -t "Test" gradnt "hello"
 
 Expected: rien, la notification n'est pas la nôtre — mais l'app ne plante pas. Le vrai test est manuel : programmer un rappel, attendre, taper, vérifier l'écran.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/mobile/src/features/app/components/NotificationObserver.tsx apps/mobile/src/app/_layout.tsx
@@ -1840,7 +1840,7 @@ git commit -m "✨ feat(app): open the screen a notification names"
 
 **Pourquoi un `GradntSwitch` et pas `GradntChip` :** `GradntChip` porte `accessibilityRole="radio"` — c'est un choix parmi plusieurs. Un booléen n'est pas un radio, et le dire à un lecteur d'écran (« radio, sélectionné ») décrit mal ce qu'on règle. `Switch` est le rôle natif, et il est déjà natif sur les deux plateformes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -1868,12 +1868,12 @@ describe('shouldRequestPermission', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm test -- NotificationSettingsSection`
 Expected: FAIL — module absent.
 
-- [ ] **Step 3: Write the primitive**
+- [x] **Step 3: Write the primitive**
 
 ```tsx
 import { Switch } from 'react-native'
@@ -1913,7 +1913,7 @@ export function GradntSwitch({ label, value, onValueChange }: GradntSwitchProps)
 }
 ```
 
-- [ ] **Step 4: Write the section**
+- [x] **Step 4: Write the section**
 
 ```tsx
 export type PermissionState = 'undetermined' | 'granted' | 'denied'
@@ -2041,18 +2041,18 @@ export function NotificationSettingsSection() {
 
 Ajouter au store `setSessionReminder`, `setReminderTime`, `setWeeklySummary`, `setInactivityNudge`, sur le modèle exact des `setLanguage`/`setAppearance` existants (même `persist(next)`).
 
-- [ ] **Step 5: Mount, and remove the bell**
+- [x] **Step 5: Mount, and remove the bell**
 
 Dans `SettingsScreen.tsx` : la section se place **avant** « APPARENCE ET LANGUE », parce qu'elle concerne les notifications avant les préférences d'affichage — non, l'inverse : garder Apparence et langue en premier, c'est ce que le commentaire existant justifie (« ce que quelqu'un cherche quand l'écran est dans une langue qu'il n'a pas choisie »). La section Notifications vient **après**.
 
 Dans `AppHeader.tsx` : retirer le `GradntIconButton` de la cloche et l'import `Bell`.
 
-- [ ] **Step 6: Run everything**
+- [x] **Step 6: Run everything**
 
 Run: `pnpm --filter @gradnt/mobile exec tsc --noEmit && pnpm --filter @gradnt/mobile exec eslint . --max-warnings=0 && pnpm test`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/mobile/src/
@@ -2071,7 +2071,7 @@ git commit -m "✨ feat(app): let the rider choose what GRADNT says and when"
 
 - Produces: `SCHEDULE_EXACT_ALARM` dans le manifest régénéré
 
-- [ ] **Step 1: Add the permission**
+- [x] **Step 1: Add the permission**
 
 ```json
 "android": {
@@ -2079,7 +2079,7 @@ git commit -m "✨ feat(app): let the rider choose what GRADNT says and when"
 }
 ```
 
-- [ ] **Step 2: Regenerate and verify**
+- [x] **Step 2: Regenerate and verify**
 
 ```bash
 cd apps/mobile && npx expo prebuild --clean --platform android --no-install
@@ -2090,7 +2090,7 @@ Expected: `1`.
 
 Sans elle, Android 12+ ne peut pas déclencher à une heure exacte : un rappel de 07:00 dérive. Elle doit vivre ici et pas dans `android/`, qui est gitignoré — c'est le piège déjà rencontré avec les chaînes de localisation.
 
-- [ ] **Step 3: The device-level trigger check**
+- [x] **Step 3: The device-level trigger check**
 
 Le pur ne peut pas attraper une erreur de forme de déclencheur. Ajouter un contrôle manuel, à lancer une fois sur l'émulateur, dans le même esprit que les vérifications au pixel déjà faites :
 
@@ -2108,7 +2108,7 @@ console.log('prochain bilan :', new Date(next), '— attendu un dimanche 18:00')
 
 Expected: un dimanche, 18:00 locales. `weekday` va de 1 à 7 avec **1 = dimanche** — un décalage ici ferait sonner le bilan le lundi, et rien dans le code ne le dirait.
 
-- [ ] **Step 4: Build and install**
+- [x] **Step 4: Build and install**
 
 ```bash
 npx expo run:android --variant release
@@ -2116,7 +2116,7 @@ npx expo run:android --variant release
 
 Expected: BUILD SUCCESSFUL.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/app.json
