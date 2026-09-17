@@ -2130,3 +2130,42 @@ git commit -m "🔧 chore(app): let Android fire a reminder at an exact hour"
 - **Pas de boutons d'action.** `categoryIdentifier` est iOS seulement dans `NotificationContentInput` ; une action qui écrit de la donnée doit tourner app fermée, ce qui demande `expo-task-manager`.
 - **Pas de badge**, pas d'historique, pas de serveur.
 - **Pas de correction du français stocké dans le plan.** Les notifications dérivent de `workout.type`, donc elles sont bilingues ; `PlanScreen` continue d'afficher `workout.title` en français. C'est le chantier « Suites » du spec, et il touche le modèle de données.
+
+---
+
+## Après le plan
+
+Ce qui a été fait une fois les treize tâches livrées, et qui n'était pas prévu ici.
+
+**L'étape d'onboarding** (voir le spec, « L'étape dans l'onboarding ») : six étapes
+deviennent sept, et c'est le seul moment où une installation neuve demande la
+permission. La section Réglages ne la demandait qu'au passage d'un interrupteur de
+OFF à ON, alors que les défauts sont à ON — donc jamais.
+
+**Un bug de course dans la réconciliation.** Chaque passe lisait la liste des
+notifications programmées avant d'écrire, donc deux passes simultanées
+programmaient toutes les deux. L'effet se relançant à chaque changement de
+préférence et de requête au démarrage, un seul lancement produisait **trois
+alarmes identiques** pour un bilan. Les passes sont chaînées (`queue` dans
+`notification.scheduler.ts`), ce que les tests vérifient par un `Promise.all`.
+
+**Le plan était vidé à la fin de l'onboarding.** Le hook de réconciliation est
+monté à la racine, donc il lisait le plan, l'objectif et la valeur pendant tout
+l'onboarding — où il n'y a pas encore de snapshot — et le client de requêtes
+gardait cette réponse vide pendant son `staleTime` de dix minutes. Les quatre
+requêtes sont retenues jusqu'à la fin de l'onboarding (`enabled` dans
+`use-gradnt-data.ts`).
+
+**Le français en dur dans le plan et dans les composants.** Le générateur écrivait
+le titre, l'intensité, la structure et la raison en français _dans la donnée_ : un
+rider anglophone lisait du français, et continuait après avoir changé de langue.
+Les quatre sont dérivables — trois de `workout.type`, la dernière de l'objectif
+servi — donc le plan ne porte plus que des codes. Vingt-cinq autres textes en dur,
+dans dix fichiers, sont passés au catalogue, et un test le vérifie désormais
+(`src/i18n/hardcoded-text.test.ts`).
+
+**Le bilan hebdomadaire répète** au lieu de tomber à une date absolue, et ne cite
+donc plus de chiffres. Task 13 étape 3, qui vérifie le déclencheur `WEEKLY` avec
+`getNextTriggerDateAsync`, redevient d'actualité : le planificateur utilise bien ce
+déclencheur maintenant. Elle était notée comme périmée parce que l'implémentation
+programmait des dates absolues ; c'était l'implémentation qui s'écartait.

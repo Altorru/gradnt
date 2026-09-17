@@ -47,6 +47,16 @@ Règle : **les chiffres ne paraissent que si les données sont fraîches**. Sino
 notification tombe sur une formulation sans chiffres. Le reste du code refuse déjà
 d'afficher un chiffre inventé ou périmé ; les notifications ne font pas exception.
 
+**Conséquence pour le bilan hebdomadaire.** Il est programmé comme une alarme
+_répétante_ — dimanche 18 h, pour toujours — et non comme une date absolue. Une
+date absolue n'était réarmée qu'à la réconciliation suivante, laquelle ne tourne
+qu'à l'ouverture de l'app : un rider qui n'ouvrait pas l'app était prévenu une
+seule fois.
+
+Un texte répétant est écrit une fois et lu des semaines plus tard, donc il ne peut
+rien citer. Le bilan utilise la formulation sans chiffres, et les chiffres
+s'affichent dans l'app. C'est le prix, assumé, de la fiabilité.
+
 ### 4. La cloche est retirée
 
 Il n'y a pas d'historique en local : la cloche n'a rien à lister. Elle ouvrirait un
@@ -353,6 +363,40 @@ NOTIFICATIONS
 L'heure est un **stepper**, pas un sélecteur natif : aucune dépendance à vérifier,
 comportement identique sur les deux plateformes, accessible. Pas de 15 minutes.
 L'heure ne s'affiche que si le rappel est actif.
+
+## L'étape dans l'onboarding
+
+Ajoutée après le plan d'origine, qui n'en parlait pas : l'étape se place **juste
+avant la validation**, entre Strava et « Ton point de départ ». Le flux passe de
+six à sept étapes, ce qui touche `currentStep` (borné à 7 désormais), la carte de
+reprise `getOnboardingResumeRoute`, et le compteur des six écrans existants.
+
+```
+6 / 7  Ce que GRADNT peut te dire
+       Rappel de séance       [ ●——]
+       Heure du rappel        − 07:00 +
+       Bilan de semaine       [ ●——]
+       Relance d'inactivité   [ ——○]
+       [ Continuer ]
+       [ Configurer plus tard ]
+```
+
+Trois raisons :
+
+- **C'est le seul moment où une installation neuve est invitée.** La section
+  Réglages ne demande la permission qu'au passage d'un interrupteur de OFF à ON, et
+  les valeurs par défaut sont à ON. Sans cette étape, l'app s'ouvrait avec trois
+  interrupteurs actifs, aucune permission, et aucune notification — sans rien pour
+  l'expliquer.
+- Le prompt système s'ouvre sur **Continuer**, jamais à l'arrivée : les
+  interrupteurs sont l'explication, et un dialogue qui les recouvre avant lecture
+  demande de répondre à une question qu'on n'a pas vue.
+- « Configurer plus tard » avance sans rien demander, et laisse tous les défauts en
+  place pour Réglages.
+
+Les contrôles sont partagés avec Réglages (`NotificationPreferenceCard`) et la
+lecture de la permission aussi (`useNotificationPermission`). Les deux écrans
+demandent la permission à des moments différents, pas des choses différentes.
 
 ## Tests
 
