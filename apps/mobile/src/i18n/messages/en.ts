@@ -33,6 +33,11 @@ export const en = {
   settings: {
     title: 'Settings',
     appearanceAndLanguage: 'APPEARANCE AND LANGUAGE',
+    profileSection: 'YOUR PROFILE',
+    powerSection: 'POWER',
+    dataSection: 'YOUR DATA',
+    profileRow: 'Cycling profile',
+    goalRow: 'Goal',
     theme: 'Theme',
     themeSystem: 'System',
     themeLight: 'Light',
@@ -51,6 +56,9 @@ export const en = {
       linkPrompt: 'Link your account to import your rides.',
       confirmDisconnect: 'Confirm disconnection',
       disconnect: 'Disconnect Strava',
+      resync: 'Resync my rides',
+      eraseNote:
+        'Your imported rides will be erased from this device. Nothing is deleted at Strava.',
       connect: 'Connect Strava',
       connecting: 'Connecting…',
       connectNote:
@@ -73,6 +81,10 @@ export const en = {
       deduce: 'Deduce from my Strava zones',
       editing: 'Correcting a recorded value',
       cancelEditing: 'Cancel the correction',
+      correct: 'Correct',
+      correctionHint: 'Tap a reading to correct it.',
+      correctLabel: 'Correct the {{value}} watt reading',
+      deleteLabel: 'Delete the {{value}} watt reading',
       deleted: 'Reading deleted.',
       edited: 'Reading updated.',
       unchanged: 'That value is already recorded.',

@@ -80,7 +80,7 @@ const SPIN = {
  * The refresh glyph, turning while a sync runs.
  *
  * Reduced motion throws the rotation away and keeps the button's own
- * "Synchronisation…" label, which already says what is happening.
+ * `common.sync` label, which already says what is happening.
  */
 function RefreshGlyph({ spinning }: { spinning: boolean }) {
   const reducedMotion = useReducedMotion()
@@ -470,7 +470,7 @@ export function SettingsScreen() {
                     iconAfter={<RefreshGlyph spinning={isSyncing} />}
                     onPress={() => void resync()}
                   >
-                    {isSyncing ? 'Synchronisation…' : 'Resynchroniser mes sorties'}
+                    {isSyncing ? t('common.sync') : t('settings.strava.resync')}
                   </GradntButton>
 
                   <GradntButton
@@ -486,8 +486,7 @@ export function SettingsScreen() {
 
                   {confirmingDisconnect ? (
                     <GradntText muted fontSize={12} lineHeight={18}>
-                      Tes sorties importées seront effacées de cet appareil. Rien n’est supprimé
-                      chez Strava.
+                      {t('settings.strava.eraseNote')}
                     </GradntText>
                   ) : null}
                 </YStack>
@@ -512,18 +511,18 @@ export function SettingsScreen() {
 
           <YStack gap="$4">
             <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-              TON PROFIL
+              {t('settings.profileSection')}
             </GradntText>
 
             <GradntCard gap="$4" padding="$4">
               <SettingsRow
-                label="Profil cycliste"
+                label={t('settings.profileRow')}
                 value={describeProfile(storedProfile, t)}
                 onPress={() => router.push('/settings/profile')}
               />
 
               <SettingsRow
-                label="Objectif"
+                label={t('settings.goalRow')}
                 value={storedGoal ? goalTypeLabels(t)[storedGoal.type] : t('settings.notSet')}
                 onPress={() => router.push('/settings/goal')}
               />
@@ -532,7 +531,7 @@ export function SettingsScreen() {
 
           <YStack gap="$4">
             <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-              PUISSANCE
+              {t('settings.powerSection')}
             </GradntText>
 
             <GradntCard gap="$4" padding="$4">
@@ -595,7 +594,7 @@ export function SettingsScreen() {
                           is when it happened and is not the rider's to move. */}
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel={`Corriger le relevé de ${entry.value} watts`}
+                        accessibilityLabel={t('settings.ftp.correctLabel', { value: entry.value })}
                         onPress={() => startEditing(entry)}
                         style={{ flex: 1 }}
                       >
@@ -631,7 +630,7 @@ export function SettingsScreen() {
                       </Pressable>
 
                       <GradntIconButton
-                        accessibilityLabel={`Supprimer le relevé de ${entry.value} watts`}
+                        accessibilityLabel={t('settings.ftp.deleteLabel', { value: entry.value })}
                         onPress={() => void removeEntry(entry)}
                       >
                         <Trash2 size={16} color="$danger" />
@@ -640,7 +639,7 @@ export function SettingsScreen() {
                   ))}
 
                   <GradntText muted fontSize={11} lineHeight={16}>
-                    Touche un relevé pour le corriger.
+                    {t('settings.ftp.correctionHint')}
                   </GradntText>
                 </YStack>
               ) : null}
@@ -691,7 +690,7 @@ export function SettingsScreen() {
                 />
                 <GradntText muted>W</GradntText>
                 <GradntButton onPress={() => void saveFtp()}>
-                  {editingRecordedAt !== null ? 'Corriger' : 'Enregistrer'}
+                  {editingRecordedAt !== null ? t('settings.ftp.correct') : t('settings.save')}
                 </GradntButton>
               </XStack>
 
@@ -709,7 +708,7 @@ export function SettingsScreen() {
 
           <YStack gap="$4">
             <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
-              TES DONNÉES
+              {t('settings.dataSection')}
             </GradntText>
 
             <GradntCard gap="$3" padding="$4">

@@ -35,6 +35,12 @@ export const fr = {
   settings: {
     title: 'Réglages',
     appearanceAndLanguage: 'APPARENCE ET LANGUE',
+    /** The other three section headings, in the order the screen shows them. */
+    profileSection: 'TON PROFIL',
+    powerSection: 'PUISSANCE',
+    dataSection: 'TES DONNÉES',
+    profileRow: 'Profil cycliste',
+    goalRow: 'Objectif',
     theme: 'Thème',
     /** `system` is a choice, so it is named like one in both catalogues. */
     themeSystem: 'Système',
@@ -55,6 +61,9 @@ export const fr = {
       linkPrompt: 'Relie ton compte pour importer tes sorties.',
       confirmDisconnect: 'Confirmer la déconnexion',
       disconnect: 'Déconnecter Strava',
+      resync: 'Resynchroniser mes sorties',
+      eraseNote:
+        'Tes sorties importées seront effacées de cet appareil. Rien n’est supprimé chez Strava.',
       connect: 'Connecter Strava',
       connecting: 'Connexion…',
       connectNote:
@@ -77,6 +86,10 @@ export const fr = {
       deduce: 'Déduire de mes zones Strava',
       editing: 'Correction d’un relevé existant',
       cancelEditing: 'Annuler la correction',
+      correct: 'Corriger',
+      correctionHint: 'Touche un relevé pour le corriger.',
+      correctLabel: 'Corriger le relevé de {{value}} watts',
+      deleteLabel: 'Supprimer le relevé de {{value}} watts',
       deleted: 'Relevé supprimé.',
       edited: 'Relevé corrigé.',
       unchanged: 'Cette valeur est déjà enregistrée.',
