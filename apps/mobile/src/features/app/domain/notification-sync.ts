@@ -1,10 +1,3 @@
-import type { WeeklySummary } from '@/lib/domain/notification-plan'
-import {
-  getWeeklyDistanceSeries,
-  getWeeklyElevationSeries,
-  getWeeklyRideCountSeries,
-  getWeeklyVolumeSeries,
-} from '@/lib/domain/selectors'
 import type { Activity, Goal } from '@/lib/domain/schemas'
 
 /**
@@ -29,22 +22,6 @@ export function latestActivityAt(activities: Activity[]): string | null {
       latest === null || activity.startAt > latest ? activity.startAt : latest,
     null,
   )
-}
-
-/**
- * The last seven days, from the same selectors the Progress screen reads.
- *
- * The series' final bucket rather than a total over the array: the activities
- * query covers twelve weeks, so summing it would have the weekly digest quote a
- * quarter of riding as though it were a week.
- */
-export function weeklySummaryFrom(activities: Activity[]): WeeklySummary {
-  return {
-    rides: getWeeklyRideCountSeries(activities).at(-1) ?? 0,
-    hours: getWeeklyVolumeSeries(activities).at(-1) ?? 0,
-    distanceKm: getWeeklyDistanceSeries(activities).at(-1) ?? 0,
-    elevationGainM: getWeeklyElevationSeries(activities).at(-1) ?? 0,
-  }
 }
 
 /** The goal and how far along it is, or null when there is nothing to celebrate. */

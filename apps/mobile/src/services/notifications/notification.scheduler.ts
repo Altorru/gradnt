@@ -11,12 +11,21 @@ export const NOTIFICATION_PREFIX = 'gradnt:'
 export type ScheduledSummary = { identifier: string; key: string }
 
 /**
+ * When a notification fires.
+ *
+ * Two shapes, because there are two: once at an instant, or every week at a
+ * fixed time. A repeat carries no date — it has none to carry.
+ */
+/**
  * The three things we need from expo-notifications, as an interface.
  *
  * Injected rather than imported so the reconciliation — the part where a
  * mistake goes unnoticed for days — can be tested without a device. The real
  * implementation lives in `expoScheduler` below.
  */
+export type ScheduleTrigger =
+  { kind: 'at'; fireAt: Date } | { kind: 'weekly'; weekday: number; hour: number; minute: number }
+
 export type SchedulerPort = {
   list: () => Promise<ScheduledSummary[]>
   cancel: (identifier: string) => Promise<void>
@@ -25,7 +34,7 @@ export type SchedulerPort = {
     title: string
     body: string
     url: string
-    fireAt: Date
+    trigger: ScheduleTrigger
     channelId: string
   }) => Promise<string>
 }
@@ -181,10 +190,39 @@ async function reconcileOnce(
       title: wording.title,
       body: wording.body,
       url: wording.url,
-      fireAt: notification.fireAt,
+      trigger:
+        notification.kind === 'weekly'
+          ? { kind: 'weekly', ...notification.repeat }
+          : { kind: 'at', fireAt: notification.fireAt },
       channelId: CHANNEL_FOR_KIND[notification.kind],
     })
   }
+}
+
+/**
+ * Expo's trigger, from ours.
+ *
+ * A `null` trigger means "deliver now", which is what an already-due one-shot
+ * wants: a date trigger in the past would never fire. A repeat needs no such
+ * care — every occurrence after this one is in the future by construction.
+ */
+function expoTriggerFor(
+  trigger: ScheduleTrigger,
+  channelId: string,
+): Notifications.NotificationTriggerInput {
+  if (trigger.kind === 'weekly') {
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      weekday: trigger.weekday,
+      hour: trigger.hour,
+      minute: trigger.minute,
+      channelId,
+    }
+  }
+
+  return trigger.fireAt.getTime() <= Date.now()
+    ? null
+    : { type: Notifications.SchedulableTriggerInputTypes.DATE, date: trigger.fireAt, channelId }
 }
 
 /**
@@ -207,7 +245,7 @@ export const expoScheduler: SchedulerPort = {
 
   cancel: (identifier) => Notifications.cancelScheduledNotificationAsync(identifier),
 
-  schedule: ({ key, title, body, url, fireAt, channelId }) =>
+  schedule: ({ key, title, body, url, trigger, channelId }) =>
     Notifications.scheduleNotificationAsync({
       content: {
         title,
@@ -218,12 +256,7 @@ export const expoScheduler: SchedulerPort = {
         // screen: a weekly summary that wakes someone is one they switch off.
         interruptionLevel: channelId === CHANNEL_FOR_KIND.session ? 'active' : 'passive',
       },
-      // A `null` trigger means "deliver now", which is what an already-due
-      // notification wants: a date trigger in the past would never fire.
-      trigger:
-        fireAt.getTime() <= Date.now()
-          ? null
-          : { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fireAt, channelId },
+      trigger: expoTriggerFor(trigger, channelId),
     }),
 }
 

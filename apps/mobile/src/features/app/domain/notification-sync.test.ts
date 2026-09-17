@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  goalProgress,
-  latestActivityAt,
-  syncFingerprint,
-  weeklySummaryFrom,
-} from './notification-sync'
+import { goalProgress, latestActivityAt, syncFingerprint } from './notification-sync'
 
 import type { Activity, Goal } from '@/lib/domain/schemas'
 
@@ -80,31 +75,6 @@ describe('latestActivityAt', () => {
     expect(latestActivityAt([activity({ startAt: recent }), activity({ startAt: old })])).toBe(
       recent,
     )
-  })
-})
-
-describe('weeklySummaryFrom', () => {
-  it('counts only the last seven days, not the whole stored history', () => {
-    const summary = weeklySummaryFrom([
-      activity({ startAt: daysAgo(2), distanceMeters: 40_000, elevationGainMeters: 500 }),
-      activity({
-        startAt: daysAgo(3),
-        durationSeconds: 3600,
-        distanceMeters: 30_000,
-        elevationGainMeters: 200,
-      }),
-      // Ten days out: in the stored history, in no week we quote.
-      activity({ startAt: daysAgo(10), distanceMeters: 90_000, elevationGainMeters: 900 }),
-    ])
-
-    expect(summary.rides).toBe(2)
-    expect(summary.hours).toBe(1)
-    expect(summary.distanceKm).toBe(70)
-    expect(summary.elevationGainM).toBe(700)
-  })
-
-  it('is empty figures with nothing ridden, not a crash', () => {
-    expect(weeklySummaryFrom([])).toEqual({ rides: 0, hours: 0, distanceKm: 0, elevationGainM: 0 })
   })
 })
 

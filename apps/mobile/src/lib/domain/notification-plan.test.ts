@@ -50,7 +50,6 @@ function input(over: Partial<PlanInput> = {}): PlanInput {
     },
     lastActivityAt: null,
     lastSyncedAt: null,
-    weeklySummary: null,
     goal: null,
     celebrated: {},
     now: NOW,
@@ -62,10 +61,12 @@ describe('session reminders', () => {
   it('fires on the day of the session, at the hour the rider chose', () => {
     const result = planNotifications(input({ workouts: [workout()] }))
 
-    expect(result).toHaveLength(1)
-    expect(result[0].key).toBe('session:w1')
-    expect(result[0].fireAt.getHours()).toBe(7)
-    expect(result[0].fireAt.getMinutes()).toBe(0)
+    const [reminder] = result
+
+    expect(reminder).toMatchObject({ key: 'session:w1', kind: 'session' })
+    // `in`, because the digest in this union has no instant to read.
+    expect('fireAt' in reminder && reminder.fireAt.getHours()).toBe(7)
+    expect('fireAt' in reminder && reminder.fireAt.getMinutes()).toBe(0)
   })
 
   it('says nothing about a session already completed, skipped or moved', () => {
@@ -95,54 +96,47 @@ describe('session reminders', () => {
   })
 })
 
-describe('weekly summary', () => {
-  const summary = { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 }
+describe('the weekly digest', () => {
+  const on = { preferences: { ...input().preferences, weeklySummary: true } }
 
-  it('carries the figures while the data is fresh', () => {
-    const result = planNotifications(
-      input({
-        preferences: { ...input().preferences, weeklySummary: true },
-        weeklySummary: summary,
-        lastSyncedAt: new Date(NOW.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-      }),
-    )
+  it('is one repeating alarm, not a notification per week', () => {
+    const result = planNotifications(input(on))
 
     expect(result).toHaveLength(1)
-    expect(result[0].kind).toBe('weekly')
-    expect(result[0]).toMatchObject({ summary })
+    expect(result[0]).toMatchObject({
+      key: 'weekly',
+      kind: 'weekly',
+      // Sunday, in `expo-notifications` numbering where 1 is Sunday.
+      repeat: { weekday: 1, hour: 18, minute: 0 },
+    })
   })
 
-  it('drops the figures once the data is stale, rather than showing last week', () => {
-    const result = planNotifications(
-      input({
-        preferences: { ...input().preferences, weeklySummary: true },
-        weeklySummary: summary,
-        lastSyncedAt: new Date(NOW.getTime() - 30 * 60 * 60 * 1000).toISOString(),
-      }),
-    )
+  /**
+   * The reason it repeats at all.
+   *
+   * The absolute-date version was re-armed by the next launch, so a rider who
+   * did not open the app heard from us exactly once. One stable key is what
+   * makes the alarm outlive a week of not opening it — and what stops the
+   * reconcile from adding a second entry next Sunday.
+   */
+  it('carries the same key a week later, so the alarm is left in place', () => {
+    const nextWeek = new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-    expect(result[0]).toMatchObject({ summary: null })
+    expect(planNotifications(input({ ...on, now: nextWeek }))[0].key).toBe(
+      planNotifications(input(on))[0].key,
+    )
   })
 
-  it('drops the figures when nothing was ever synced', () => {
-    const result = planNotifications(
-      input({
-        preferences: { ...input().preferences, weeklySummary: true },
-        weeklySummary: summary,
-        lastSyncedAt: null,
-      }),
-    )
-
-    expect(result[0]).toMatchObject({ summary: null })
+  it('is gone when the rider turned it off', () => {
+    expect(planNotifications(input())).toEqual([])
   })
 
-  it('lands on the next Sunday evening', () => {
-    const result = planNotifications(
-      input({ preferences: { ...input().preferences, weeklySummary: true } }),
-    )
+  it('is kept when the cap drops the sessions that do not fit', () => {
+    const many = Array.from({ length: 30 }, (_, index) => workout({ id: `w${index}` }))
+    const result = planNotifications(input({ ...on, workouts: many }))
 
-    expect(result[0].fireAt.getDay()).toBe(0) // Sunday
-    expect(result[0].fireAt.getHours()).toBe(18)
+    expect(result).toHaveLength(21)
+    expect(result.some((notification) => notification.kind === 'weekly')).toBe(true)
   })
 })
 
@@ -324,37 +318,15 @@ describe('describeNotification', () => {
     expect(describeNotification(notification, frTranslation, 'fr').url).toBe('/plan/w1')
   })
 
-  it('writes the weekly figures the way the rider’s language writes numbers', () => {
+  it('words the digest without figures, which it cannot vouch for a week later', () => {
     const notification = planNotifications(
-      input({
-        preferences: { ...input().preferences, weeklySummary: true },
-        weeklySummary: { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 },
-        lastSyncedAt: new Date(NOW.getTime() - 60 * 1000).toISOString(),
-      }),
+      input({ preferences: { ...input().preferences, weeklySummary: true } }),
     )[0]
 
-    expect(describeNotification(notification, frTranslation, 'fr').body).toContain('6,5')
-    expect(describeNotification(notification, enTranslation, 'en').body).toContain('6.5')
-  })
+    const body = describeNotification(notification, frTranslation, 'fr').body
 
-  it('has two weekly wordings, and uses the one the data allows', () => {
-    const fresh = planNotifications(
-      input({
-        preferences: { ...input().preferences, weeklySummary: true },
-        weeklySummary: { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 },
-        lastSyncedAt: new Date(NOW.getTime() - 60 * 1000).toISOString(),
-      }),
-    )[0]
-    const stale = planNotifications(
-      input({
-        preferences: { ...input().preferences, weeklySummary: true },
-        weeklySummary: { rides: 4, hours: 6.5, distanceKm: 142, elevationGainM: 850 },
-        lastSyncedAt: null,
-      }),
-    )[0]
-
-    expect(describeNotification(fresh, frTranslation, 'fr').body).toContain('4')
-    expect(describeNotification(stale, frTranslation, 'fr').body).not.toContain('4')
+    expect(body).not.toMatch(/\d/)
+    expect(describeNotification(notification, enTranslation, 'en').body).not.toMatch(/\d/)
   })
 
   it('deep links a nudge to the home screen, the only screen it has', () => {

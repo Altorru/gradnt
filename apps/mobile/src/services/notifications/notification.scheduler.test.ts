@@ -24,7 +24,7 @@ vi.mock('expo-notifications', () => ({
   scheduleNotificationAsync: vi.fn(),
   setNotificationChannelAsync: vi.fn(),
   setNotificationHandler: vi.fn(),
-  SchedulableTriggerInputTypes: { DATE: 'date' },
+  SchedulableTriggerInputTypes: { DATE: 'date', WEEKLY: 'weekly' },
   // The real numeric values, so an assertion on an importance is a statement
   // about Android rather than about this stub's spelling.
   AndroidImportance: { LOW: 4, DEFAULT: 5, HIGH: 6 },
@@ -93,6 +93,19 @@ const session: DesiredNotification = {
     status: 'planned',
     goalType: 'fitness',
   },
+}
+
+/**
+ * The digest, as the planner builds it: a repeat, so no instant to carry.
+ *
+ * The weekday matters and is unchecked elsewhere — 1 is Sunday in
+ * `expo-notifications` numbering, and a one-off error here rings the digest on
+ * Monday with nothing in the code to say so.
+ */
+const digest: DesiredNotification = {
+  key: 'weekly',
+  kind: 'weekly',
+  repeat: { weekday: 1, hour: 18, minute: 0 },
 }
 
 describe('channels', () => {
@@ -186,6 +199,32 @@ describe('the notification handler', () => {
   })
 })
 
+describe('the trigger a notification is scheduled with', () => {
+  it('hands a repeat to the OS as a weekly alarm, not a date', async () => {
+    const { scheduler, schedule } = port()
+
+    await reconcile([digest], translation, 'fr', scheduler)
+
+    expect(schedule).toHaveBeenCalledWith(
+      expect.objectContaining({
+        key: 'gradnt:weekly',
+        channelId: 'weekly',
+        trigger: { kind: 'weekly', weekday: 1, hour: 18, minute: 0 },
+      }),
+    )
+  })
+
+  it('gives a one-shot its instant', async () => {
+    const { scheduler, schedule } = port()
+
+    await reconcile([session], translation, 'fr', scheduler)
+
+    expect(schedule).toHaveBeenCalledWith(
+      expect.objectContaining({ trigger: { kind: 'at', fireAt: session.fireAt } }),
+    )
+  })
+})
+
 describe('reconcile', () => {
   it('schedules what is missing', async () => {
     const { scheduler, schedule } = port()
@@ -200,7 +239,7 @@ describe('reconcile', () => {
       expect.objectContaining({
         key: 'gradnt:session:w1',
         channelId: 'sessions',
-        fireAt: session.fireAt,
+        trigger: { kind: 'at', fireAt: session.fireAt },
       }),
     )
   })

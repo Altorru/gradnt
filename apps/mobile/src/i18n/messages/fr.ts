@@ -292,7 +292,6 @@ export const fr = {
 
     weekly: {
       title: 'Ta semaine',
-      bodyWithFigures: '{{rides}} sorties · {{hours}} h · {{distance}} km',
       bodyWithoutFigures: 'Ta semaine est prête. Ouvre GRADNT pour la voir.',
     },
 

@@ -36,27 +36,22 @@ describe('catalogues', () => {
 })
 
 describe('notification copy', () => {
-  it('has both weekly wordings, so the stale one is never a missing key', () => {
-    expect(translate('fr', 'notifications.weekly.bodyWithoutFigures')).not.toContain(
-      'notifications.',
-    )
-    expect(
-      translate('fr', 'notifications.weekly.bodyWithFigures', {
-        rides: 4,
-        hours: 6,
-        distance: 100,
-      }),
-    ).not.toContain('notifications.')
-    expect(translate('en', 'notifications.weekly.bodyWithoutFigures')).not.toContain(
-      'notifications.',
-    )
-    expect(
-      translate('en', 'notifications.weekly.bodyWithFigures', {
-        rides: 4,
-        hours: 6,
-        distance: 100,
-      }),
-    ).not.toContain('notifications.')
+  it('resolves the digest in both languages rather than leaking its key', () => {
+    // The digest repeats, so it has one wording and no figures to interpolate.
+    for (const language of ['fr', 'en'] as const) {
+      expect(translate(language, 'notifications.weekly.bodyWithoutFigures')).not.toContain(
+        'notifications.',
+      )
+    }
+  })
+
+  it('interpolates the copy that does take a figure', () => {
+    for (const language of ['fr', 'en'] as const) {
+      const rendered = translate(language, 'notifications.session.duration', { minutes: 90 })
+
+      expect(rendered).toContain('90')
+      expect(rendered).not.toContain('notifications.')
+    }
   })
 })
 

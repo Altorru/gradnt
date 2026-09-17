@@ -18,12 +18,7 @@ import {
   useUpcomingWorkoutsQuery,
 } from '@/hooks/use-gradnt-data'
 
-import {
-  goalProgress,
-  latestActivityAt,
-  syncFingerprint,
-  weeklySummaryFrom,
-} from '../domain/notification-sync'
+import { goalProgress, latestActivityAt, syncFingerprint } from '../domain/notification-sync'
 import { usePreferencesStore } from '../store/preferences.store'
 
 /**
@@ -106,7 +101,6 @@ export function useNotificationSync(): void {
         preferences,
         lastActivityAt: latestActivityAt(activities),
         lastSyncedAt,
-        weeklySummary: weeklySummaryFrom(activities),
         goal: goalProgress(goal, progress),
         celebrated: preferences.celebratedThresholds,
         now,

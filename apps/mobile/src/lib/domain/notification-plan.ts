@@ -32,20 +32,24 @@ export const WEEKLY_WEEKDAY = 1
 export const MILESTONE_THRESHOLDS = [25, 50, 75, 100] as const
 export type MilestoneThreshold = (typeof MILESTONE_THRESHOLDS)[number]
 
-export type WeeklySummary = {
-  rides: number
-  hours: number
-  distanceKm: number
-  elevationGainM: number
-}
-
 export type CelebrationRecord = Record<string, number>
+
+/** When a repeating digest fires, in `expo-notifications` weekday numbering. */
+export type WeeklyRepeat = { weekday: number; hour: number; minute: number }
 
 type Base = { key: string; fireAt: Date }
 
+/**
+ * Everything except the weekly digest, which repeats and so carries no instant.
+ *
+ * Named so the cap in `planNotifications` can filter on `fireAt` and keep its
+ * narrowing: a union member without the field widens the whole thing.
+ */
+type OneShotNotification = Extract<DesiredNotification, { fireAt: Date }>
+
 export type DesiredNotification =
   | (Base & { kind: 'session'; workout: PlannedWorkout })
-  | (Base & { kind: 'weekly'; summary: WeeklySummary | null })
+  | { key: string; kind: 'weekly'; repeat: WeeklyRepeat }
   | (Base & { kind: 'inactivity' })
   | (Base & { kind: 'milestone'; threshold: MilestoneThreshold; progress: number })
 
@@ -54,7 +58,6 @@ export type PlanInput = {
   preferences: NotificationPreferences
   lastActivityAt: string | null
   lastSyncedAt: string | null
-  weeklySummary: WeeklySummary | null
   goal: { key: string; progress: number } | null
   celebrated: CelebrationRecord
   now: Date
@@ -73,7 +76,7 @@ function fireAtOnDay(workoutDate: string, hour: number, minute: number): Date {
   return new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute, 0, 0)
 }
 
-function sessionNotifications(input: PlanInput): DesiredNotification[] {
+function sessionNotifications(input: PlanInput): OneShotNotification[] {
   const { preferences, now } = input
 
   if (!preferences.sessionReminder) {
@@ -109,40 +112,29 @@ export function isFresh(lastSyncedAt: string | null, now: Date): boolean {
 }
 
 /**
- * The next Sunday evening, in local time.
+ * The digest, as a repeating weekly alarm.
  *
- * `WEEKLY_WEEKDAY` is Sunday in `expo-notifications` numbering, which runs 1..7
- * from Sunday — one off `Date.getDay()`, which runs 0..6 from Sunday. Hence the
- * `- 1`.
+ * A repeat fires every Sunday whether or not the app is opened, which the
+ * absolute-date version could not: it was re-armed by the next launch, so a
+ * rider who did not open the app heard from us exactly once.
+ *
+ * The price is that a repeat carries one fixed body, so it cannot quote the
+ * week's figures — and a figure chosen a week before it arrives is unverifiable
+ * by then, which is the rule this planner exists to keep. The wording is the
+ * figure-free one and the numbers are shown in the app.
  */
-function nextWeeklyFire(now: Date): Date {
-  const fireAt = new Date(now)
-  fireAt.setHours(WEEKLY_HOUR, WEEKLY_MINUTE, 0, 0)
-
-  const daysUntil = (WEEKLY_WEEKDAY - 1 - fireAt.getDay() + 7) % 7
-  fireAt.setDate(fireAt.getDate() + daysUntil)
-
-  if (fireAt <= now) {
-    fireAt.setDate(fireAt.getDate() + 7)
-  }
-
-  return fireAt
-}
-
 function weeklyNotifications(input: PlanInput): DesiredNotification[] {
   if (!input.preferences.weeklySummary) {
     return []
   }
 
-  const fresh = isFresh(input.lastSyncedAt, input.now)
-  const fireAt = nextWeeklyFire(input.now)
-
   return [
     {
-      key: `weekly:${fireAt.toISOString().slice(0, 10)}`,
+      // One entry for the life of the install. A key per date would add a
+      // notification every week and leave each previous one to be cancelled.
+      key: 'weekly',
       kind: 'weekly',
-      summary: fresh ? input.weeklySummary : null,
-      fireAt,
+      repeat: { weekday: WEEKLY_WEEKDAY, hour: WEEKLY_HOUR, minute: WEEKLY_MINUTE },
     },
   ]
 }
@@ -165,7 +157,7 @@ function nextDailyFire(now: Date, hour: number, minute: number): Date {
   return fireAt
 }
 
-function inactivityNotifications(input: PlanInput): DesiredNotification[] {
+function inactivityNotifications(input: PlanInput): OneShotNotification[] {
   const { preferences, lastActivityAt, lastSyncedAt, now } = input
 
   if (!preferences.inactivityNudge || lastActivityAt === null) {
@@ -197,7 +189,7 @@ function inactivityNotifications(input: PlanInput): DesiredNotification[] {
   ]
 }
 
-function milestoneNotifications(input: PlanInput): DesiredNotification[] {
+function milestoneNotifications(input: PlanInput): OneShotNotification[] {
   const { goal, celebrated, now } = input
 
   if (goal === null) {
@@ -234,21 +226,25 @@ function milestoneNotifications(input: PlanInput): DesiredNotification[] {
  * thing to drop.
  */
 export function planNotifications(input: PlanInput): DesiredNotification[] {
-  const all = [
+  const weekly = weeklyNotifications(input)
+  // Named so the filter below keeps its narrowing: the digest has no instant to
+  // be immediate or later than.
+  const oneShot: OneShotNotification[] = [
     ...sessionNotifications(input),
-    ...weeklyNotifications(input),
     ...inactivityNotifications(input),
     ...milestoneNotifications(input),
   ]
 
-  const immediate = all.filter((notification) => notification.fireAt <= input.now)
-  const later = all
+  const immediate = oneShot.filter((notification) => notification.fireAt <= input.now)
+  const later = oneShot
     .filter((notification) => notification.fireAt > input.now)
     .sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
 
   const room = Math.max(0, SCHEDULE_CAP - immediate.length)
 
-  return [...immediate, ...later.slice(0, room)]
+  // The repeat is neither immediate nor later, and the cap does not count it:
+  // it holds one slot for ever rather than one per week.
+  return [...immediate, ...weekly, ...later.slice(0, room)]
 }
 
 /** The workout type, as a catalogue key. Never `workout.title`. */
@@ -299,18 +295,9 @@ export function describeNotification(
     case 'weekly':
       return {
         title: t('notifications.weekly.title'),
-        body:
-          notification.summary === null
-            ? t('notifications.weekly.bodyWithoutFigures')
-            : t('notifications.weekly.bodyWithFigures', {
-                rides: formatNumber(language, notification.summary.rides),
-                // The one figure with a fractional part, and so the one that
-                // makes the separator visible. Same treatment as the plan screen.
-                hours: formatNumber(language, notification.summary.hours, {
-                  maximumFractionDigits: 1,
-                }),
-                distance: formatNumber(language, notification.summary.distanceKm),
-              }),
+        // Always the figure-free wording: the digest repeats, so its body is
+        // written once and read weeks later.
+        body: t('notifications.weekly.bodyWithoutFigures'),
         url: '/progress',
       }
 
