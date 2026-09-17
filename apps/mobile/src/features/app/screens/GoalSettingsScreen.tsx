@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import type { CyclistGoalForm } from '@/features/onboarding/domain/goal.schema'
 
 import { ArrowLeft } from '@tamagui/lucide-icons-2'
@@ -37,7 +38,11 @@ export function GoalSettingsScreen() {
   const storedGoal = useOnboardingStore((state) => state.goal)
   const setGoal = useOnboardingStore((state) => state.setGoal)
 
-  const { control, handleSubmit } = useForm<CyclistGoalForm>({
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<CyclistGoalForm>({
     resolver: zodResolver(cyclistGoalSchema),
     defaultValues: storedGoal ?? { type: 'ftp', targetValue: '', eventName: '' },
   })
@@ -46,13 +51,13 @@ export function GoalSettingsScreen() {
   const targetMeta = getTargetMeta(type, t)
 
   const save = handleSubmit(async (values) => {
-    setGoal(values)
+    if (!(await setGoal(values))) return
 
-    // The goal drives both of these. The store write is synchronous and the
-    // queries are not, so they are refetched before leaving the screen.
+    // Refetch only after the settings are durably saved.
     await Promise.all([
       queryClient.refetchQueries({ queryKey: ['goal'] }),
       queryClient.refetchQueries({ queryKey: ['goal-current-value'] }),
+      queryClient.refetchQueries({ queryKey: ['training-plan-update'] }),
     ])
 
     router.back()
@@ -62,6 +67,7 @@ export function GoalSettingsScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$6">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" gap="$3">
             <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color="$textPrimary" />
@@ -212,7 +218,9 @@ export function GoalSettingsScreen() {
             />
           ) : null}
 
-          <GradntButton onPress={() => void save()}>{t('settings.save')}</GradntButton>
+          <GradntButton disabled={isSubmitting} onPress={() => void save()}>
+            {t('settings.save')}
+          </GradntButton>
         </YStack>
       </GradntScrollView>
     </GradntScreen>

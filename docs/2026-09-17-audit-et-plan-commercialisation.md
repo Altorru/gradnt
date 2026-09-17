@@ -1,5 +1,7 @@
 # GRADNT — Audit produit et plan de commercialisation
 
+> Suite de cet audit : [développement et décisions actualisées](2026-09-17-developpement-commercialisation.md). Hugo a confirmé Supabase sur le projet existant, Strava + saisie manuelle + fichiers originaux, et la boucle après-sortie notification → ressenti → analyse IA. Le suivi de développement indique les correctifs réalisés et les risques restant à résoudre.
+
 Date : 17 septembre 2026. Révision du dépôt auditée : `d01f66a`.
 
 ## 1. Décision recommandée

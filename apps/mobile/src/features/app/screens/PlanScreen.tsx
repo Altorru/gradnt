@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CalendarDays, ChevronRight } from '@tamagui/lucide-icons-2'
 import { format as formatDate } from 'date-fns'
 import { useRouter, type Href } from 'expo-router'
@@ -13,11 +14,20 @@ import {
 } from '@/design-system'
 import {
   useMoveWorkoutMutation,
+  useArchivedPlansQuery,
+  usePlanUpdateReasonQuery,
+  useStartNewPlanMutation,
   useSkipWorkoutMutation,
   useTrainingPlanQuery,
 } from '@/hooks/use-gradnt-data'
 import { useDateLocale, useNumberFormat, useTranslation, type Translate } from '@/i18n'
-import { getPlanCompletionPercentage, type TrainingPlan } from '@/lib/domain'
+import {
+  getPlanCompletionPercentage,
+  getCurrentWeekWorkouts,
+  groupWorkoutsByWeek,
+  isUpcomingWorkout,
+  startOfCyclingWeek,
+} from '@/lib/domain'
 
 import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
@@ -48,46 +58,42 @@ export function PlanScreen() {
   const planQuery = useTrainingPlanQuery()
   const skipWorkout = useSkipWorkoutMutation()
   const moveWorkout = useMoveWorkoutMutation()
-  const weeks = planQuery.data?.weeks ?? []
-  const workouts = weeks.flatMap((week) => week.workouts)
-  /**
-   * The summary card covers the plan's first week, and the plan says which week
-   * that is. The list is written four weeks ahead, so counting all of it under
-   * "this week" would report a month as seven days.
-   */
-  const thisWeek = weeks[0]?.workouts ?? []
-
-  /**
-   * What a week is called.
-   *
-   * The first is "this week", because that is what it is. The others are named
-   * by the day they begin: a week number means nothing to a rider, and a date
-   * is the only thing that says when they get there.
-   */
-  const weekLabelOf = (week: TrainingPlan['weeks'][number]) => {
-    const [first] = week.workouts
-
-    return week.weekNumber === 1 || first === undefined
+  const archives = useArchivedPlansQuery()
+  const [showHistory, setShowHistory] = useState(false)
+  const updateReason = usePlanUpdateReasonQuery()
+  const startNewPlan = useStartNewPlanMutation()
+  const [confirmingNewPlan, setConfirmingNewPlan] = useState(false)
+  const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
+  const weeks = groupWorkoutsByWeek(workouts)
+  const thisWeek = getCurrentWeekWorkouts(workouts)
+  const currentWeekStart = startOfCyclingWeek(new Date()).getTime()
+  const weekLabelOf = (week: (typeof weeks)[number]) =>
+    week.startDate.getTime() === currentWeekStart
       ? t('plan.thisWeek')
-      : t('plan.weekOf', {
-          date: formatDate(new Date(first.date), 'd MMM', { locale: dateLocale }),
-        })
-  }
-  const plannedWorkouts = thisWeek.filter((workout) => workout.status === 'planned')
+      : t('plan.weekOf', { date: formatDate(week.startDate, 'd MMM', { locale: dateLocale }) })
+  const plannedWorkouts = thisWeek.filter(isUpcomingWorkout)
   const completedWorkouts = thisWeek.filter((workout) => workout.status === 'completed')
-  const trackedWorkouts = thisWeek.filter((workout) => workout.status !== 'planned')
+  const trackedWorkouts = thisWeek.filter(
+    (workout) => workout.status === 'completed' || workout.status === 'skipped',
+  )
   const completionPercentage = getPlanCompletionPercentage(thisWeek)
   const plannedMinutes = plannedWorkouts.reduce(
     (total, workout) => total + workout.durationMinutes,
     0,
   )
-  const isMutating = skipWorkout.isPending || moveWorkout.isPending
+  const isMutating = skipWorkout.isPending || moveWorkout.isPending || startNewPlan.isPending
 
   return (
     <AppShell header={<AppBrandHeader />}>
       <AppScrollView>
         <YStack gap="$7">
           <AppScreenIntro title={t('plan.title')} description={t('plan.description')} />
+
+          {planQuery.data?.legacyCalendarReconstructed ? (
+            <GradntCard gap="$2">
+              <GradntText>{t('plan.legacyCalendarNote')}</GradntText>
+            </GradntCard>
+          ) : null}
 
           {planQuery.isError ? (
             <GradntCard padding="$4" gap="$3">
@@ -99,6 +105,69 @@ export function PlanScreen() {
               </GradntButton>
             </GradntCard>
           ) : null}
+
+          {updateReason.data ? (
+            <GradntCard gap="$3">
+              <GradntHeading level={3}>
+                {t(
+                  updateReason.data === 'settings_changed'
+                    ? 'plan.settingsChanged'
+                    : 'plan.finished',
+                )}
+              </GradntHeading>
+              <GradntText muted>{t('plan.newPlanNote')}</GradntText>
+              <GradntButton
+                disabled={isMutating}
+                onPress={() => {
+                  if (!confirmingNewPlan) {
+                    setConfirmingNewPlan(true)
+                    return
+                  }
+                  startNewPlan.mutate(undefined, { onSuccess: () => setConfirmingNewPlan(false) })
+                }}
+              >
+                {t(confirmingNewPlan ? 'plan.confirmNewPlan' : 'plan.prepareNewPlan')}
+              </GradntButton>
+              {confirmingNewPlan ? (
+                <GradntButton
+                  tone="ghost"
+                  disabled={isMutating}
+                  onPress={() => setConfirmingNewPlan(false)}
+                >
+                  {t('common.cancel')}
+                </GradntButton>
+              ) : null}
+            </GradntCard>
+          ) : null}
+          {skipWorkout.isError || moveWorkout.isError || startNewPlan.isError ? (
+            <GradntCard gap="$3">
+              <GradntText color="$danger" accessibilityLiveRegion="polite">
+                {t('common.saveFailed')}
+              </GradntText>
+              <GradntButton
+                tone="secondary"
+                onPress={() => {
+                  skipWorkout.reset()
+                  moveWorkout.reset()
+                  startNewPlan.reset()
+                  void planQuery.refetch()
+                  void updateReason.refetch()
+                }}
+              >
+                {t('plan.reload')}
+              </GradntButton>
+            </GradntCard>
+          ) : null}
+          <GradntButton
+            tone="ghost"
+            disabled={isMutating || planQuery.isFetching}
+            onPress={() => {
+              void planQuery.refetch()
+              void updateReason.refetch()
+            }}
+          >
+            {t('plan.reload')}
+          </GradntButton>
 
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$3">
@@ -150,7 +219,7 @@ export function PlanScreen() {
           ) : null}
 
           {weeks.map((week) => (
-            <YStack key={week.weekNumber} gap="$3">
+            <YStack key={week.startDate.toISOString()} gap="$3">
               <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
                 {weekLabelOf(week)}
               </GradntText>
@@ -158,6 +227,8 @@ export function PlanScreen() {
               {week.workouts.map((workout) => (
                 <GradntCard key={workout.id} padding="$4" gap="$3">
                   <XStack
+                    accessibilityRole="button"
+                    accessibilityLabel={t('plan.workout.see')}
                     alignItems="center"
                     gap="$3"
                     onPress={() => {
@@ -166,7 +237,7 @@ export function PlanScreen() {
                   >
                     <YStack flex={1} gap="$1">
                       <GradntText muted fontSize={11} weight="semibold" letterSpacing={0.7}>
-                        {formatDate(new Date(workout.date), 'EEEE', { locale: dateLocale })}
+                        {formatDate(new Date(workout.date), 'EEEE d MMM', { locale: dateLocale })}
                       </GradntText>
                       <GradntText weight="semibold">{workoutTitle(t, workout.type)}</GradntText>
                       <GradntText muted fontSize={13}>
@@ -180,7 +251,7 @@ export function PlanScreen() {
                     <ChevronRight size={18} color="$textSecondary" />
                   </XStack>
 
-                  {workout.status === 'planned' ? (
+                  {isUpcomingWorkout(workout) ? (
                     <XStack gap="$2">
                       <YStack flex={1}>
                         <GradntButton
@@ -214,6 +285,46 @@ export function PlanScreen() {
               ))}
             </YStack>
           ))}
+          {archives.data?.length ? (
+            <YStack gap="$3">
+              <GradntButton tone="secondary" onPress={() => setShowHistory(!showHistory)}>
+                {t(showHistory ? 'plan.hideHistory' : 'plan.showHistory')}
+              </GradntButton>
+              {showHistory
+                ? [...archives.data].reverse().map((oldPlan) => (
+                    <GradntCard key={oldPlan.id} gap="$3">
+                      <GradntText weight="semibold">
+                        {t('plan.archivedCalendar', {
+                          date: formatDate(new Date(oldPlan.startDate), 'd MMM yyyy', {
+                            locale: dateLocale,
+                          }),
+                        })}
+                      </GradntText>
+                      {oldPlan.weeks
+                        .flatMap((week) => week.workouts)
+                        .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))
+                        .map((workout) => (
+                          <YStack key={workout.id} gap="$1">
+                            <GradntText>
+                              {formatDate(new Date(workout.date), 'd MMM', { locale: dateLocale })}{' '}
+                              · {workoutTitle(t, workout.type)}
+                            </GradntText>
+                            <GradntText muted fontSize={12}>
+                              {formatWorkoutDuration(workout.durationMinutes)} ·{' '}
+                              {statusLabels(t)[workout.status]}
+                            </GradntText>
+                          </YStack>
+                        ))}
+                    </GradntCard>
+                  ))
+                : null}
+            </YStack>
+          ) : null}
+          {archives.isError ? (
+            <GradntButton tone="secondary" onPress={() => void archives.refetch()}>
+              {t('plan.retryHistory')}
+            </GradntButton>
+          ) : null}
         </YStack>
       </AppScrollView>
     </AppShell>

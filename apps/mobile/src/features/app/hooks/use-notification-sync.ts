@@ -78,6 +78,7 @@ export function useNotificationSync(): void {
   })
 
   useEffect(() => {
+    let active = true
     if (Platform.OS === 'web') {
       return
     }
@@ -95,6 +96,7 @@ export function useNotificationSync(): void {
 
       // A channel has to exist before Android 13 will deliver anything into it.
       await ensureChannels(translation)
+      if (!active) return
 
       const desired = planNotifications({
         workouts,
@@ -107,6 +109,7 @@ export function useNotificationSync(): void {
       })
 
       await reconcile(desired, translation, language, expoScheduler)
+      if (!active) return
 
       // Remembered only once it has actually been scheduled, so a reconcile
       // that failed does not silently swallow the milestone.
@@ -125,7 +128,10 @@ export function useNotificationSync(): void {
       }
     })
 
-    return () => subscription.remove()
+    return () => {
+      active = false
+      subscription.remove()
+    }
   }, [
     fingerprint,
     translation,

@@ -9,15 +9,7 @@ import {
   type WorkoutType,
 } from './schemas'
 
-/**
- * How far ahead the plan is written.
- *
- * A week was not enough for a reminder to be reliable. The plan is regenerated
- * from the onboarding snapshot on every read, so nothing past its end exists
- * until the app is opened again — and a rider who stopped opening it stopped
- * being reminded. Four weeks fits the notification cap with room to spare: the
- * cap counts sessions, and three a week is twelve.
- */
+/** The first plan covers four weeks; its creation date is persisted. */
 export const PLAN_WEEKS = 4
 
 type PlanWeek = TrainingPlan['weeks'][number]
@@ -27,6 +19,7 @@ export type FirstPlanInput = {
   goal: CyclistGoalForm
   availability: WeeklyAvailabilityForm
   startDate: Date
+  planId?: string
 }
 
 const weeklyVolumeMinutes = {
@@ -119,10 +112,7 @@ function weekWorkouts(
     const date = getNextDate(weekStart, weekdayIndex[slot.day])
 
     const workout = plannedWorkoutSchema.parse({
-      // The week and the slot, not the date: the plan shifts with the day it is
-      // read on, and an entry a rider skipped has to keep the identity it was
-      // skipped under.
-      id: `first-plan-${week + 1}-${index + 1}`,
+      id: `${input.planId ?? 'first-plan'}-${week + 1}-${index + 1}`,
       date: date.toISOString(),
       type: template.type,
       durationMinutes,

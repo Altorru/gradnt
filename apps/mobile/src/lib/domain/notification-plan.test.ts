@@ -90,11 +90,16 @@ describe('session reminders', () => {
     expect(atFourteen.key).not.toBe(atSeven.key)
   })
 
-  it('says nothing about a session already completed, skipped or moved', () => {
-    for (const status of ['completed', 'skipped', 'moved'] as const) {
+  it('says nothing about a session already completed or skipped', () => {
+    for (const status of ['completed', 'skipped'] as const) {
       const result = planNotifications(input({ workouts: [workout({ status })] }))
       expect(result, status).toHaveLength(0)
     }
+  })
+
+  it('schedules the session reminder after a workout is moved', () => {
+    const result = planNotifications(input({ workouts: [workout({ status: 'moved' })] }))
+    expect(result.find((notification) => notification.kind === 'session')).toBeDefined()
   })
 
   it('says nothing about a session in the past', () => {

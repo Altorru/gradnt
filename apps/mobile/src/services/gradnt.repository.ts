@@ -1,12 +1,10 @@
 import type { MessageKey, Translate } from '@/i18n'
 import { loadOnboardingSnapshot } from '@/features/onboarding/services/onboarding.persistence'
 import {
-  generateFirstPlan,
   buildTrainingMetrics,
   getEventDaysRemaining,
   getGoalCurrentValue,
   getWeeklyVolumeFloorHours,
-  trainingPlanSchema,
   type Activity,
   type AthleteProfile,
   type DataProvenance,
@@ -15,6 +13,8 @@ import {
   type TrainingMetrics,
   type TrainingPlan,
 } from '@/lib/domain'
+
+import { planRepository } from './plan.repository'
 
 import { loadCurrentFtp } from './ftp/ftp.persistence'
 import { fetchRecentActivities, historyWindowStart } from './strava/api/strava-activity.service'
@@ -91,57 +91,6 @@ export interface GradntRepository {
   getTrainingMetrics(): Promise<TrainingMetrics>
   getTrainingPlan(): Promise<TrainingPlan>
   getUpcomingWorkouts(): Promise<PlannedWorkout[]>
-}
-
-async function getGeneratedTrainingPlan(): Promise<TrainingPlan | null> {
-  const snapshot = await loadOnboardingSnapshot()
-
-  if (!snapshot?.profile || !snapshot.goal || !snapshot.availability) {
-    return null
-  }
-
-  const weeks = generateFirstPlan({
-    profile: snapshot.profile,
-    goal: snapshot.goal,
-    availability: snapshot.availability,
-    startDate: new Date(),
-  })
-
-  const workouts = weeks.flatMap((week) => week.workouts)
-
-  if (workouts.length === 0) {
-    return null
-  }
-
-  return trainingPlanSchema.parse({
-    id: 'plan-local-first',
-    startDate: new Date().toISOString(),
-    endDate: workouts.at(-1)?.date ?? new Date().toISOString(),
-    goalId: 'goal-local-first',
-    weeks,
-    version: 1,
-    status: 'active',
-  })
-}
-
-/**
- * A valid plan with no workouts, for when there is nothing to generate from.
- *
- * Callers render their empty state from `weeks.length === 0`; substituting a
- * ready-made week would show the rider a schedule that is not theirs.
- */
-function emptyTrainingPlan(): TrainingPlan {
-  const now = new Date().toISOString()
-
-  return trainingPlanSchema.parse({
-    id: 'plan-empty',
-    startDate: now,
-    endDate: now,
-    goalId: 'goal-local',
-    weeks: [],
-    version: 1,
-    status: 'active',
-  })
 }
 
 export class MockGradntRepository implements GradntRepository {
@@ -279,10 +228,7 @@ export class MockGradntRepository implements GradntRepository {
   }
 
   async getTrainingPlan() {
-    // An empty plan, not the demo one. With no onboarding snapshot there is
-    // nothing to generate from, and showing a plausible pre-built week would
-    // present fiction as the rider's own schedule.
-    return (await getGeneratedTrainingPlan()) ?? emptyTrainingPlan()
+    return planRepository.getPlan()
   }
 
   async getUpcomingWorkouts() {

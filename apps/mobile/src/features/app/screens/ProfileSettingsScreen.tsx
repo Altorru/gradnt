@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import type { CyclistProfileForm } from '@/features/onboarding/domain/profile.schema'
 
 import { ArrowLeft } from '@tamagui/lucide-icons-2'
@@ -36,7 +37,11 @@ export function ProfileSettingsScreen() {
   const storedProfile = useOnboardingStore((state) => state.profile)
   const setProfile = useOnboardingStore((state) => state.setProfile)
 
-  const { control, handleSubmit } = useForm<CyclistProfileForm>({
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<CyclistProfileForm>({
     resolver: zodResolver(cyclistProfileSchema),
     defaultValues: storedProfile ?? {
       discipline: 'road',
@@ -46,10 +51,11 @@ export function ProfileSettingsScreen() {
   })
 
   const save = handleSubmit(async (values) => {
-    setProfile(values)
+    if (!(await setProfile(values))) return
 
     await Promise.all([
       queryClient.refetchQueries({ queryKey: ['athlete'] }),
+      queryClient.refetchQueries({ queryKey: ['training-plan-update'] }),
       queryClient.refetchQueries({ queryKey: ['training-plan'] }),
       queryClient.refetchQueries({ queryKey: ['upcoming-workouts'] }),
     ])
@@ -61,6 +67,7 @@ export function ProfileSettingsScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$6">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" gap="$3">
             <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color="$textPrimary" />
@@ -137,7 +144,9 @@ export function ProfileSettingsScreen() {
             )}
           />
 
-          <GradntButton onPress={() => void save()}>{t('settings.save')}</GradntButton>
+          <GradntButton disabled={isSubmitting} onPress={() => void save()}>
+            {t('settings.save')}
+          </GradntButton>
         </YStack>
       </GradntScrollView>
     </GradntScreen>

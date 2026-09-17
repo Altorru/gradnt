@@ -48,7 +48,10 @@ export default function StravaCallbackScreen() {
       const result = await stravaService.completeConnect(callbackUrl)
 
       if (result.ok) {
-        setStrava(result.connection)
+        if (!(await setStrava(result.connection))) {
+          setMessage(translateNow()('common.saveFailed'))
+          return
+        }
         router.replace('/onboarding/review')
         return
       }

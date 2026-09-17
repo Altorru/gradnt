@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '../components/OnboardingSaveFeedback'
 import { ArrowLeft, ArrowRight } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
 import { Linking, Platform } from 'react-native'
@@ -31,13 +32,14 @@ import { useOnboardingStore } from '../store/onboarding.store'
  * ever asks at all — Settings only asks when a switch goes from off to on.
  */
 export function NotificationsScreen() {
+  const saving = useOnboardingStore((state) => state.saving)
   const router = useRouter()
   const { t } = useTranslation()
   const { permission, request } = useNotificationPermission()
   const markSeen = useOnboardingStore((state) => state.setNotificationsSeen)
 
-  const leave = () => {
-    markSeen()
+  const leave = async () => {
+    if (!(await markSeen())) return
     router.push('/onboarding/review')
   }
 
@@ -54,13 +56,14 @@ export function NotificationsScreen() {
     // chosen a time, rather than one here and one in Settings.
     await openExactAlarmSettings()
 
-    leave()
+    await leave()
   }
 
   return (
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$7">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
@@ -109,6 +112,7 @@ export function NotificationsScreen() {
           <YStack gap="$3">
             <GradntButton
               iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
+              disabled={saving}
               onPress={() => void submit()}
             >
               {t('common.continue')}
@@ -117,7 +121,12 @@ export function NotificationsScreen() {
             {/* Deliberately available: a rider who does not want to decide now
                 should not be held at a prompt, and every default here is
                 reachable again from Settings. */}
-            <GradntButton tone="ghost" minHeight={44} onPress={leave}>
+            <GradntButton
+              tone="ghost"
+              minHeight={44}
+              disabled={saving}
+              onPress={() => void leave()}
+            >
               {t('onboarding.notifications.later')}
             </GradntButton>
           </YStack>

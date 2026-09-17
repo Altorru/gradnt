@@ -92,7 +92,7 @@ function sessionNotifications(input: PlanInput): DesiredNotification[] {
   }
 
   return input.workouts
-    .filter((workout) => workout.status === 'planned')
+    .filter((workout) => workout.status === 'planned' || workout.status === 'moved')
     .map((workout) => {
       const fireAt = fireAtOnDay(workout.date, preferences.reminderHour, preferences.reminderMinute)
 

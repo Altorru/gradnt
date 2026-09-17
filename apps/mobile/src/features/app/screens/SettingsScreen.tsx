@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import {
   ArrowLeft,
   ChevronDown,
@@ -11,7 +12,7 @@ import {
 } from '@tamagui/lucide-icons-2'
 import { useQueryClient } from '@tanstack/react-query'
 import { format as formatDate, formatDistanceToNow } from 'date-fns'
-import { useRouter } from 'expo-router'
+import { useRouter, type Href } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { Pressable } from 'react-native'
 import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated'
@@ -336,7 +337,7 @@ export function SettingsScreen() {
     const result = await stravaService.connect()
 
     if (result.ok) {
-      setStrava(result.connection)
+      await setStrava(result.connection)
       await Promise.all(
         STRAVA_QUERY_KEYS.map((queryKey) => queryClient.refetchQueries({ queryKey })),
       )
@@ -392,6 +393,7 @@ export function SettingsScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$6">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" gap="$3">
             <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color="$textPrimary" />
@@ -508,6 +510,14 @@ export function SettingsScreen() {
           </YStack>
 
           <NotificationSettingsSection />
+
+          <GradntCard gap="$3">
+            <GradntHeading level={3}>{t('account.title')}</GradntHeading>
+            <GradntText muted>{t('account.description')}</GradntText>
+            <GradntButton tone="secondary" onPress={() => router.push('/account' as Href)}>
+              {t('account.open')}
+            </GradntButton>
+          </GradntCard>
 
           <YStack gap="$4">
             <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>

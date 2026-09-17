@@ -8,6 +8,7 @@ import { PreferencesHydration } from '@/features/app/components/PreferencesHydra
 import { GradntFontProvider, GradntQueryProvider, GradntThemeProvider } from '@/design-system'
 import { useResolvedScheme } from '@/hooks/use-resolved-scheme'
 import { useNotificationSync } from '@/features/app/hooks/use-notification-sync'
+import { AuthLifecycle } from '@/features/auth/components/AuthLifecycle'
 
 /**
  * Brings the scheduled notifications in step with the plan, and renders nothing.
@@ -34,6 +35,7 @@ export default function RootLayout() {
           <GradntFontProvider>
             <OnboardingHydration>
               <GradntQueryProvider>
+                <AuthLifecycle />
                 {/* Inside the query provider, which the sync reads through, and
                     inside hydration, without which it would schedule defaults. */}
                 <GradntNotificationSync />

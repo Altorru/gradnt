@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '../components/OnboardingSaveFeedback'
 import { ArrowLeft, ArrowRight, CheckCircle2, Link2, ShieldCheck } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
@@ -28,6 +29,7 @@ import { useOnboardingStore } from '../store/onboarding.store'
 import { stravaService, type StravaServiceError } from '../services/strava.service'
 
 export function StravaScreen() {
+  const saving = useOnboardingStore((state) => state.saving)
   const router = useRouter()
   const { t } = useTranslation()
   const setStrava = useOnboardingStore((state) => state.setStrava)
@@ -48,7 +50,7 @@ export function StravaScreen() {
     const result = await stravaService.connect()
 
     if (result.ok) {
-      setStrava(result.connection)
+      await setStrava(result.connection)
     } else {
       setError(result.error)
     }
@@ -57,8 +59,8 @@ export function StravaScreen() {
   }
 
   const connected = connection.status === 'connected'
-  const deferConnection = () => {
-    setStrava(deferredStravaConnection)
+  const deferConnection = async () => {
+    if (!(await setStrava(deferredStravaConnection))) return
     router.push('/onboarding/notifications')
   }
 
@@ -66,6 +68,7 @@ export function StravaScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$7">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
@@ -144,7 +147,7 @@ export function StravaScreen() {
 
           <YStack gap="$3">
             <GradntButton
-              disabled={isLoading || connected}
+              disabled={isLoading || connected || saving}
               opacity={isLoading || connected ? 0.55 : 1}
               iconAfter={
                 isLoading ? (
@@ -175,7 +178,7 @@ export function StravaScreen() {
                 {t('common.continue')}
               </GradntButton>
             ) : (
-              <GradntButton tone="ghost" onPress={deferConnection}>
+              <GradntButton tone="ghost" disabled={saving} onPress={() => void deferConnection()}>
                 {t('onboarding.strava.defer')}
               </GradntButton>
             )}

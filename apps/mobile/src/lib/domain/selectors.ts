@@ -339,8 +339,23 @@ export function getTrendDirection(
   return 'stable'
 }
 
-export function getNextWorkout(workouts: PlannedWorkout[]): PlannedWorkout | null {
-  return workouts.find((workout) => workout.status === 'planned') ?? null
+export function isUpcomingWorkout(workout: PlannedWorkout): boolean {
+  return workout.status === 'planned' || workout.status === 'moved'
+}
+
+export function getNextWorkout(
+  workouts: PlannedWorkout[],
+  now: Date = new Date(),
+): PlannedWorkout | null {
+  const today = new Date(now)
+  today.setHours(0, 0, 0, 0)
+  return (
+    [...workouts]
+      .filter(
+        (workout) => isUpcomingWorkout(workout) && Date.parse(workout.date) >= today.getTime(),
+      )
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0] ?? null
+  )
 }
 
 /**

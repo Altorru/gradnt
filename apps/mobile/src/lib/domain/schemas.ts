@@ -102,6 +102,8 @@ export const trainingPlanSchema = z.object({
   ),
   version: z.number().int().positive(),
   status: z.enum(['draft', 'active', 'archived']),
+  /** Old overrides stored statuses but no original calendar anchor. */
+  legacyCalendarReconstructed: z.boolean().optional(),
 })
 
 export const trainingMetricsSchema = z.object({

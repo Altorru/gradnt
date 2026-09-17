@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import { format as formatDate } from 'date-fns'
 import { useRouter, type Href } from 'expo-router'
 import { useEffect, useState } from 'react'
@@ -112,7 +113,7 @@ export function HomeScreen() {
     const result = await stravaService.connect()
 
     if (result.ok) {
-      setStrava(result.connection)
+      await setStrava(result.connection)
       // The activities come from Strava, so the figures on this screen are
       // stale the moment the connection lands.
       await activitiesQuery.refetch()
@@ -127,6 +128,7 @@ export function HomeScreen() {
     <AppShell header={<AppBrandHeader />}>
       <AppScrollView>
         <YStack gap="$7">
+          <OnboardingSaveFeedback />
           {/*
             The page answers the product question in order: where the rider
             stands relative to the goal, then what to do next, then supporting

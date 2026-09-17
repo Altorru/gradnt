@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import { ArrowUpRight, CalendarDays } from '@tamagui/lucide-icons-2'
 import { format as formatDate } from 'date-fns'
 import { useState } from 'react'
@@ -120,7 +121,7 @@ export function ProgressScreen() {
     const result = await stravaService.connect()
 
     if (result.ok) {
-      setStrava(result.connection)
+      await setStrava(result.connection)
       await activitiesQuery.refetch()
     } else {
       setConnectError(t(STRAVA_ERROR_KEYS[result.error.code], result.error.params))
@@ -137,6 +138,7 @@ export function ProgressScreen() {
       <AppShell header={<AppBrandHeader />}>
         <AppScrollView>
           <YStack gap="$7">
+            <OnboardingSaveFeedback />
             <AppScreenIntro title={t('progress.title')} description={t('progress.description')} />
 
             <GradntStravaConnectBlock

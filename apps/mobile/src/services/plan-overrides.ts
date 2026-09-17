@@ -5,7 +5,7 @@ import type { PlanOverride } from './plan.persistence'
 export function applyPlanOverrides(plan: TrainingPlan, overrides: PlanOverride[]): TrainingPlan {
   const overrideByWorkoutId = new Map(overrides.map((override) => [override.workoutId, override]))
 
-  return {
+  const updated = {
     ...plan,
     weeks: plan.weeks.map((week) => ({
       ...week,
@@ -24,4 +24,8 @@ export function applyPlanOverrides(plan: TrainingPlan, overrides: PlanOverride[]
       }),
     })),
   }
+  const lastDate = updated.weeks
+    .flatMap((week) => week.workouts)
+    .reduce((latest, workout) => (workout.date > latest ? workout.date : latest), plan.startDate)
+  return { ...updated, endDate: lastDate }
 }

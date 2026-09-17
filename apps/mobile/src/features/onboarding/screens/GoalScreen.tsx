@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '../components/OnboardingSaveFeedback'
 import { ArrowLeft, ArrowRight } from '@tamagui/lucide-icons-2'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm, useWatch } from 'react-hook-form'
@@ -34,7 +35,7 @@ export function GoalScreen() {
     control,
     handleSubmit,
     setValue,
-    formState: { isValid, errors },
+    formState: { isValid, errors, isSubmitting },
   } = useForm<CyclistGoalForm>({
     resolver: zodResolver(cyclistGoalSchema),
     mode: 'onChange',
@@ -70,8 +71,8 @@ export function GoalScreen() {
     }
   }
 
-  const submit = handleSubmit((values) => {
-    setGoal(values)
+  const submit = handleSubmit(async (values) => {
+    if (!(await setGoal(values))) return
 
     router.push('/onboarding/availability')
   })
@@ -80,6 +81,7 @@ export function GoalScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$7">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
@@ -207,7 +209,7 @@ export function GoalScreen() {
           ) : null}
 
           <GradntButton
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
             opacity={isValid ? 1 : 0.45}
             iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
             onPress={submit}

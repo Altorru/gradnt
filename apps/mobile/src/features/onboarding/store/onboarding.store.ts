@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { CloudMetadata } from '@/services/supabase/documents'
 
 import type { WeeklyAvailabilityForm } from '../domain/availability.schema'
 import type { CyclistGoalForm } from '../domain/goal.schema'
@@ -19,11 +20,14 @@ type OnboardingState = {
   currentStep: number
   completed: boolean
   hydrated: boolean
+  cloud?: CloudMetadata
+  saving: boolean
+  persistenceError: boolean
 
-  setProfile: (profile: CyclistProfileForm) => void
-  setGoal: (goal: CyclistGoalForm) => void
-  setAvailability: (availability: WeeklyAvailabilityForm) => void
-  setStrava: (strava: StravaConnection) => void
+  setProfile: (profile: CyclistProfileForm) => Promise<boolean>
+  setGoal: (goal: CyclistGoalForm) => Promise<boolean>
+  setAvailability: (availability: WeeklyAvailabilityForm) => Promise<boolean>
+  setStrava: (strava: StravaConnection) => Promise<boolean>
   /**
    * Records that the rider got past the notifications step.
    *
@@ -31,10 +35,10 @@ type OnboardingState = {
    * preferences store — so all this keeps is the resume point. Without it a
    * rider killed on the review screen would come back to Strava.
    */
-  setNotificationsSeen: () => void
-  complete: () => void
+  setNotificationsSeen: () => Promise<boolean>
+  complete: () => Promise<boolean>
   hydrate: () => Promise<void>
-  reset: () => Promise<void>
+  reset: () => Promise<boolean>
 }
 
 const initialState = {
@@ -45,92 +49,72 @@ const initialState = {
   currentStep: 1,
   completed: false,
   hydrated: false,
-} satisfies OnboardingSnapshot & { hydrated: boolean }
+  saving: false,
+  persistenceError: false,
+} satisfies OnboardingSnapshot & { hydrated: boolean; saving: boolean; persistenceError: boolean }
 
-function persist(state: OnboardingState): void {
-  if (!state.hydrated) {
-    return
+let pending: Promise<unknown> = Promise.resolve()
+
+export const useOnboardingStore = create<OnboardingState>((set, get) => {
+  function update(updates: Partial<OnboardingSnapshot>): Promise<boolean> {
+    const result = pending.then(async () => {
+      const state = get()
+      if (!state.hydrated) return false
+      set({ saving: true, persistenceError: false })
+      try {
+        const saved = await saveOnboardingSnapshot({
+          profile: state.profile,
+          goal: state.goal,
+          availability: state.availability,
+          strava: state.strava,
+          completed: state.completed,
+          cloud: state.cloud,
+          ...updates,
+          currentStep: Math.max(state.currentStep, updates.currentStep ?? state.currentStep),
+        })
+        set({ ...saved, saving: false, persistenceError: false })
+        return true
+      } catch {
+        set({ saving: false, persistenceError: true })
+        return false
+      }
+    })
+    pending = result.catch(() => undefined)
+    return result
   }
-
-  const snapshot: OnboardingSnapshot = {
-    profile: state.profile,
-    goal: state.goal,
-    availability: state.availability,
-    strava: state.strava,
-    currentStep: state.currentStep,
-    completed: state.completed,
+  return {
+    ...initialState,
+    setProfile: (profile) => update({ profile, currentStep: Math.max(get().currentStep, 2) }),
+    setGoal: (goal) => update({ goal, currentStep: Math.max(get().currentStep, 3) }),
+    setAvailability: (availability) =>
+      update({ availability, currentStep: Math.max(get().currentStep, 4) }),
+    setStrava: (strava) => update({ strava, currentStep: Math.max(get().currentStep, 5) }),
+    setNotificationsSeen: () => update({ currentStep: Math.max(get().currentStep, 6) }),
+    complete: () => update({ currentStep: 7, completed: true }),
+    hydrate: async () => {
+      await pending
+      set({ hydrated: false, persistenceError: false })
+      try {
+        const snapshot = await loadOnboardingSnapshot()
+        set({ ...initialState, ...snapshot, cloud: snapshot?.cloud, hydrated: true })
+      } catch {
+        set({ hydrated: true, persistenceError: true })
+      }
+    },
+    reset: async () => {
+      await pending
+      set({ saving: true, persistenceError: false })
+      try {
+        await clearOnboardingSnapshot()
+        await get().hydrate()
+        return !get().persistenceError
+      } catch {
+        set({ saving: false, persistenceError: true })
+        return false
+      }
+    },
   }
-
-  void saveOnboardingSnapshot(snapshot)
-}
-
-export const useOnboardingStore = create<OnboardingState>((set) => ({
-  ...initialState,
-
-  setProfile: (profile) => {
-    set((state) => {
-      const nextState = { ...state, profile, currentStep: Math.max(state.currentStep, 2) }
-      persist(nextState)
-      return nextState
-    })
-  },
-
-  setGoal: (goal) => {
-    set((state) => {
-      const nextState = { ...state, goal, currentStep: Math.max(state.currentStep, 3) }
-      persist(nextState)
-      return nextState
-    })
-  },
-
-  setAvailability: (availability) => {
-    set((state) => {
-      const nextState = { ...state, availability, currentStep: Math.max(state.currentStep, 4) }
-      persist(nextState)
-      return nextState
-    })
-  },
-
-  setStrava: (strava) => {
-    set((state) => {
-      const nextState = { ...state, strava, currentStep: Math.max(state.currentStep, 5) }
-      persist(nextState)
-      return nextState
-    })
-  },
-
-  setNotificationsSeen: () => {
-    set((state) => {
-      const nextState = { ...state, currentStep: Math.max(state.currentStep, 6) }
-      persist(nextState)
-      return nextState
-    })
-  },
-
-  complete: () => {
-    set((state) => {
-      const nextState = { ...state, currentStep: 7, completed: true }
-      persist(nextState)
-      return nextState
-    })
-  },
-
-  hydrate: async () => {
-    const snapshot = await loadOnboardingSnapshot()
-
-    if (snapshot) {
-      set({ ...snapshot, hydrated: true })
-      return
-    }
-
-    set({ hydrated: true })
-  },
-
-  reset: async () => {
-    await clearOnboardingSnapshot()
-    set({ ...initialState, hydrated: true })
-  },
-}))
+})
 
 export function getOnboardingResumeRoute(
   step: number,

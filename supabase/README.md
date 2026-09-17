@@ -1,14 +1,18 @@
-# Strava backend
+# GRADNT backend — Supabase and Strava
 
 Strava requires a `client_secret` to turn an authorization code into tokens, and
 a `client_secret` cannot ship inside a mobile app. `functions/strava-exchange`
 is the whole server side: it holds that secret, performs the exchange, and
 returns the normalized connection plus the tokens.
 
-It is deliberately **stateless**. It stores nothing, needs no database, no
-authentication and no user model — the mobile app keeps its own tokens in the
-OS keychain via `expo-secure-store`. That is why there is no `migrations/`
-directory here.
+The Strava exchange and refresh functions remain **stateless**. Strava tokens
+are kept in the mobile OS keychain via `expo-secure-store`.
+
+GRADNT accounts now use Supabase Auth. `migrations/` creates private product
+documents for onboarding settings and training calendars, protected by RLS.
+Those documents contain no Strava API activities. Read the
+[commercialisation development log](../docs/2026-09-17-developpement-commercialisation.md)
+for the current product decisions and remaining work.
 
 ## Why there is a redirect bridge
 
@@ -164,3 +168,37 @@ because it can echo the submitted credentials back.
   Strava, but token _rotation_ needs a real connection to confirm.
 - **Neither function has automated tests.** Deno is not installed in this repo,
   so they are only exercised by hand against the deployed copy.
+
+## Private accounts and calendars
+
+Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in
+`apps/mobile/.env.local`. Use a `sb_publishable_` key, never a secret/service-role
+key. The account screen supports email/password sign-up, email confirmation
+and sign-in. Google and password recovery remain launch prerequisites.
+
+Authenticated riders store settings and calendar history in their own
+`user_documents` rows. There is no silent local fallback on cloud failure.
+Writes use an expected revision through `save_user_document`: a stale device
+must reload rather than overwrite another device. Without a GRADNT account,
+settings remain local and calendars use SQLite on native platforms.
+
+Importing settings into a new account requires an explicit action. Existing
+local calendars are preserved on the device; the first cloud calendar is new.
+Strava must be connected again for that account/device. Cloud workspace data
+is not written into the unowned local workspace when signing out.
+
+A new native build is necessary to include `expo-sqlite`. Test on both iOS and
+Android before distribution. Configure authentication email delivery and
+confirmation URLs for the target environment; avoid relying on the default
+email service for a public launch.
+
+Local verification (no remote test accounts or emails):
+
+```sh
+supabase start
+supabase test db
+node infra/scripts/test-private-workspace.mjs
+```
+
+The API smoke test refuses remote endpoints, creates two confirmed temporary
+users, verifies isolation and stale-write protection, then deletes them.

@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '../components/OnboardingSaveFeedback'
 import { ArrowLeft, ArrowRight, Clock3 } from '@tamagui/lucide-icons-2'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'expo-router'
@@ -37,7 +38,12 @@ export function AvailabilityScreen() {
   const storedAvailability = useOnboardingStore((state) => state.availability)
   const setAvailability = useOnboardingStore((state) => state.setAvailability)
 
-  const { control, handleSubmit, setValue } = useForm<AvailabilityFormValues>({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { isSubmitting },
+  } = useForm<AvailabilityFormValues>({
     resolver: zodResolver(weeklyAvailabilityFormSchema),
     mode: 'onChange',
     defaultValues: {
@@ -63,8 +69,8 @@ export function AvailabilityScreen() {
     )
   }
 
-  const submit = handleSubmit((values) => {
-    setAvailability(values.slots)
+  const submit = handleSubmit(async (values) => {
+    if (!(await setAvailability(values.slots))) return
     router.push('/onboarding/strava')
   })
 
@@ -79,6 +85,7 @@ export function AvailabilityScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$7">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
@@ -145,7 +152,7 @@ export function AvailabilityScreen() {
           ) : null}
 
           <GradntButton
-            disabled={!canContinue}
+            disabled={!canContinue || isSubmitting}
             opacity={canContinue ? 1 : 0.45}
             iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
             onPress={submit}

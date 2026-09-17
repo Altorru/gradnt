@@ -1,6 +1,11 @@
 import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { z } from 'zod'
+import {
+  readCloudDocument,
+  writeCloudDocument,
+  type CloudMetadata,
+} from '@/services/supabase/documents'
 
 import { weeklyAvailabilitySchema } from '../domain/availability.schema'
 import { cyclistGoalSchema } from '../domain/goal.schema'
@@ -18,29 +23,62 @@ export const onboardingSnapshotSchema = z.object({
   completed: z.boolean(),
 })
 
-export type OnboardingSnapshot = z.infer<typeof onboardingSnapshotSchema>
-
-async function readStoredValue(): Promise<string | null> {
-  if (Platform.OS === 'web') {
-    return typeof window === 'undefined' ? null : window.localStorage.getItem(onboardingStorageKey)
-  }
-
-  return SecureStore.getItemAsync(onboardingStorageKey)
+export type OnboardingSnapshot = z.infer<typeof onboardingSnapshotSchema> & {
+  cloud?: CloudMetadata
 }
 
-async function writeStoredValue(value: string): Promise<void> {
+export const emptyOnboardingSnapshot: OnboardingSnapshot = {
+  profile: null,
+  goal: null,
+  availability: null,
+  strava: null,
+  currentStep: 1,
+  completed: false,
+}
+
+export async function clearDeviceStravaConnection(userId: string): Promise<void> {
+  const key = `gradnt.strava.connection.${userId}`
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined') window.localStorage.removeItem(key)
+  } else {
+    await SecureStore.deleteItemAsync(key)
+  }
+}
+
+async function readStoredValue(key = onboardingStorageKey): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    return typeof window === 'undefined' ? null : window.localStorage.getItem(key)
+  }
+
+  return SecureStore.getItemAsync(key)
+}
+
+async function writeStoredValue(value: string, key = onboardingStorageKey): Promise<void> {
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(onboardingStorageKey, value)
+      window.localStorage.setItem(key, value)
     }
 
     return
   }
 
-  await SecureStore.setItemAsync(onboardingStorageKey, value)
+  await SecureStore.setItemAsync(key, value)
 }
 
 export async function loadOnboardingSnapshot(): Promise<OnboardingSnapshot | null> {
+  const document = await readCloudDocument('onboarding')
+  if (document.mode === 'cloud') {
+    const snapshot =
+      document.value === null
+        ? emptyOnboardingSnapshot
+        : onboardingSnapshotSchema.parse(document.value)
+    const deviceStrava = await readStoredValue(
+      `gradnt.strava.connection.${document.metadata.userId}`,
+    )
+    const strava =
+      deviceStrava === null ? null : stravaConnectionSchema.parse(JSON.parse(deviceStrava))
+    return { ...snapshot, strava, cloud: document.metadata }
+  }
   try {
     const storedValue = await readStoredValue()
 
@@ -57,11 +95,40 @@ export async function loadOnboardingSnapshot(): Promise<OnboardingSnapshot | nul
   }
 }
 
-export async function saveOnboardingSnapshot(snapshot: OnboardingSnapshot): Promise<void> {
-  await writeStoredValue(JSON.stringify(snapshot))
+export async function saveOnboardingSnapshot(
+  snapshot: OnboardingSnapshot,
+): Promise<OnboardingSnapshot> {
+  const payload = onboardingSnapshotSchema.parse(snapshot)
+  const document = snapshot.cloud ? null : await readCloudDocument('onboarding')
+  const metadata = snapshot.cloud ?? (document?.mode === 'cloud' ? document.metadata : undefined)
+  if (metadata) {
+    if (!snapshot.cloud && document?.mode === 'cloud' && document.value !== null) {
+      throw new Error('document_conflict')
+    }
+    const cloud = await writeCloudDocument('onboarding', { ...payload, strava: null }, metadata)
+    if (payload.strava) {
+      await writeStoredValue(
+        JSON.stringify(payload.strava),
+        `gradnt.strava.connection.${cloud.userId}`,
+      )
+    } else if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined')
+        window.localStorage.removeItem(`gradnt.strava.connection.${cloud.userId}`)
+    } else {
+      await SecureStore.deleteItemAsync(`gradnt.strava.connection.${cloud.userId}`)
+    }
+    return { ...payload, cloud }
+  }
+  await writeStoredValue(JSON.stringify(payload))
+  return payload
 }
 
 export async function clearOnboardingSnapshot(): Promise<void> {
+  const document = await readCloudDocument('onboarding')
+  if (document.mode === 'cloud') {
+    await saveOnboardingSnapshot({ ...emptyOnboardingSnapshot, cloud: document.metadata })
+    return
+  }
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(onboardingStorageKey)

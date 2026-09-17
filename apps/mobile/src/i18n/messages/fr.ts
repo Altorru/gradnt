@@ -22,6 +22,10 @@ export const fr = {
     seeMore: 'Voir plus',
     loading: 'Chargement…',
     sync: 'Synchronisation…',
+    saving: 'Enregistrement…',
+    reloadSaved: 'Recharger les données sauvegardées',
+    saveFailed:
+      'La sauvegarde a échoué. Vérifie ta connexion puis réessaie. Si les données ont changé sur un autre appareil, recharge cet écran.',
   },
 
   tabs: {
@@ -30,6 +34,32 @@ export const fr = {
     progress: 'Progrès',
     explore: 'Explorer',
     garage: 'Garage',
+  },
+
+  account: {
+    title: 'Ton compte GRADNT',
+    description: 'Conserve ton profil, ton objectif et ton plan dans ton compte privé.',
+    open: 'Compte et sauvegarde',
+    email: 'Email',
+    password: 'Mot de passe',
+    passwordHint: 'Au moins 8 caractères pour créer un compte.',
+    signIn: 'Se connecter',
+    signUp: 'Créer mon compte',
+    signOut: 'Déconnecter cet appareil',
+    signedIn: 'Connecté : {{email}}',
+    checkEmail: 'Vérifie ton email pour confirmer le compte, puis connecte-toi ici.',
+    unavailable: 'La connexion aux comptes n’est pas encore configurée dans cette version.',
+    failed: 'L’opération a échoué. Vérifie tes identifiants et ta connexion, puis réessaie.',
+    invalid:
+      'Indique un email valide et un mot de passe. Pour créer un compte : au moins 8 caractères.',
+    importTitle: 'Reprendre tes réglages actuels ?',
+    importNote:
+      'Ce compte est vide. Tu peux y copier le profil, l’objectif et les disponibilités de cet appareil. La connexion Strava reste propre à chaque appareil et doit être rétablie.',
+    import: 'Importer mes réglages dans ce compte',
+    startFresh: 'Configurer ce compte depuis le début',
+    continue: 'Retrouver mon app',
+    privateNote:
+      'Les réglages et les séances sont privés dans ton compte. Les jetons Strava restent sur cet appareil ; les activités de l’API Strava ne sont pas copiées dans cette sauvegarde.',
   },
 
   settings: {
@@ -107,7 +137,7 @@ export const fr = {
     privacy: {
       retained: 'Ce qui est conservé',
       retainedNote:
-        'Tes jetons d’accès Strava sont chiffrés dans le trousseau de cet appareil, avec ton profil et ton objectif saisis à l’inscription. GRADNT ne conserve rien sur ses serveurs : la fonction qui échange le code d’autorisation est sans état et n’écrit aucune donnée.',
+        'Sur mobile, tes jetons d’accès Strava et ta session GRADNT sont conservés dans le trousseau de cet appareil. Sans compte GRADNT, tes réglages et ton calendrier sont conservés localement. Si tu connectes un compte GRADNT, ton profil, ton objectif, tes disponibilités et ton calendrier sont conservés dans ce compte privé. Les activités de l’API Strava ne sont pas copiées dans cette sauvegarde.',
       disconnectNote:
         'Déconnecter Strava efface les jetons et les sorties importées de cet appareil. Les activités elles-mêmes restent chez Strava, où tu gardes la main dessus.',
     },
@@ -164,6 +194,19 @@ export const fr = {
     description:
       'Les séances qui te rapprochent de ton objectif, avec de la marge pour la vraie vie.',
     unavailable: 'Le plan est momentanément indisponible.',
+    legacyCalendarNote:
+      'Ton ancien calendrier ne conservait pas ses dates d’origine. Les statuts enregistrés sont préservés, mais leurs dates historiques ne peuvent pas être certifiées. Les nouvelles dates resteront désormais fixes.',
+    showHistory: 'Voir mes anciens calendriers',
+    hideHistory: 'Masquer les anciens calendriers',
+    archivedCalendar: 'Calendrier commencé le {{date}}',
+    retryHistory: 'Recharger les anciens calendriers',
+    settingsChanged: 'Tes réglages ont changé',
+    finished: 'Ton calendrier est terminé',
+    newPlanNote:
+      'Un nouveau calendrier de 4 semaines utilisera ton profil, ton objectif et tes disponibilités actuels. Il remplacera les séances à venir du plan actuel. Ton ancien calendrier et les séances suivies resteront dans l’historique.',
+    prepareNewPlan: 'Renouveler mon calendrier',
+    confirmNewPlan: 'Confirmer le nouveau calendrier',
+    reload: 'Actualiser le calendrier',
     thisWeek: 'Cette semaine',
     /** The later weeks, named by the day they begin. */
     weekOf: 'Semaine du {{date}}',

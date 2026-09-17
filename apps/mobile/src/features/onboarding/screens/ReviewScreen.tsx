@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '../components/OnboardingSaveFeedback'
 import { ArrowLeft, Check, ChevronRight } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
 import { XStack, YStack } from 'tamagui'
@@ -36,6 +37,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 export function ReviewScreen() {
+  const saving = useOnboardingStore((state) => state.saving)
   const router = useRouter()
   const { t } = useTranslation()
   const complete = useOnboardingStore((state) => state.complete)
@@ -70,6 +72,7 @@ export function ReviewScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$7">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
@@ -170,8 +173,9 @@ export function ReviewScreen() {
 
             <GradntButton
               iconAfter={<ChevronRight size={18} color={colors.graphite950} />}
-              onPress={() => {
-                complete()
+              disabled={saving}
+              onPress={async () => {
+                if (!(await complete())) return
                 router.replace('/home')
               }}
             >
@@ -181,8 +185,9 @@ export function ReviewScreen() {
             <GradntButton
               tone="ghost"
               minHeight={44}
-              onPress={() => {
-                void reset()
+              disabled={saving}
+              onPress={async () => {
+                if (!(await reset())) return
                 // Dismisses the flow rather than landing on top of it. Left in
                 // place, every screen just walked through comes back at the
                 // first back press.

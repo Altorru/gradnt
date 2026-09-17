@@ -20,6 +20,10 @@ export const en = {
     seeMore: 'See more',
     loading: 'Loading…',
     sync: 'Syncing…',
+    saving: 'Saving…',
+    reloadSaved: 'Reload saved data',
+    saveFailed:
+      'Saving failed. Check your connection and try again. If another device changed the data, reload this screen.',
   },
 
   tabs: {
@@ -28,6 +32,32 @@ export const en = {
     progress: 'Progress',
     explore: 'Explore',
     garage: 'Garage',
+  },
+
+  account: {
+    title: 'Your GRADNT account',
+    description: 'Keep your profile, goal and plan in your private account.',
+    open: 'Account and backup',
+    email: 'Email',
+    password: 'Password',
+    passwordHint: 'At least 8 characters to create an account.',
+    signIn: 'Sign in',
+    signUp: 'Create my account',
+    signOut: 'Sign out on this device',
+    signedIn: 'Signed in: {{email}}',
+    checkEmail: 'Check your email to confirm your account, then sign in here.',
+    unavailable: 'Account sign-in is not configured in this version yet.',
+    failed: 'The operation failed. Check your credentials and connection, then try again.',
+    invalid:
+      'Enter a valid email and a password. Creating an account requires at least 8 characters.',
+    importTitle: 'Keep your current settings?',
+    importNote:
+      'This account is empty. You can copy the profile, goal and availability from this device. The Strava connection belongs to each device and must be reconnected.',
+    import: 'Import my settings into this account',
+    startFresh: 'Set up this account from scratch',
+    continue: 'Return to my app',
+    privateNote:
+      'Settings and sessions are private in your account. Strava tokens remain on this device; Strava API activities are not copied into this backup.',
   },
 
   settings: {
@@ -101,7 +131,7 @@ export const en = {
     privacy: {
       retained: 'What is kept',
       retainedNote:
-        'Your Strava access tokens are encrypted in this device’s keychain, along with the profile and goal you entered during onboarding. GRADNT keeps nothing on its servers: the function that exchanges the authorisation code is stateless and writes no data.',
+        'On mobile, your Strava tokens and GRADNT session are kept in this device’s keychain. Without a GRADNT account, settings and calendar stay local. With an account, your profile, goal, availability and calendar are kept in your private account. Strava API activities are not copied into this backup.',
       disconnectNote:
         'Disconnecting Strava erases the tokens and the imported rides from this device. The activities themselves stay with Strava, where you keep control of them.',
     },
@@ -144,6 +174,19 @@ export const en = {
     title: 'Your plan',
     description: 'The sessions that move you towards your goal, with room for real life.',
     unavailable: 'The plan is temporarily unavailable.',
+    legacyCalendarNote:
+      'Your old calendar did not store its original dates. Saved statuses are preserved, but their historical dates cannot be verified. New dates will now stay fixed.',
+    showHistory: 'View previous calendars',
+    hideHistory: 'Hide previous calendars',
+    archivedCalendar: 'Calendar started {{date}}',
+    retryHistory: 'Reload previous calendars',
+    settingsChanged: 'Your settings have changed',
+    finished: 'Your calendar has finished',
+    newPlanNote:
+      'A new 4-week calendar will use your current profile, goal and availability. It will replace the upcoming sessions in the current plan. Your previous calendar and tracked sessions will remain in history.',
+    prepareNewPlan: 'Renew my calendar',
+    confirmNewPlan: 'Confirm the new calendar',
+    reload: 'Refresh calendar',
     thisWeek: 'This week',
     weekOf: 'Week of {{date}}',
     nonePlanned: 'No session planned',

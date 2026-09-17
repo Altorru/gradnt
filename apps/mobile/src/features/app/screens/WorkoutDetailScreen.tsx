@@ -55,8 +55,23 @@ export function WorkoutDetailScreen() {
           <GradntIconButton onPress={() => router.back()}>
             <ArrowLeft size={18} />
           </GradntIconButton>
-          <GradntHeading>{t('plan.workout.notFoundTitle')}</GradntHeading>
-          <GradntText muted>{t('plan.workout.notFound')}</GradntText>
+          <GradntHeading>
+            {t(
+              workoutsQuery.isPending
+                ? 'common.loading'
+                : workoutsQuery.isError
+                  ? 'plan.unavailable'
+                  : 'plan.workout.notFoundTitle',
+            )}
+          </GradntHeading>
+          {!workoutsQuery.isPending && !workoutsQuery.isError ? (
+            <GradntText muted>{t('plan.workout.notFound')}</GradntText>
+          ) : null}
+          {workoutsQuery.isError ? (
+            <GradntButton tone="secondary" onPress={() => void workoutsQuery.refetch()}>
+              {t('common.retry')}
+            </GradntButton>
+          ) : null}
         </YStack>
       </GradntScreen>
     )
@@ -115,6 +130,11 @@ export function WorkoutDetailScreen() {
 
           {workout.status === 'planned' || workout.status === 'moved' ? (
             <YStack gap="$3">
+              {completeWorkout.isError || skipWorkout.isError ? (
+                <GradntText color="$danger" accessibilityLiveRegion="polite">
+                  {t('common.saveFailed')}
+                </GradntText>
+              ) : null}
               <GradntButton
                 disabled={isPending}
                 iconAfter={<CheckCircle2 size={18} color="$onAccent" />}

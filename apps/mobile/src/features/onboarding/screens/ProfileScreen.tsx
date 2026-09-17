@@ -1,3 +1,4 @@
+import { OnboardingSaveFeedback } from '../components/OnboardingSaveFeedback'
 import { ArrowLeft, ArrowRight } from '@tamagui/lucide-icons-2'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
@@ -30,7 +31,7 @@ export function ProfileScreen() {
   const {
     control,
     handleSubmit,
-    formState: { isValid },
+    formState: { isValid, isSubmitting },
   } = useForm<CyclistProfileForm>({
     resolver: zodResolver(cyclistProfileSchema),
     mode: 'onChange',
@@ -41,8 +42,8 @@ export function ProfileScreen() {
     },
   })
 
-  const submit = handleSubmit((values) => {
-    setProfile(values)
+  const submit = handleSubmit(async (values) => {
+    if (!(await setProfile(values))) return
     router.push('/onboarding/goal')
   })
 
@@ -50,6 +51,7 @@ export function ProfileScreen() {
     <GradntScreen>
       <GradntScrollView>
         <YStack gap="$7">
+          <OnboardingSaveFeedback />
           <XStack alignItems="center" justifyContent="space-between">
             <GradntIconButton onPress={() => router.back()}>
               <ArrowLeft size={18} color={'$textPrimary'} />
@@ -151,7 +153,7 @@ export function ProfileScreen() {
           </YStack>
 
           <GradntButton
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
             opacity={isValid ? 1 : 0.45}
             iconAfter={<ArrowRight size={18} color={colors.graphite950} />}
             onPress={submit}

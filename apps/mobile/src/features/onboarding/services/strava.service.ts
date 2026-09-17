@@ -119,7 +119,9 @@ export class LiveStravaService implements StravaService {
    * the tokens, and any half-finished authorization.
    */
   async disconnect() {
-    useOnboardingStore.getState().setStrava(defaultStravaConnection)
+    if (!(await useOnboardingStore.getState().setStrava(defaultStravaConnection))) {
+      throw new Error('strava_disconnect_save_failed')
+    }
     await clearStravaTokens()
     await clearPendingStravaState()
   }
