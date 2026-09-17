@@ -14,10 +14,10 @@ import {
 import {
   useMoveWorkoutMutation,
   useSkipWorkoutMutation,
-  useUpcomingWorkoutsQuery,
+  useTrainingPlanQuery,
 } from '@/hooks/use-gradnt-data'
 import { useDateLocale, useNumberFormat, useTranslation, type Translate } from '@/i18n'
-import { getPlanCompletionPercentage } from '@/lib/domain'
+import { getPlanCompletionPercentage, type TrainingPlan } from '@/lib/domain'
 
 import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
@@ -45,27 +45,34 @@ export function PlanScreen() {
   const dateLocale = useDateLocale()
   const formatNumber = useNumberFormat()
   const router = useRouter()
-  const workoutsQuery = useUpcomingWorkoutsQuery()
+  const planQuery = useTrainingPlanQuery()
   const skipWorkout = useSkipWorkoutMutation()
   const moveWorkout = useMoveWorkoutMutation()
-  const workouts = workoutsQuery.data ?? []
+  const weeks = planQuery.data?.weeks ?? []
+  const workouts = weeks.flatMap((week) => week.workouts)
   /**
-   * The summary card covers the plan's own first week, not all four.
-   *
-   * The plan is written four weeks ahead so a reminder can outlive a gap between
-   * opens, and this card said "this week" while counting every session in it.
-   *
-   * The window comes from the plan rather than from the clock — a date read
-   * during render is impure, and the first week is the earliest session plus
-   * seven days by construction.
+   * The summary card covers the plan's first week, and the plan says which week
+   * that is. The list is written four weeks ahead, so counting all of it under
+   * "this week" would report a month as seven days.
    */
-  const firstWeekStart = workouts.reduce(
-    (earliest, workout) => Math.min(earliest, Date.parse(workout.date)),
-    Number.POSITIVE_INFINITY,
-  )
-  const thisWeek = workouts.filter(
-    (workout) => Date.parse(workout.date) < firstWeekStart + 7 * 24 * 60 * 60 * 1000,
-  )
+  const thisWeek = weeks[0]?.workouts ?? []
+
+  /**
+   * What a week is called.
+   *
+   * The first is "this week", because that is what it is. The others are named
+   * by the day they begin: a week number means nothing to a rider, and a date
+   * is the only thing that says when they get there.
+   */
+  const weekLabelOf = (week: TrainingPlan['weeks'][number]) => {
+    const [first] = week.workouts
+
+    return week.weekNumber === 1 || first === undefined
+      ? t('plan.thisWeek')
+      : t('plan.weekOf', {
+          date: formatDate(new Date(first.date), 'd MMM', { locale: dateLocale }),
+        })
+  }
   const plannedWorkouts = thisWeek.filter((workout) => workout.status === 'planned')
   const completedWorkouts = thisWeek.filter((workout) => workout.status === 'completed')
   const trackedWorkouts = thisWeek.filter((workout) => workout.status !== 'planned')
@@ -82,12 +89,12 @@ export function PlanScreen() {
         <YStack gap="$7">
           <AppScreenIntro title={t('plan.title')} description={t('plan.description')} />
 
-          {workoutsQuery.isError ? (
+          {planQuery.isError ? (
             <GradntCard padding="$4" gap="$3">
               <GradntText color="$danger" fontSize={13} weight="semibold">
                 {t('plan.unavailable')}
               </GradntText>
-              <GradntButton tone="secondary" onPress={() => void workoutsQuery.refetch()}>
+              <GradntButton tone="secondary" onPress={() => void planQuery.refetch()}>
                 {t('common.retry')}
               </GradntButton>
             </GradntCard>
@@ -99,7 +106,7 @@ export function PlanScreen() {
               <YStack flex={1} gap="$1">
                 <GradntText weight="semibold">{t('plan.thisWeek')}</GradntText>
                 <GradntText muted fontSize={13}>
-                  {workoutsQuery.isPending
+                  {planQuery.isPending
                     ? t('common.loading')
                     : thisWeek.length
                       ? `${t('plan.upcoming', { count: plannedWorkouts.length })} · ${plural('plan.completed', completedWorkouts.length)}`
@@ -107,10 +114,10 @@ export function PlanScreen() {
                 </GradntText>
               </YStack>
               <GradntBadge tone={completionPercentage === 100 ? 'positive' : 'neutral'}>
-                {workoutsQuery.isPending ? '—' : `${completionPercentage}%`}
+                {planQuery.isPending ? '—' : `${completionPercentage}%`}
               </GradntBadge>
             </XStack>
-            {!workoutsQuery.isPending && thisWeek.length ? (
+            {!planQuery.isPending && thisWeek.length ? (
               <YStack gap="$2">
                 <XStack justifyContent="space-between">
                   <GradntText muted fontSize={12}>
@@ -135,72 +142,78 @@ export function PlanScreen() {
             ) : null}
           </GradntCard>
 
-          {!workoutsQuery.isPending && !workoutsQuery.isError && workouts.length === 0 ? (
+          {!planQuery.isPending && !planQuery.isError && workouts.length === 0 ? (
             <GradntCard padding="$4" gap="$2">
               <GradntHeading level={3}>{t('plan.emptyTitle')}</GradntHeading>
               <GradntText muted>{t('plan.emptyNote')}</GradntText>
             </GradntCard>
           ) : null}
 
-          <YStack gap="$3">
-            {workouts.map((workout) => (
-              <GradntCard key={workout.id} padding="$4" gap="$3">
-                <XStack
-                  alignItems="center"
-                  gap="$3"
-                  onPress={() => {
-                    router.push(`/plan/${workout.id}` as Href)
-                  }}
-                >
-                  <YStack flex={1} gap="$1">
-                    <GradntText muted fontSize={11} weight="semibold" letterSpacing={0.7}>
-                      {formatDate(new Date(workout.date), 'EEEE', { locale: dateLocale })}
-                    </GradntText>
-                    <GradntText weight="semibold">{workoutTitle(t, workout.type)}</GradntText>
-                    <GradntText muted fontSize={13}>
-                      {formatWorkoutDuration(workout.durationMinutes)} ·{' '}
-                      {workoutIntensity(t, workout.type)}
-                    </GradntText>
-                  </YStack>
-                  <GradntBadge tone={statusTone[workout.status]}>
-                    {statusLabels(t)[workout.status]}
-                  </GradntBadge>
-                  <ChevronRight size={18} color="$textSecondary" />
-                </XStack>
+          {weeks.map((week) => (
+            <YStack key={week.weekNumber} gap="$3">
+              <GradntText muted fontSize={12} weight="semibold" letterSpacing={1}>
+                {weekLabelOf(week)}
+              </GradntText>
 
-                {workout.status === 'planned' ? (
-                  <XStack gap="$2">
-                    <YStack flex={1}>
-                      <GradntButton
-                        tone="ghost"
-                        minHeight={44}
-                        disabled={isMutating}
-                        onPress={() => {
-                          skipWorkout.mutate(workout.id)
-                        }}
-                      >
-                        {t('plan.skip')}
-                      </GradntButton>
+              {week.workouts.map((workout) => (
+                <GradntCard key={workout.id} padding="$4" gap="$3">
+                  <XStack
+                    alignItems="center"
+                    gap="$3"
+                    onPress={() => {
+                      router.push(`/plan/${workout.id}` as Href)
+                    }}
+                  >
+                    <YStack flex={1} gap="$1">
+                      <GradntText muted fontSize={11} weight="semibold" letterSpacing={0.7}>
+                        {formatDate(new Date(workout.date), 'EEEE', { locale: dateLocale })}
+                      </GradntText>
+                      <GradntText weight="semibold">{workoutTitle(t, workout.type)}</GradntText>
+                      <GradntText muted fontSize={13}>
+                        {formatWorkoutDuration(workout.durationMinutes)} ·{' '}
+                        {workoutIntensity(t, workout.type)}
+                      </GradntText>
                     </YStack>
-                    <YStack flex={1}>
-                      <GradntButton
-                        tone="secondary"
-                        minHeight={44}
-                        disabled={isMutating}
-                        onPress={() => {
-                          const nextDate = new Date(workout.date)
-                          nextDate.setDate(nextDate.getDate() + 1)
-                          moveWorkout.mutate({ workoutId: workout.id, date: nextDate })
-                        }}
-                      >
-                        {t('plan.moveOneDay')}
-                      </GradntButton>
-                    </YStack>
+                    <GradntBadge tone={statusTone[workout.status]}>
+                      {statusLabels(t)[workout.status]}
+                    </GradntBadge>
+                    <ChevronRight size={18} color="$textSecondary" />
                   </XStack>
-                ) : null}
-              </GradntCard>
-            ))}
-          </YStack>
+
+                  {workout.status === 'planned' ? (
+                    <XStack gap="$2">
+                      <YStack flex={1}>
+                        <GradntButton
+                          tone="ghost"
+                          minHeight={44}
+                          disabled={isMutating}
+                          onPress={() => {
+                            skipWorkout.mutate(workout.id)
+                          }}
+                        >
+                          {t('plan.skip')}
+                        </GradntButton>
+                      </YStack>
+                      <YStack flex={1}>
+                        <GradntButton
+                          tone="secondary"
+                          minHeight={44}
+                          disabled={isMutating}
+                          onPress={() => {
+                            const nextDate = new Date(workout.date)
+                            nextDate.setDate(nextDate.getDate() + 1)
+                            moveWorkout.mutate({ workoutId: workout.id, date: nextDate })
+                          }}
+                        >
+                          {t('plan.moveOneDay')}
+                        </GradntButton>
+                      </YStack>
+                    </XStack>
+                  ) : null}
+                </GradntCard>
+              ))}
+            </YStack>
+          ))}
         </YStack>
       </AppScrollView>
     </AppShell>

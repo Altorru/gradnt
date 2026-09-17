@@ -165,6 +165,8 @@ export const fr = {
       'Les séances qui te rapprochent de ton objectif, avec de la marge pour la vraie vie.',
     unavailable: 'Le plan est momentanément indisponible.',
     thisWeek: 'Cette semaine',
+    /** The later weeks, named by the day they begin. */
+    weekOf: 'Semaine du {{date}}',
     nonePlanned: 'Aucune séance planifiée',
     progress: 'Avancement du plan',
     tracked: '{{tracked}}/{{total}} suivies',

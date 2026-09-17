@@ -145,6 +145,7 @@ export const en = {
     description: 'The sessions that move you towards your goal, with room for real life.',
     unavailable: 'The plan is temporarily unavailable.',
     thisWeek: 'This week',
+    weekOf: 'Week of {{date}}',
     nonePlanned: 'No session planned',
     progress: 'Plan progress',
     tracked: '{{tracked}}/{{total}} tracked',
