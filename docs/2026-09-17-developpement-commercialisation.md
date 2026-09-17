@@ -129,7 +129,7 @@
 
 ### 5. Tickets ordonnés et critères de recette
 
-1. Liaison OAuth compte GRADNT ↔ athlète Strava, stockage serveur des secrets et révocation.
+1. Liaison OAuth compte GRADNT ↔ athlète Strava, stockage serveur des secrets et révocation. Le [protocole de test webhook](2026-09-17-test-webhooks-strava.md) couvre la validation, le test manuel et la recette réelle.
 2. Webhook validé + table d’événements + jobs idempotents + tests de créations/modifications/suppressions.
 3. Appareils push + préférences + reçus + notification et ouverture de la bonne sortie à froid.
 4. Modèle des ressentis + table privée + formulaire + brouillon + modification : livré, recette native à faire.
