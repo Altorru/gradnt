@@ -43,7 +43,15 @@ export function GradntHomePreview() {
               <GradntText muted>Où tu en es aujourd&apos;hui ?</GradntText>
             </YStack>
 
-            <GradntGoalCard />
+            <GradntGoalCard
+              eyebrow="OBJECTIF PRINCIPAL"
+              goalLabel="DÉNIVELÉ"
+              targetLabel="→ 2 000 m"
+              statusLabel="POINT DE DÉPART"
+              changeLabel="Après tes premières sorties"
+              currentValue={null}
+              progressPercentage={0}
+            />
 
             <YStack gap="$4">
               <GradntSectionHeader title="Ton état" action="Voir plus" />

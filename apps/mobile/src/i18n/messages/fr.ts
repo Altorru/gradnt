@@ -56,6 +56,7 @@ export const fr = {
       confirmDisconnect: 'Confirmer la déconnexion',
       disconnect: 'Déconnecter Strava',
       connect: 'Connecter Strava',
+      connecting: 'Connexion…',
       connectNote:
         'GRADNT lit ton historique pour situer ton point de départ et adapter ce qu’il te propose.',
     },
@@ -103,6 +104,24 @@ export const fr = {
    * readable even when the screen is in the other one — "French" is no help to
    * someone who cannot read English.
    */
+  /**
+   * Why fetching rides from Strava failed, said to the rider.
+   *
+   * Three screens show these — the two dashboards and the settings — so they
+   * are named by what went wrong rather than by where they appear.
+   */
+  strava: {
+    failures: {
+      disconnected: 'Aucun compte Strava n’est relié.',
+      expired:
+        'Ta connexion Strava a expiré ou ses autorisations sont incomplètes. Reconnecte ton compte dans les réglages.',
+      rateLimited: 'Strava limite temporairement les demandes. Réessaie dans quelques minutes.',
+      error: 'Tes sorties Strava n’ont pas pu être récupérées.',
+      /** Wraps the catch-all with the underlying message, for diagnosis. */
+      withDetail: '{{sentence}} ({{detail}})',
+    },
+  },
+
   insights: {
     startTitle: 'Point de départ déclaré',
     startMessage:
@@ -299,6 +318,24 @@ export const fr = {
     intensities: 'Intensités',
     basedOnProfile: 'Basé sur ton profil déclaré',
     basedOnActivities: 'Basé sur des activités observées',
+
+    goalEyebrow: 'OBJECTIF PRINCIPAL',
+    /**
+     * The short name of each goal, for the card heading.
+     *
+     * Not `onboarding.goalLabels`, which reads "Objectif forme": that one names
+     * the goal in a list of goals, this one titles a card about it.
+     */
+    goalTypes: {
+      ftp: 'FTP',
+      distance: 'DISTANCE',
+      event: 'ÉVÉNEMENT',
+      climbing: 'DÉNIVELÉ',
+      fitness: 'FORME',
+    },
+    goalNone: 'OBJECTIF',
+    goalTarget: '→ {{value}}',
+    goalToPrecise: 'Objectif à préciser',
   },
 
   garage: {

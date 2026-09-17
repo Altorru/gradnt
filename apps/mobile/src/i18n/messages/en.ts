@@ -52,6 +52,7 @@ export const en = {
       confirmDisconnect: 'Confirm disconnection',
       disconnect: 'Disconnect Strava',
       connect: 'Connect Strava',
+      connecting: 'Connecting…',
       connectNote:
         'GRADNT reads your history to place your starting point and shape what it suggests.',
     },
@@ -89,6 +90,18 @@ export const en = {
     importedRides: {
       one: '{{count}} ride imported',
       other: '{{count}} rides imported',
+    },
+  },
+
+  /** Why fetching rides from Strava failed, said to the rider. See `fr`. */
+  strava: {
+    failures: {
+      disconnected: 'No Strava account is connected.',
+      expired:
+        'Your Strava connection has expired or its permissions are incomplete. Reconnect your account in settings.',
+      rateLimited: 'Strava is temporarily limiting requests. Try again in a few minutes.',
+      error: 'Your Strava rides could not be fetched.',
+      withDetail: '{{sentence}} ({{detail}})',
     },
   },
 
@@ -272,6 +285,18 @@ export const en = {
     intensities: 'Intensities',
     basedOnProfile: 'Based on the profile you declared',
     basedOnActivities: 'Based on observed activities',
+
+    goalEyebrow: 'MAIN GOAL',
+    goalTypes: {
+      ftp: 'FTP',
+      distance: 'DISTANCE',
+      event: 'EVENT',
+      climbing: 'CLIMBING',
+      fitness: 'FITNESS',
+    },
+    goalNone: 'GOAL',
+    goalTarget: '→ {{value}}',
+    goalToPrecise: 'Goal to set',
   },
 
   garage: {

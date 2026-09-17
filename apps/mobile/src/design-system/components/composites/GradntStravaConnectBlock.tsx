@@ -5,11 +5,13 @@ import { GradntButton, GradntCard, GradntHeading, GradntText } from '../primitiv
 
 type GradntStravaConnectBlockProps = {
   onConnect: () => void
+  title: string
+  description: string
+  connectLabel: string
+  connectingLabel: string
   isConnecting?: boolean
   /** Shown under the action. Leave unset while a connection attempt is idle. */
   errorMessage?: string | null
-  title?: string
-  description?: string
   visual?: ReactNode
 }
 
@@ -17,7 +19,9 @@ type GradntStravaConnectBlockProps = {
  * Empty state for the screens whose content comes from Strava.
  *
  * Presentational on purpose: the design system does not reach into a feature's
- * service, so the screen owns the action and this owns how it looks.
+ * service, so the screen owns the action and this owns how it looks. The words
+ * are props rather than defaults — the ones this used to carry were French, so
+ * two of its three callers showed French on an English screen.
  *
  * It is the answer to "there is nothing here *yet*", which is why it never
  * carries a retry button. A failed request is a different state with a
@@ -26,10 +30,12 @@ type GradntStravaConnectBlockProps = {
  */
 export function GradntStravaConnectBlock({
   onConnect,
+  title,
+  description,
+  connectLabel,
+  connectingLabel,
   isConnecting = false,
   errorMessage = null,
-  title = 'Relie tes sorties',
-  description = 'GRADNT lit ton historique Strava pour situer ton point de départ et adapter ce qu’il te propose.',
   visual,
 }: GradntStravaConnectBlockProps) {
   return (
@@ -44,7 +50,7 @@ export function GradntStravaConnectBlock({
       {visual}
 
       <GradntButton onPress={onConnect} disabled={isConnecting} opacity={isConnecting ? 0.55 : 1}>
-        {isConnecting ? 'Connexion…' : 'Connecter Strava'}
+        {isConnecting ? connectingLabel : connectLabel}
       </GradntButton>
 
       {errorMessage ? (

@@ -35,6 +35,7 @@ import { describeActivityFailure } from '@/services/gradnt.repository'
 
 import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
+import { goalUnitSymbol } from '../domain/goal-labels'
 
 /**
  * The goal words and the volume bands are the onboarding ones.
@@ -56,14 +57,6 @@ const VOLUME_KEYS: Record<string, MessageKey> = {
   '6to10': 'onboarding.volumes.sixToTen',
   gt10: 'onboarding.volumes.gt10',
 }
-
-const goalUnits = {
-  w: 'W',
-  km: 'km',
-  m: 'm',
-  h: 'h',
-  none: '',
-} as const
 
 export function ProgressScreen() {
   const { t, plural } = useTranslation()
@@ -108,7 +101,7 @@ export function ProgressScreen() {
   const rideCount = getWeeklyRideCount(activities)
   const goalLabel = goal ? t(GOAL_KEYS[goal.type] ?? 'progress.mainGoal') : t('progress.mainGoal')
   const goalTarget = goal?.targetValue
-  const goalUnit = goal ? goalUnits[goal.targetUnit] : ''
+  const goalUnit = goal ? goalUnitSymbol(goal.targetUnit) : ''
   const goalSummary =
     currentValue !== null && goalTarget !== null && goalTarget !== undefined
       ? `${currentValue} ${goalUnit} → ${goalTarget} ${goalUnit}`
@@ -150,6 +143,10 @@ export function ProgressScreen() {
               onConnect={() => void connectStrava()}
               isConnecting={isConnecting}
               errorMessage={connectError}
+              title={t('onboarding.strava.title')}
+              description={t('settings.strava.connectNote')}
+              connectLabel={t('settings.strava.connect')}
+              connectingLabel={t('settings.strava.connecting')}
             />
           </YStack>
         </AppScrollView>
@@ -166,7 +163,7 @@ export function ProgressScreen() {
           {hasError ? (
             <GradntText color="$danger" fontSize={13}>
               {activitiesQuery.isError
-                ? describeActivityFailure(activitiesQuery.error)
+                ? describeActivityFailure(activitiesQuery.error, t)
                 : t('progress.unavailable')}
             </GradntText>
           ) : null}

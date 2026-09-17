@@ -360,7 +360,7 @@ export function SettingsScreen() {
     const activities = queryClient.getQueryState(['activities'])
 
     if (activities?.status === 'error') {
-      setError(describeActivityFailure(activities.error))
+      setError(describeActivityFailure(activities.error, t))
     } else {
       const count = queryClient.getQueryData<Activity[]>(['activities'])?.length ?? 0
       setSyncReport(plural('settings.importedRides', count))
@@ -493,11 +493,13 @@ export function SettingsScreen() {
                 </YStack>
               ) : (
                 // Connects in place rather than pushing to the onboarding
-                // screen: that one is step 5 of 6 and would walk a rider who
+                // screen: that one is step 5 of 7 and would walk a rider who
                 // has already signed up back through the review flow.
                 <GradntStravaConnectBlock
                   title={t('settings.strava.connect')}
                   description={t('settings.strava.connectNote')}
+                  connectLabel={t('settings.strava.connect')}
+                  connectingLabel={t('settings.strava.connecting')}
                   onConnect={() => void connect()}
                   isConnecting={isConnecting}
                   errorMessage={error}

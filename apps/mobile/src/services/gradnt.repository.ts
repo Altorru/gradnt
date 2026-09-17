@@ -1,3 +1,4 @@
+import type { MessageKey, Translate } from '@/i18n'
 import { loadOnboardingSnapshot } from '@/features/onboarding/services/onboarding.persistence'
 import {
   generateFirstPlan,
@@ -26,41 +27,59 @@ export type GoalValueSnapshot = {
   provenance: Extract<DataProvenance, 'observed' | 'declared'>
 }
 
-const ACTIVITY_FAILURE_MESSAGES = {
-  disconnected: 'Aucun compte Strava n’est relié.',
-  expired:
-    'Ta connexion Strava a expiré ou ses autorisations sont incomplètes. Reconnecte ton compte dans les réglages.',
-  rateLimited: 'Strava limite temporairement les demandes. Réessaie dans quelques minutes.',
-  error: 'Tes sorties Strava n’ont pas pu être récupérées.',
-} as const
+/**
+ * The four ways fetching rides can fail, as catalogue keys.
+ *
+ * Codes, not sentences: a rider who has not connected Strava and a rider whose
+ * session expired need different things done, so the four stay separate — but
+ * *which* failure happened is all this service knows, and how to say it belongs
+ * to the catalogue.
+ */
+const ACTIVITY_FAILURE_KEYS = {
+  disconnected: 'strava.failures.disconnected',
+  expired: 'strava.failures.expired',
+  rateLimited: 'strava.failures.rateLimited',
+  error: 'strava.failures.error',
+} as const satisfies Record<string, MessageKey>
+
+export type ActivityFailureReason = keyof typeof ACTIVITY_FAILURE_KEYS
 
 /**
- * Why activities could not be fetched, in words a rider can act on.
+ * Why activities could not be fetched.
  *
- * The four failures stay separate all the way to the screen. Telling a rider
- * whose session expired the same thing as a rider who simply has not ridden yet
- * leaves only one of them with anything to do.
+ * The message carries the code rather than a sentence: nothing renders it, and
+ * a code is what makes a log line worth reading.
  */
 export class StravaActivitiesError extends Error {
   constructor(
-    readonly reason: keyof typeof ACTIVITY_FAILURE_MESSAGES,
-    detail?: string,
+    readonly reason: ActivityFailureReason,
+    readonly detail?: string,
   ) {
-    // The known failures read as sentences. The catch-all carries the
-    // underlying message, because "something went wrong" is what made this
-    // failure invisible in the first place.
-    super(
-      reason === 'error' && detail
-        ? `${ACTIVITY_FAILURE_MESSAGES.error} (${detail})`
-        : ACTIVITY_FAILURE_MESSAGES[reason],
-    )
+    // The catch-all keeps the underlying message, because "something went
+    // wrong" is what made this failure invisible in the first place.
+    super(detail === undefined ? reason : `${reason}: ${detail}`)
     this.name = 'StravaActivitiesError'
   }
 }
 
-/** Renders any thrown activity failure as something worth showing a rider. */
-export function describeActivityFailure(error: unknown): string {
-  return error instanceof Error ? error.message : ACTIVITY_FAILURE_MESSAGES.error
+/**
+ * The failure, in the rider's language.
+ *
+ * Takes the translator rather than returning a sentence, so the wording stays
+ * in the catalogue and a module that fetches rides never holds it.
+ */
+export function describeActivityFailure(error: unknown, t: Translate): string {
+  if (!(error instanceof StravaActivitiesError)) {
+    return t(ACTIVITY_FAILURE_KEYS.error)
+  }
+
+  const sentence = t(ACTIVITY_FAILURE_KEYS[error.reason])
+
+  if (error.reason !== 'error' || error.detail === undefined) {
+    return sentence
+  }
+
+  return t('strava.failures.withDetail', { sentence, detail: error.detail })
 }
 
 export interface GradntRepository {

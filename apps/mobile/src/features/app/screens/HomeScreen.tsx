@@ -36,6 +36,7 @@ import { XStack, YStack } from 'tamagui'
 import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 import { formatWorkoutDuration, workoutIntensity, workoutTitle } from '../domain/workout-labels'
+import { goalEyebrow, goalTargetLabel, goalTypeLabel } from '../domain/goal-labels'
 import { useDateLocale, useTranslation } from '@/i18n'
 import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { stravaService } from '@/features/onboarding/services/strava.service'
@@ -140,15 +141,17 @@ export function HomeScreen() {
           {hasError ? (
             <GradntText color="$danger" fontSize={13}>
               {activitiesQuery.isError
-                ? describeActivityFailure(activitiesQuery.error)
+                ? describeActivityFailure(activitiesQuery.error, t)
                 : t('home.unavailable')}
             </GradntText>
           ) : null}
 
           <GradntGoalCard
-            goal={goal ?? undefined}
-            currentValue={currentGoalValue ?? undefined}
-            progressPercentage={progressPercentage || undefined}
+            eyebrow={goalEyebrow(t)}
+            goalLabel={goal ? goalTypeLabel(t, goal.type) : t('home.goalNone')}
+            targetLabel={goalTargetLabel(t, goal ?? null)}
+            currentValue={currentGoalValue}
+            progressPercentage={progressPercentage}
             statusLabel={
               currentGoalValue === null ? t('home.status.startingPoint') : t('home.status.onTrack')
             }
@@ -245,6 +248,10 @@ export function HomeScreen() {
               onConnect={() => void connectStrava()}
               isConnecting={isConnecting}
               errorMessage={connectError}
+              title={t('onboarding.strava.title')}
+              description={t('settings.strava.connectNote')}
+              connectLabel={t('settings.strava.connect')}
+              connectingLabel={t('settings.strava.connecting')}
             />
           )}
 
