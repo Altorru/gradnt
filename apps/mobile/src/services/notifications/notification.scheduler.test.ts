@@ -10,6 +10,7 @@ import type { DesiredNotification } from '@/lib/domain/notification-plan'
 import {
   CHANNEL_FOR_KIND,
   ensureChannels,
+  expoScheduler,
   reconcile,
   type SchedulerPort,
 } from './notification.scheduler'
@@ -103,8 +104,11 @@ const session: DesiredNotification = {
  * Monday with nothing in the code to say so.
  */
 const digest: DesiredNotification = {
-  key: 'weekly',
+  // Dated, because Android's alarm cannot be repeated and the next open has to
+  // recognise the entry it replaced.
+  key: 'weekly:2026-09-20',
   kind: 'weekly',
+  fireAt: new Date('2026-09-20T18:00:00.000Z'),
   repeat: { weekday: 1, hour: 18, minute: 0 },
 }
 
@@ -207,9 +211,9 @@ describe('the trigger a notification is scheduled with', () => {
 
     expect(schedule).toHaveBeenCalledWith(
       expect.objectContaining({
-        key: 'gradnt:weekly',
+        key: 'gradnt:weekly:2026-09-20',
         channelId: 'weekly',
-        trigger: { kind: 'weekly', weekday: 1, hour: 18, minute: 0 },
+        trigger: { kind: 'weekly', fireAt: digest.fireAt, weekday: 1, hour: 18, minute: 0 },
       }),
     )
   })
@@ -222,6 +226,47 @@ describe('the trigger a notification is scheduled with', () => {
     expect(schedule).toHaveBeenCalledWith(
       expect.objectContaining({ trigger: { kind: 'at', fireAt: session.fireAt } }),
     )
+  })
+})
+
+describe('how a repeat reaches the OS', () => {
+  const weekly = {
+    key: 'gradnt:weekly:2026-09-20',
+    title: 'Ta semaine',
+    body: 'Ta semaine est prête.',
+    url: '/progress',
+    trigger: { kind: 'weekly' as const, fireAt: digest.fireAt, weekday: 1, hour: 18, minute: 0 },
+    channelId: 'weekly',
+  }
+
+  async function triggerOn(os: 'ios' | 'android') {
+    platform.OS = os
+    vi.mocked(Notifications.scheduleNotificationAsync).mockClear()
+
+    await expoScheduler.schedule(weekly)
+
+    return vi.mocked(Notifications.scheduleNotificationAsync).mock.calls[0]?.[0].trigger
+  }
+
+  it('repeats on iOS, where a calendar trigger really does', async () => {
+    expect(await triggerOn('ios')).toMatchObject({
+      type: 'weekly',
+      weekday: 1,
+      hour: 18,
+      minute: 0,
+    })
+  })
+
+  /**
+   * Android cannot repeat one.
+   *
+   * Expo schedules a single exact alarm and never reschedules it, and nothing
+   * removes it from the store when it fires — so a `weekly` trigger there would
+   * ring once and then be believed pending for ever. The instant is handed over
+   * instead, and the date-keyed entry re-arms it on the next open.
+   */
+  it('hands over the instant on Android, which has no repeating alarm we can trust', async () => {
+    expect(await triggerOn('android')).toMatchObject({ type: 'date', date: digest.fireAt })
   })
 })
 

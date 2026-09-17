@@ -24,7 +24,8 @@ export type ScheduledSummary = { identifier: string; key: string }
  * implementation lives in `expoScheduler` below.
  */
 export type ScheduleTrigger =
-  { kind: 'at'; fireAt: Date } | { kind: 'weekly'; weekday: number; hour: number; minute: number }
+  | { kind: 'at'; fireAt: Date }
+  | { kind: 'weekly'; fireAt: Date; weekday: number; hour: number; minute: number }
 
 export type SchedulerPort = {
   list: () => Promise<ScheduledSummary[]>
@@ -192,7 +193,7 @@ async function reconcileOnce(
       url: wording.url,
       trigger:
         notification.kind === 'weekly'
-          ? { kind: 'weekly', ...notification.repeat }
+          ? { kind: 'weekly', fireAt: notification.fireAt, ...notification.repeat }
           : { kind: 'at', fireAt: notification.fireAt },
       channelId: CHANNEL_FOR_KIND[notification.kind],
     })
@@ -203,14 +204,20 @@ async function reconcileOnce(
  * Expo's trigger, from ours.
  *
  * A `null` trigger means "deliver now", which is what an already-due one-shot
- * wants: a date trigger in the past would never fire. A repeat needs no such
- * care — every occurrence after this one is in the future by construction.
+ * wants: a date trigger in the past would never fire.
+ *
+ * The weekly one is why this reads a platform. iOS repeats a calendar trigger
+ * for real. Expo's Android scheduling is a single exact alarm, never
+ * rescheduled, and nothing removes it from the store when it fires — so a
+ * repeat there would ring once and then be believed pending for ever. Android
+ * is given the instant instead, and the planner's date-keyed entry re-arms it on
+ * the next open.
  */
 function expoTriggerFor(
   trigger: ScheduleTrigger,
   channelId: string,
 ): Notifications.NotificationTriggerInput {
-  if (trigger.kind === 'weekly') {
+  if (trigger.kind === 'weekly' && Platform.OS === 'ios') {
     return {
       type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
       weekday: trigger.weekday,

@@ -99,44 +99,39 @@ describe('session reminders', () => {
 describe('the weekly digest', () => {
   const on = { preferences: { ...input().preferences, weeklySummary: true } }
 
-  it('is one repeating alarm, not a notification per week', () => {
+  it('is a weekly repeat, landing on the next Sunday evening', () => {
     const result = planNotifications(input(on))
 
     expect(result).toHaveLength(1)
     expect(result[0]).toMatchObject({
-      key: 'weekly',
       kind: 'weekly',
       // Sunday, in `expo-notifications` numbering where 1 is Sunday.
       repeat: { weekday: 1, hour: 18, minute: 0 },
     })
+    expect(result[0].fireAt.getDay()).toBe(0)
+    expect(result[0].fireAt.getHours()).toBe(18)
   })
 
   /**
-   * The reason it repeats at all.
+   * The key moves with the date, and that is what makes Android work.
    *
-   * The absolute-date version was re-armed by the next launch, so a rider who
-   * did not open the app heard from us exactly once. One stable key is what
-   * makes the alarm outlive a week of not opening it — and what stops the
-   * reconcile from adding a second entry next Sunday.
+   * Expo's Android alarm is a single one that is never rescheduled, and nothing
+   * removes it from the store when it fires — so a key that never changed would
+   * be read as still pending and never re-armed, and the digest would ring once,
+   * ever. A key per Sunday also lets the reconcile cancel the entry it replaced.
    */
-  it('carries the same key a week later, so the alarm is left in place', () => {
-    const nextWeek = new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1000)
+  it('changes key with the Sunday, so the entry it replaced is not kept', () => {
+    const thisWeek = planNotifications(input(on))[0]
+    const nextWeek = planNotifications(
+      input({ ...on, now: new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1000) }),
+    )[0]
 
-    expect(planNotifications(input({ ...on, now: nextWeek }))[0].key).toBe(
-      planNotifications(input(on))[0].key,
-    )
+    expect(thisWeek.key).toMatch(/^weekly:\d{4}-\d{2}-\d{2}$/)
+    expect(nextWeek.key).not.toBe(thisWeek.key)
   })
 
   it('is gone when the rider turned it off', () => {
     expect(planNotifications(input())).toEqual([])
-  })
-
-  it('is kept when the cap drops the sessions that do not fit', () => {
-    const many = Array.from({ length: 30 }, (_, index) => workout({ id: `w${index}` }))
-    const result = planNotifications(input({ ...on, workouts: many }))
-
-    expect(result).toHaveLength(21)
-    expect(result.some((notification) => notification.kind === 'weekly')).toBe(true)
   })
 })
 

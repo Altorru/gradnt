@@ -39,17 +39,9 @@ export type WeeklyRepeat = { weekday: number; hour: number; minute: number }
 
 type Base = { key: string; fireAt: Date }
 
-/**
- * Everything except the weekly digest, which repeats and so carries no instant.
- *
- * Named so the cap in `planNotifications` can filter on `fireAt` and keep its
- * narrowing: a union member without the field widens the whole thing.
- */
-type OneShotNotification = Extract<DesiredNotification, { fireAt: Date }>
-
 export type DesiredNotification =
   | (Base & { kind: 'session'; workout: PlannedWorkout })
-  | { key: string; kind: 'weekly'; repeat: WeeklyRepeat }
+  | (Base & { kind: 'weekly'; repeat: WeeklyRepeat })
   | (Base & { kind: 'inactivity' })
   | (Base & { kind: 'milestone'; threshold: MilestoneThreshold; progress: number })
 
@@ -76,7 +68,7 @@ function fireAtOnDay(workoutDate: string, hour: number, minute: number): Date {
   return new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute, 0, 0)
 }
 
-function sessionNotifications(input: PlanInput): OneShotNotification[] {
+function sessionNotifications(input: PlanInput): DesiredNotification[] {
   const { preferences, now } = input
 
   if (!preferences.sessionReminder) {
@@ -112,29 +104,58 @@ export function isFresh(lastSyncedAt: string | null, now: Date): boolean {
 }
 
 /**
- * The digest, as a repeating weekly alarm.
+ * The digest, as a weekly repeat.
  *
- * A repeat fires every Sunday whether or not the app is opened, which the
- * absolute-date version could not: it was re-armed by the next launch, so a
- * rider who did not open the app heard from us exactly once.
+ * The key carries the next Sunday rather than being fixed, and that is not
+ * incidental: the two platforms hold it differently. iOS repeats a calendar
+ * trigger for real. Expo's Android scheduling is a single exact alarm, never
+ * rescheduled, and nothing removes it when it fires — so a key that never
+ * changed would leave Android believing the digest was still pending and never
+ * re-arm it, and the digest would ring once, ever.
  *
- * The price is that a repeat carries one fixed body, so it cannot quote the
- * week's figures — and a figure chosen a week before it arrives is unverifiable
- * by then, which is the rule this planner exists to keep. The wording is the
- * figure-free one and the numbers are shown in the app.
+ * With the date in the key, Android re-arms on the next open exactly as the
+ * date-only version did, and iOS gets the repeat it can actually deliver.
+ *
+ * Either way it cannot quote the week's figures: a body written a week before
+ * it is read is unverifiable by then, which is the rule this planner keeps.
  */
+/**
+ * The next Sunday evening, in local time.
+ *
+ * `WEEKLY_WEEKDAY` is Sunday in `expo-notifications` numbering, which runs 1..7
+ * from Sunday — one off `Date.getDay()`, which runs 0..6 from Sunday. Hence the
+ * `- 1`.
+ *
+ * The instant is only used for the key and for Android's one-shot alarm; iOS
+ * ignores it and repeats the weekday and time instead.
+ */
+function nextWeeklyFire(now: Date): Date {
+  const fireAt = new Date(now)
+  fireAt.setHours(WEEKLY_HOUR, WEEKLY_MINUTE, 0, 0)
+
+  const daysUntil = (WEEKLY_WEEKDAY - 1 - fireAt.getDay() + 7) % 7
+  fireAt.setDate(fireAt.getDate() + daysUntil)
+
+  if (fireAt <= now) {
+    fireAt.setDate(fireAt.getDate() + 7)
+  }
+
+  return fireAt
+}
+
 function weeklyNotifications(input: PlanInput): DesiredNotification[] {
   if (!input.preferences.weeklySummary) {
     return []
   }
 
+  const fireAt = nextWeeklyFire(input.now)
+
   return [
     {
-      // One entry for the life of the install. A key per date would add a
-      // notification every week and leave each previous one to be cancelled.
-      key: 'weekly',
+      key: `weekly:${fireAt.toISOString().slice(0, 10)}`,
       kind: 'weekly',
       repeat: { weekday: WEEKLY_WEEKDAY, hour: WEEKLY_HOUR, minute: WEEKLY_MINUTE },
+      fireAt,
     },
   ]
 }
@@ -157,7 +178,7 @@ function nextDailyFire(now: Date, hour: number, minute: number): Date {
   return fireAt
 }
 
-function inactivityNotifications(input: PlanInput): OneShotNotification[] {
+function inactivityNotifications(input: PlanInput): DesiredNotification[] {
   const { preferences, lastActivityAt, lastSyncedAt, now } = input
 
   if (!preferences.inactivityNudge || lastActivityAt === null) {
@@ -189,7 +210,7 @@ function inactivityNotifications(input: PlanInput): OneShotNotification[] {
   ]
 }
 
-function milestoneNotifications(input: PlanInput): OneShotNotification[] {
+function milestoneNotifications(input: PlanInput): DesiredNotification[] {
   const { goal, celebrated, now } = input
 
   if (goal === null) {
@@ -226,25 +247,21 @@ function milestoneNotifications(input: PlanInput): OneShotNotification[] {
  * thing to drop.
  */
 export function planNotifications(input: PlanInput): DesiredNotification[] {
-  const weekly = weeklyNotifications(input)
-  // Named so the filter below keeps its narrowing: the digest has no instant to
-  // be immediate or later than.
-  const oneShot: OneShotNotification[] = [
+  const all = [
     ...sessionNotifications(input),
+    ...weeklyNotifications(input),
     ...inactivityNotifications(input),
     ...milestoneNotifications(input),
   ]
 
-  const immediate = oneShot.filter((notification) => notification.fireAt <= input.now)
-  const later = oneShot
+  const immediate = all.filter((notification) => notification.fireAt <= input.now)
+  const later = all
     .filter((notification) => notification.fireAt > input.now)
     .sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
 
   const room = Math.max(0, SCHEDULE_CAP - immediate.length)
 
-  // The repeat is neither immediate nor later, and the cap does not count it:
-  // it holds one slot for ever rather than one per week.
-  return [...immediate, ...weekly, ...later.slice(0, room)]
+  return [...immediate, ...later.slice(0, room)]
 }
 
 /** The workout type, as a catalogue key. Never `workout.title`. */
