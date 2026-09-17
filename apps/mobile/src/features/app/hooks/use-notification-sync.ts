@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { AppState, Platform } from 'react-native'
 
 import { useAppLanguage, useTranslation } from '@/i18n'
+import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { planNotifications } from '@/lib/domain/notification-plan'
 import { getGoalProgressPercentage } from '@/lib/domain/selectors'
 import {
@@ -39,11 +40,22 @@ export function useNotificationSync(): void {
   const language = useAppLanguage()
   const preferences = usePreferencesStore()
   const setCelebrated = usePreferencesStore((state) => state.setCelebrated)
+  const onboardingHydrated = useOnboardingStore((state) => state.hydrated)
+  const onboardingCompleted = useOnboardingStore((state) => state.completed)
 
-  const activitiesQuery = useActivitiesQuery()
-  const workoutsQuery = useUpcomingWorkoutsQuery()
-  const goalQuery = useGoalQuery()
-  const currentValueQuery = useCurrentGoalValueQuery()
+  /**
+   * This hook is mounted at the root, so it runs through the whole onboarding
+   * flow — where there is no plan, no goal and no value to derive one from.
+   * Reading them there would cache "nothing" for the query client's ten-minute
+   * staleTime, and the screens that mount once onboarding ends would read that
+   * answer instead of asking. There is also nothing to notify about yet.
+   */
+  const ready = onboardingHydrated && onboardingCompleted
+
+  const activitiesQuery = useActivitiesQuery({ enabled: ready })
+  const workoutsQuery = useUpcomingWorkoutsQuery({ enabled: ready })
+  const goalQuery = useGoalQuery({ enabled: ready })
+  const currentValueQuery = useCurrentGoalValueQuery({ enabled: ready })
 
   // Memoised because the empty fallback is a new array every render, and the
   // effect below would restart on each one.
@@ -77,8 +89,10 @@ export function useNotificationSync(): void {
 
     const run = async () => {
       // Without hydrated preferences the first pass would schedule the defaults
-      // and only correct itself a beat later.
-      if (!preferences.hydrated) {
+      // and only correct itself a beat later. Without a finished onboarding
+      // there is nothing to schedule, and reconciling an empty set would cancel
+      // work belonging to a rider who has not started yet.
+      if (!preferences.hydrated || !ready) {
         return
       }
 
@@ -122,6 +136,7 @@ export function useNotificationSync(): void {
     fingerprint,
     translation,
     language,
+    ready,
     workouts,
     activities,
     goal,

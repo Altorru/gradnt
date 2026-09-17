@@ -3,29 +3,44 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { planRepository } from '../services/plan.repository'
 import { gradntRepository } from '../services/gradnt.repository'
 
-export function useAthleteQuery() {
+/**
+ * Whether a caller is ready for the answer yet.
+ *
+ * Before onboarding runs there is no profile to derive a plan, a goal or a
+ * value from, and these queries answer "nothing" — an answer the cache then
+ * keeps for its ten-minute staleTime. Anything mounted before the rider has a
+ * profile has to hold them back, or the screens that mount afterwards read the
+ * empty answer and never ask again.
+ */
+type QueryGate = { enabled?: boolean }
+
+export function useAthleteQuery({ enabled = true }: QueryGate = {}) {
   return useQuery({
     queryKey: ['athlete'],
+    enabled,
     queryFn: () => gradntRepository.getAthlete(),
   })
 }
 
-export function useGoalQuery() {
+export function useGoalQuery({ enabled = true }: QueryGate = {}) {
   return useQuery({
     queryKey: ['goal'],
+    enabled,
     queryFn: () => gradntRepository.getGoal(),
   })
 }
 
-export function useCurrentGoalValueQuery() {
+export function useCurrentGoalValueQuery({ enabled = true }: QueryGate = {}) {
   return useQuery({
     queryKey: ['goal-current-value'],
+    enabled,
     queryFn: () => gradntRepository.getCurrentGoalValue(),
   })
 }
-export function useActivitiesQuery() {
+export function useActivitiesQuery({ enabled = true }: QueryGate = {}) {
   return useQuery({
     queryKey: ['activities'],
+    enabled,
     queryFn: () => gradntRepository.getActivities(),
   })
 }
@@ -90,9 +105,10 @@ export function useMoveWorkoutMutation() {
   })
 }
 
-export function useUpcomingWorkoutsQuery() {
+export function useUpcomingWorkoutsQuery({ enabled = true }: QueryGate = {}) {
   return useQuery({
     queryKey: ['upcoming-workouts'],
+    enabled,
     queryFn: async () => {
       const plan = await planRepository.getPlan()
       return plan.weeks.flatMap((week) => week.workouts)
