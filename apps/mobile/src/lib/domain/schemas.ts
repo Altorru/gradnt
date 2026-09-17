@@ -16,9 +16,16 @@ export const athleteProfileSchema = z.object({
 export const goalMeasureSchema = z.enum(['cumulative', 'best'])
 export type GoalMeasure = z.infer<typeof goalMeasureSchema>
 
+/**
+ * Named rather than inlined in `goalSchema`, because a planned workout records
+ * the goal it serves too — and two copies of this list would drift.
+ */
+export const goalTypeSchema = z.enum(['ftp', 'distance', 'event', 'climbing', 'fitness'])
+export type GoalType = z.infer<typeof goalTypeSchema>
+
 export const goalSchema = z.object({
   id: z.string(),
-  type: z.enum(['ftp', 'distance', 'event', 'climbing', 'fitness']),
+  type: goalTypeSchema,
   targetValue: z.number().positive().nullable(),
   targetUnit: z.enum(['w', 'km', 'm', 'h', 'none']),
   /**
@@ -54,16 +61,32 @@ export const activitySchema = z.object({
   provenance: z.literal('observed'),
 })
 
+export const workoutTypeSchema = z.enum([
+  'endurance',
+  'tempo',
+  'sweet_spot',
+  'threshold',
+  'vo2_max',
+  'recovery',
+])
+export type WorkoutType = z.infer<typeof workoutTypeSchema>
+
 export const plannedWorkoutSchema = z.object({
   id: z.string(),
   date: z.string().datetime(),
-  type: z.enum(['endurance', 'tempo', 'sweet_spot', 'threshold', 'vo2_max', 'recovery']),
-  title: z.string().min(1),
+  type: workoutTypeSchema,
   durationMinutes: z.number().int().positive(),
-  intensityTarget: z.string().min(1),
-  structure: z.string().min(1),
   status: z.enum(['planned', 'completed', 'skipped', 'moved']),
-  reason: z.string().min(1),
+  /**
+   * The goal this session serves, as a code.
+   *
+   * A title, an intensity target, a structure and a reason used to be stored
+   * here as French sentences, which made the plan readable only by whoever
+   * generated it: an English rider read French. All four are derivable — three
+   * from `type`, the fourth from this — so the words now come from the
+   * catalogue at render time.
+   */
+  goalType: goalTypeSchema.nullable(),
 })
 
 export const trainingPlanSchema = z.object({

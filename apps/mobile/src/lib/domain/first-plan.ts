@@ -2,7 +2,7 @@ import type { WeeklyAvailabilityForm } from '../../features/onboarding/domain/av
 import type { CyclistGoalForm } from '../../features/onboarding/domain/goal.schema'
 import type { CyclistProfileForm } from '../../features/onboarding/domain/profile.schema'
 
-import { plannedWorkoutSchema, type PlannedWorkout } from './schemas'
+import { plannedWorkoutSchema, type PlannedWorkout, type WorkoutType } from './schemas'
 
 export type FirstPlanInput = {
   profile: CyclistProfileForm
@@ -28,26 +28,21 @@ const weekdayIndex: Record<WeeklyAvailabilityForm[number]['day'], number> = {
   saturday: 6,
 }
 
+/**
+ * The three sessions a first week is built from, as bare types.
+ *
+ * Only the codes: the words live in the catalogue, keyed by these. A title
+ * written into the plan here would be French for an English rider, and it would
+ * stay French after they changed the language.
+ */
 const workoutTemplates = [
-  {
-    type: 'endurance' as const,
-    title: 'Endurance fondamentale',
-    intensityTarget: 'Facile',
-    structure: 'Continu, conversation confortable',
-  },
-  {
-    type: 'sweet_spot' as const,
-    title: 'Sweet Spot',
-    intensityTarget: '88–94 % FTP si disponible',
-    structure: '3 × 8 min, récupération 5 min',
-  },
-  {
-    type: 'recovery' as const,
-    title: 'Récupération active',
-    intensityTarget: 'Très facile',
-    structure: 'Continu, cadence souple',
-  },
-]
+  { type: 'endurance' },
+  { type: 'sweet_spot' },
+  { type: 'recovery' },
+] as const satisfies readonly { type: WorkoutType }[]
+
+/** The types a first plan can produce, so the catalogue maps can be total. */
+export type WorkoutTemplateType = (typeof workoutTemplates)[number]['type']
 
 function getDaysUntilTarget(startDate: Date, targetDay: number): number {
   return (targetDay - startDate.getDay() + 7) % 7
@@ -98,21 +93,14 @@ export function generateFirstPlan(input: FirstPlanInput): PlannedWorkout[] {
 
     const template = getIntensityTemplate(index, availableSlots.length)
     const date = getNextDate(input.startDate, weekdayIndex[slot.day])
-    const goalReason =
-      input.goal.type === 'fitness'
-        ? 'Soutenir une progression régulière à partir de ton profil déclaré.'
-        : `Prioriser ton objectif ${input.goal.type} sans dépasser ton volume déclaré.`
 
     const workout = plannedWorkoutSchema.parse({
       id: `first-plan-${index + 1}`,
       date: date.toISOString(),
       type: template.type,
-      title: template.title,
       durationMinutes,
-      intensityTarget: template.intensityTarget,
-      structure: template.structure,
       status: 'planned',
-      reason: `${goalReason} Jour choisi selon ta disponibilité récurrente.`,
+      goalType: input.goal.type,
     })
 
     scheduledMinutes += durationMinutes

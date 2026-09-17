@@ -1,5 +1,3 @@
-import type { PlannedWorkout } from '@/lib/domain'
-
 import { BarChart3, ChevronRight, Clock3 } from '@tamagui/lucide-icons-2'
 import { XStack, YStack } from 'tamagui'
 
@@ -8,39 +6,43 @@ import { GradntButton, GradntCard, GradntText } from './primitives'
 import { colors } from '../tokens'
 
 type GradntWorkoutCardProps = {
-  workout?: PlannedWorkout
-  day?: string
-  title?: string
-  duration?: string
-  description?: string
+  day: string
+  title: string
+  duration: string
+  intensity: string
+  actionLabel: string
+  onPress?: () => void
 }
 
+/**
+ * The next session, as a card.
+ *
+ * Presentational: it is handed the words, not a workout. It used to take a
+ * `PlannedWorkout` and format it itself, with `fr-FR` and `'Voir la séance'`
+ * written into the design system — so an English rider read the day and the
+ * action in French whatever the app was set to. It also had demo values as its
+ * prop defaults, which is what a caller passing `undefined` got: a plausible
+ * session that was nobody's.
+ */
 export function GradntWorkoutCard({
-  workout,
-  day = 'VENDREDI 12 AVR.',
-  title = 'Sweet Spot',
-  duration = '1 h 15',
-  description = '3 × 12 min · 88–94 % FTP',
+  day,
+  title,
+  duration,
+  intensity,
+  actionLabel,
+  onPress,
 }: GradntWorkoutCardProps) {
-  const workoutDay = workout
-    ? new Date(workout.date).toLocaleDateString('fr-FR', { weekday: 'long' })
-    : day
-  const workoutDuration = workout
-    ? `${Math.floor(workout.durationMinutes / 60)} h ${workout.durationMinutes % 60 || ''}`.trim()
-    : duration
-  const workoutDescription = workout ? workout.intensityTarget : description
-
   return (
     <GradntCard premium padding="$4" gap="$4" borderRadius={20} borderColor="$borderStrong">
       <XStack alignItems="flex-end" justifyContent="space-between" gap="$3">
         <YStack flex={1} gap="$3">
           <YStack gap="$1">
             <GradntText muted weight="medium" fontSize={11} lineHeight={14} letterSpacing={0.65}>
-              {workoutDay}
+              {day}
             </GradntText>
 
             <GradntText weight="bold" fontSize={21} lineHeight={25} letterSpacing={-0.5}>
-              {workout?.title ?? title}
+              {title}
             </GradntText>
           </YStack>
 
@@ -49,7 +51,7 @@ export function GradntWorkoutCard({
               <Clock3 size={14} color={'$textSecondary'} />
 
               <GradntText muted fontSize={12}>
-                {workoutDuration}
+                {duration}
               </GradntText>
             </XStack>
 
@@ -57,7 +59,7 @@ export function GradntWorkoutCard({
               <BarChart3 size={14} color={'$textSecondary'} />
 
               <GradntText muted fontSize={12}>
-                {workoutDescription}
+                {intensity}
               </GradntText>
             </XStack>
           </XStack>
@@ -77,8 +79,9 @@ export function GradntWorkoutCard({
         minHeight={46}
         borderRadius={15}
         iconAfter={<ChevronRight size={17} color={colors.graphite950} />}
+        onPress={onPress}
       >
-        Voir la séance
+        {actionLabel}
       </GradntButton>
     </GradntCard>
   )

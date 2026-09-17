@@ -21,17 +21,7 @@ import { getPlanCompletionPercentage } from '@/lib/domain'
 
 import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
-
-function formatWorkoutDuration(durationMinutes: number) {
-  const hours = Math.floor(durationMinutes / 60)
-  const minutes = durationMinutes % 60
-
-  if (hours === 0) {
-    return `${minutes} min`
-  }
-
-  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes}`
-}
+import { formatWorkoutDuration, workoutIntensity, workoutTitle } from '../domain/workout-labels'
 
 const statusTone = {
   planned: 'neutral',
@@ -149,9 +139,10 @@ export function PlanScreen() {
                     <GradntText muted fontSize={11} weight="semibold" letterSpacing={0.7}>
                       {formatDate(new Date(workout.date), 'EEEE', { locale: dateLocale })}
                     </GradntText>
-                    <GradntText weight="semibold">{workout.title}</GradntText>
+                    <GradntText weight="semibold">{workoutTitle(t, workout.type)}</GradntText>
                     <GradntText muted fontSize={13}>
-                      {formatWorkoutDuration(workout.durationMinutes)} · {workout.intensityTarget}
+                      {formatWorkoutDuration(workout.durationMinutes)} ·{' '}
+                      {workoutIntensity(t, workout.type)}
                     </GradntText>
                   </YStack>
                   <GradntBadge tone={statusTone[workout.status]}>

@@ -20,6 +20,14 @@ import {
   useUpcomingWorkoutsQuery,
 } from '@/hooks/use-gradnt-data'
 
+import {
+  formatWorkoutDuration,
+  workoutIntensity,
+  workoutReason,
+  workoutStructure,
+  workoutTitle,
+} from '../domain/workout-labels'
+
 /** What a workout's state is called, per language. */
 function statusLabels(t: Translate) {
   return {
@@ -69,7 +77,7 @@ export function WorkoutDetailScreen() {
               {formatDate(new Date(workout.date), 'EEEE d MMMM', { locale: dateLocale })}
             </GradntText>
             <XStack alignItems="center" justifyContent="space-between" gap="$3">
-              <GradntHeading>{workout.title}</GradntHeading>
+              <GradntHeading>{workoutTitle(t, workout.type)}</GradntHeading>
               <GradntBadge
                 tone={
                   workout.status === 'completed'
@@ -90,17 +98,18 @@ export function WorkoutDetailScreen() {
               <YStack gap="$1">
                 <GradntText weight="semibold">{t('plan.workout.durationAndIntensity')}</GradntText>
                 <GradntText muted fontSize={13}>
-                  {workout.durationMinutes} min · {workout.intensityTarget}
+                  {formatWorkoutDuration(workout.durationMinutes)} ·{' '}
+                  {workoutIntensity(t, workout.type)}
                 </GradntText>
               </YStack>
             </XStack>
-            <GradntText lineHeight={21}>{workout.structure}</GradntText>
+            <GradntText lineHeight={21}>{workoutStructure(t, workout.type)}</GradntText>
           </GradntCard>
 
           <GradntCard gap="$3">
             <GradntText weight="semibold">{t('plan.workout.whyThisSession')}</GradntText>
             <GradntText muted lineHeight={21}>
-              {workout.reason}
+              {workoutReason(t, workout.goalType)}
             </GradntText>
           </GradntCard>
 

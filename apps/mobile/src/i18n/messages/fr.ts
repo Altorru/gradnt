@@ -146,6 +146,7 @@ export const fr = {
       notFound: 'Cette séance n’est plus disponible dans ton plan local.',
       durationAndIntensity: 'Durée et intensité',
       whyThisSession: 'Pourquoi cette séance ?',
+      see: 'Voir la séance',
       markCompleted: 'Marquer comme terminée',
       skip: 'Sauter cette séance',
     },
@@ -161,6 +162,49 @@ export const fr = {
       other: '{{count}} terminées',
     },
     upcoming: '{{count}} à venir',
+  },
+
+  /**
+   * The vocabulary of a session, keyed by `workout.type`.
+   *
+   * Shared rather than nested under `plan` because four places say the same
+   * things about a session — the plan list, the session screen, the home card
+   * and the design-system preview — and they used to say them by each storing
+   * their own copy. These are the only copies.
+   */
+  workouts: {
+    titles: {
+      endurance: 'Endurance fondamentale',
+      tempo: 'Tempo',
+      sweet_spot: 'Sweet Spot',
+      threshold: 'Seuil',
+      vo2_max: 'VO₂ max',
+      recovery: 'Récupération active',
+    },
+
+    intensity: {
+      endurance: 'Facile',
+      tempo: 'Modéré, soutenu sans forcer',
+      sweet_spot: '88–94 % FTP si disponible',
+      threshold: 'Autour du seuil, 95–105 % FTP',
+      vo2_max: 'Efforts courts et intenses',
+      recovery: 'Très facile',
+    },
+
+    structure: {
+      endurance: 'Continu, conversation confortable',
+      tempo: '2 × 15 min, récupération 5 min',
+      sweet_spot: '3 × 8 min, récupération 5 min',
+      threshold: '4 × 6 min, récupération 4 min',
+      vo2_max: '5 × 3 min, récupération 3 min',
+      recovery: 'Continu, cadence souple',
+    },
+
+    reasons: {
+      fitness:
+        'Soutenir une progression régulière à partir de ton profil déclaré. Jour choisi selon ta disponibilité récurrente.',
+      goal: 'Prioriser ton objectif {{goal}} sans dépasser ton volume déclaré. Jour choisi selon ta disponibilité récurrente.',
+    },
   },
 
   progress: {

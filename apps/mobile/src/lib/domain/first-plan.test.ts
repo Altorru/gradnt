@@ -94,4 +94,40 @@ describe('generateFirstPlan', () => {
     expect(new Date(workouts[0]?.date ?? '').getUTCDay()).toBe(6)
     expect(new Date(workouts[1]?.date ?? '').getUTCDay()).toBe(1)
   })
+
+  /**
+   * Codes only. The words come from the catalogue, keyed by `type`.
+   *
+   * A title stored at generation time is written in whatever language was
+   * active then, and it stays that way after the rider changes it — which is
+   * what the plan list, the session screen and the home card all rendered.
+   */
+  it('stores no wording of its own, so the plan reads in any language', () => {
+    const [workout] = generateFirstPlan({
+      profile,
+      goal,
+      availability: defaultWeeklyAvailability,
+      startDate,
+    })
+
+    expect(Object.keys(workout ?? {}).sort()).toEqual([
+      'date',
+      'durationMinutes',
+      'goalType',
+      'id',
+      'status',
+      'type',
+    ])
+  })
+
+  it('records the goal a session serves, as a code', () => {
+    const [workout] = generateFirstPlan({
+      profile,
+      goal: { ...goal, type: 'climbing', targetValue: '2000' },
+      availability: defaultWeeklyAvailability,
+      startDate,
+    })
+
+    expect(workout?.goalType).toBe('climbing')
+  })
 })

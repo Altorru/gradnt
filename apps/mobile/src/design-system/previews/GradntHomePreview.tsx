@@ -63,7 +63,13 @@ export function GradntHomePreview() {
 
             <YStack gap="$4">
               <GradntSectionHeader title="Prochaine étape" action="Voir" />
-              <GradntWorkoutCard />
+              <GradntWorkoutCard
+                day="VENDREDI 12 AVR."
+                title="Sweet Spot"
+                duration="1 h 15"
+                intensity="3 × 12 min · 88–94 % FTP"
+                actionLabel="Voir la séance"
+              />
             </YStack>
 
             <YStack gap="$4">

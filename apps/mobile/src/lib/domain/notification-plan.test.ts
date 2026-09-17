@@ -28,12 +28,9 @@ function workout(over: Partial<PlannedWorkout> = {}): PlannedWorkout {
     id: 'w1',
     date: '2026-09-17T07:00:00.000Z',
     type: 'endurance',
-    title: 'Endurance fondamentale',
     durationMinutes: 90,
-    intensityTarget: 'Facile',
-    structure: 'Continu',
     status: 'planned',
-    reason: 'Base',
+    goalType: 'fitness',
     ...over,
   }
 }

@@ -133,6 +133,7 @@ export const en = {
       notFound: 'This session is no longer in your local plan.',
       durationAndIntensity: 'Duration and intensity',
       whyThisSession: 'Why this session?',
+      see: 'See the session',
       markCompleted: 'Mark as done',
       skip: 'Skip this session',
     },
@@ -141,6 +142,42 @@ export const en = {
       other: '{{count}} completed',
     },
     upcoming: '{{count}} upcoming',
+  },
+
+  /** The vocabulary of a session, keyed by `workout.type`. See `fr`. */
+  workouts: {
+    titles: {
+      endurance: 'Base endurance',
+      tempo: 'Tempo',
+      sweet_spot: 'Sweet Spot',
+      threshold: 'Threshold',
+      vo2_max: 'VO₂ max',
+      recovery: 'Active recovery',
+    },
+
+    intensity: {
+      endurance: 'Easy',
+      tempo: 'Moderate, steady without forcing',
+      sweet_spot: '88–94 % FTP if you have one',
+      threshold: 'Around threshold, 95–105 % FTP',
+      vo2_max: 'Short, hard efforts',
+      recovery: 'Very easy',
+    },
+
+    structure: {
+      endurance: 'Continuous, conversation pace',
+      tempo: '2 × 15 min, 5 min recovery',
+      sweet_spot: '3 × 8 min, 5 min recovery',
+      threshold: '4 × 6 min, 4 min recovery',
+      vo2_max: '5 × 3 min, 3 min recovery',
+      recovery: 'Continuous, easy cadence',
+    },
+
+    reasons: {
+      fitness:
+        'To support steady progress from the profile you gave. The day follows your recurring availability.',
+      goal: 'To prioritise your {{goal}} goal without exceeding the volume you declared. The day follows your recurring availability.',
+    },
   },
 
   progress: {

@@ -1,3 +1,4 @@
+import { format as formatDate } from 'date-fns'
 import { useRouter, type Href } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
@@ -34,7 +35,8 @@ import { XStack, YStack } from 'tamagui'
 
 import { AppBrandHeader } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
-import { useTranslation } from '@/i18n'
+import { formatWorkoutDuration, workoutIntensity, workoutTitle } from '../domain/workout-labels'
+import { useDateLocale, useTranslation } from '@/i18n'
 import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { stravaService } from '@/features/onboarding/services/strava.service'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
@@ -43,6 +45,7 @@ import { loadFtpHistory } from '@/services/ftp/ftp.service'
 
 export function HomeScreen() {
   const { t, plural } = useTranslation()
+  const dateLocale = useDateLocale()
   const router = useRouter()
   const setStrava = useOnboardingStore((state) => state.setStrava)
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
@@ -166,7 +169,23 @@ export function HomeScreen() {
               action={t('common.see')}
               onPress={() => openTab('/plan')}
             />
-            <GradntWorkoutCard workout={nextWorkout ?? undefined} />
+            {/* Nothing rather than a demo session. The card used to fall back
+                to its own sample values, so a rider with an empty plan was
+                shown a plausible session that was nobody's. */}
+            {nextWorkout ? (
+              <GradntWorkoutCard
+                day={formatDate(new Date(nextWorkout.date), 'EEEE d MMM', { locale: dateLocale })}
+                title={workoutTitle(t, nextWorkout.type)}
+                duration={formatWorkoutDuration(nextWorkout.durationMinutes)}
+                intensity={workoutIntensity(t, nextWorkout.type)}
+                actionLabel={t('plan.workout.see')}
+                onPress={() => router.push(`/plan/${nextWorkout.id}` as Href)}
+              />
+            ) : (
+              <GradntText muted fontSize={13}>
+                {t('plan.nonePlanned')}
+              </GradntText>
+            )}
           </YStack>
 
           {/*
