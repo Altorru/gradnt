@@ -2164,6 +2164,11 @@ servi — donc le plan ne porte plus que des codes. Vingt-cinq autres textes en 
 dans dix fichiers, sont passés au catalogue, et un test le vérifie désormais
 (`src/i18n/hardcoded-text.test.ts`).
 
+**L'écran Plan groupe par semaine.** Le plan écrit quatre semaines pour qu'un
+rappel survive à une absence, et l'écran les rendait à plat sous une carte
+intitulée « cette semaine ». Il lit maintenant les semaines du plan plutôt que de
+deviner une fenêtre de sept jours, et chaque groupe porte son nom.
+
 **Le bilan hebdomadaire ne cite plus de chiffres**, et porte un déclencheur
 répétant sur iOS. Task 13 étape 3, qui vérifie le déclencheur `WEEKLY` avec
 `getNextTriggerDateAsync`, n'est donc plus périmée — mais elle vaut pour iOS
