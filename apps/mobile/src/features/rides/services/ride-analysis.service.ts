@@ -21,7 +21,10 @@ const storedRowSchema = z.object({
 export type AiRideAnalysis = z.infer<typeof aiAnalysisSchema>
 
 export class RideAnalysisRequestError extends Error {
-  constructor(public readonly code: string) {
+  constructor(
+    public readonly code: string,
+    public readonly providerMessage: string | null = null,
+  ) {
     super(code)
     this.name = 'RideAnalysisRequestError'
   }
@@ -50,21 +53,31 @@ function clientOrThrow() {
   return client
 }
 
-async function responseErrorCode(error: unknown): Promise<string> {
-  if (typeof error !== 'object' || error === null || !('context' in error)) return 'request_failed'
+async function responseError(
+  error: unknown,
+): Promise<{ code: string; providerMessage: string | null }> {
+  if (typeof error !== 'object' || error === null || !('context' in error))
+    return { code: 'request_failed', providerMessage: null }
   const context = (error as { context?: unknown }).context
   if (typeof context !== 'object' || context === null || !('json' in context))
-    return 'request_failed'
+    return { code: 'request_failed', providerMessage: null }
   const json = (context as { json?: unknown }).json
-  if (typeof json !== 'function') return 'request_failed'
+  if (typeof json !== 'function') return { code: 'request_failed', providerMessage: null }
   const payload = await (json as () => Promise<unknown>)().catch(() => null)
   const parsed = z
-    .object({ error: z.string().min(1), providerStatus: z.number().int().optional() })
+    .object({
+      error: z.string().min(1),
+      providerStatus: z.number().int().optional(),
+      providerMessage: z.string().min(1).max(500).nullable().optional(),
+    })
     .safeParse(payload)
-  if (!parsed.success) return 'request_failed'
-  return parsed.data.providerStatus
-    ? `${parsed.data.error}_${parsed.data.providerStatus}`
-    : parsed.data.error
+  if (!parsed.success) return { code: 'request_failed', providerMessage: null }
+  return {
+    code: parsed.data.providerStatus
+      ? `${parsed.data.error}_${parsed.data.providerStatus}`
+      : parsed.data.error,
+    providerMessage: parsed.data.providerMessage ?? null,
+  }
 }
 
 function requestBody(input: RideAnalysisRequest) {
@@ -149,7 +162,10 @@ export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<
   const { data, error } = await client.functions.invoke('ride-analysis', {
     body: requestBody(input),
   })
-  if (error) throw new RideAnalysisRequestError(await responseErrorCode(error))
+  if (error) {
+    const diagnostic = await responseError(error)
+    throw new RideAnalysisRequestError(diagnostic.code, diagnostic.providerMessage)
+  }
   const parsed = z.object({ analysis: aiAnalysisSchema }).safeParse(data)
   if (!parsed.success) throw new Error('Invalid ride-analysis response')
   return parsed.data.analysis

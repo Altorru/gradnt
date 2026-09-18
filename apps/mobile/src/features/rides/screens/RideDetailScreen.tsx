@@ -299,7 +299,15 @@ export function RideDetailScreen() {
                     </GradntButton>
                   )}
                   {generateAnalysisMutation.isError ? (
-                    <GradntText color="$warning">{t(analysisErrorKey)}</GradntText>
+                    <YStack gap="$1">
+                      <GradntText color="$warning">{t(analysisErrorKey)}</GradntText>
+                      {generateAnalysisMutation.error instanceof RideAnalysisRequestError &&
+                      generateAnalysisMutation.error.providerMessage ? (
+                        <GradntText muted fontSize={12}>
+                          {generateAnalysisMutation.error.providerMessage}
+                        </GradntText>
+                      ) : null}
+                    </YStack>
                   ) : null}
                 </GradntCard>
               ) : null}
