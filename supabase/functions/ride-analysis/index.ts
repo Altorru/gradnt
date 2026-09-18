@@ -96,6 +96,38 @@ const responseSchema = z.object({
   caution: z.string().max(300).nullable().optional().default(null),
 })
 
+const looseResponseSchema = z
+  .object({
+    headline: z.string().optional(),
+    explanation: z.string().optional(),
+    summary: z.string().optional(),
+    goalImpact: z.string().optional(),
+    goal_impact: z.string().optional(),
+    nextStep: z.string().optional(),
+    next_step: z.string().optional(),
+    recommendation: z.string().optional(),
+    caution: z.string().nullable().optional(),
+  })
+  .passthrough()
+
+function normaliseCoachResponse(value: unknown) {
+  const loose = looseResponseSchema.safeParse(value)
+  if (!loose.success) return null
+  const explanation = loose.data.explanation ?? loose.data.summary
+  const nextStep = loose.data.nextStep ?? loose.data.next_step ?? loose.data.recommendation
+  if (!explanation || !nextStep) return null
+  return responseSchema.safeParse({
+    headline: loose.data.headline ?? 'Débrief de ta sortie',
+    explanation,
+    goalImpact:
+      loose.data.goalImpact ??
+      loose.data.goal_impact ??
+      'Cette sortie est intégrée à la lecture de ton objectif et de ton plan.',
+    nextStep,
+    caution: loose.data.caution ?? null,
+  })
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -182,7 +214,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string; thought?: boolean }> } }>
   }
   const texts = (provider.candidates?.[0]?.content?.parts ?? [])
-    .filter((part) => !part.thought && typeof part.text === 'string')
+    .filter((part) => typeof part.text === 'string')
     .map((part) => part.text?.trim())
     .filter((text): text is string => Boolean(text))
 
@@ -192,7 +224,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     .reverse()
     .map((text) => {
       try {
-        return responseSchema.safeParse(JSON.parse(text.replace(/^```json\s*|\s*```$/g, '')))
+        return normaliseCoachResponse(JSON.parse(text.replace(/^```json\s*|\s*```$/g, '')))
       } catch {
         return null
       }
