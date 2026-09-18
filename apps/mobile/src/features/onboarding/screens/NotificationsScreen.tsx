@@ -70,11 +70,11 @@ export function NotificationsScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              6 / 7
+              6 / 8
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={6} total={7} />
+          <OnboardingProgress step={6} total={8} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.notifications.title')}</GradntHeading>

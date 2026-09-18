@@ -124,7 +124,8 @@ export function getOnboardingResumeRoute(
   | '/onboarding/availability'
   | '/onboarding/strava'
   | '/onboarding/notifications'
-  | '/onboarding/review' {
+  | '/onboarding/review'
+  | '/onboarding/account' {
   if (step <= 2) {
     return '/onboarding/profile'
   }
@@ -145,7 +146,7 @@ export function getOnboardingResumeRoute(
     return '/onboarding/notifications'
   }
 
-  return '/onboarding/review'
+  return step >= 8 ? '/onboarding/account' : '/onboarding/review'
 }
 
 export function resetOnboardingForDevelopment(): void {

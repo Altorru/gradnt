@@ -300,13 +300,19 @@ export function RideDetailScreen() {
                     </GradntButton>
                   )}
                   {generateAnalysisMutation.isError ? (
-                    <YStack gap="$1">
+                    <YStack gap="$2">
                       <GradntText color="$warning">{t(analysisErrorKey)}</GradntText>
                       {generateAnalysisMutation.error instanceof RideAnalysisRequestError &&
                       generateAnalysisMutation.error.providerMessage ? (
                         <GradntText muted fontSize={12}>
                           {generateAnalysisMutation.error.providerMessage}
                         </GradntText>
+                      ) : null}
+                      {generateAnalysisMutation.error instanceof RideAnalysisRequestError &&
+                      generateAnalysisMutation.error.code === 'authentication_required' ? (
+                        <GradntButton tone="secondary" onPress={() => router.push('/account')}>
+                          {t('account.signIn')}
+                        </GradntButton>
                       ) : null}
                     </YStack>
                   ) : null}

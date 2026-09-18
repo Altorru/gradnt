@@ -40,7 +40,6 @@ export function ReviewScreen() {
   const saving = useOnboardingStore((state) => state.saving)
   const router = useRouter()
   const { t } = useTranslation()
-  const complete = useOnboardingStore((state) => state.complete)
   const reset = useOnboardingStore((state) => state.reset)
   const profile = useOnboardingStore((state) => state.profile)
   const goal = useOnboardingStore((state) => state.goal)
@@ -79,11 +78,11 @@ export function ReviewScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              7 / 7
+              7 / 8
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={7} total={7} />
+          <OnboardingProgress step={7} total={8} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.review.title')}</GradntHeading>
@@ -174,12 +173,9 @@ export function ReviewScreen() {
             <GradntButton
               iconAfter={<ChevronRight size={18} color={colors.graphite950} />}
               disabled={saving}
-              onPress={async () => {
-                if (!(await complete())) return
-                router.replace('/home')
-              }}
+              onPress={() => router.push('/onboarding/account')}
             >
-              {t('onboarding.review.start')}
+              {t('onboarding.review.account')}
             </GradntButton>
 
             <GradntButton

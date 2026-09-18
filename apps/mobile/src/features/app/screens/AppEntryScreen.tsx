@@ -8,6 +8,7 @@ import {
   getOnboardingResumeRoute,
   useOnboardingStore,
 } from '@/features/onboarding/store/onboarding.store'
+import { getSupabaseClient } from '@/services/supabase/client'
 
 /**
  * Where a launch lands.
@@ -43,7 +44,16 @@ export default function AppEntryScreen() {
       return
     }
 
-    router.replace(launchDestination(completed, currentStep))
+    const client = getSupabaseClient()
+    if (!client) {
+      router.replace('/onboarding/account')
+      return
+    }
+    void client.auth.getSession().then(({ data }) => {
+      router.replace(
+        data.session ? launchDestination(completed, currentStep) : '/onboarding/account',
+      )
+    })
   }, [completed, currentStep, hydrated, router])
 
   return (

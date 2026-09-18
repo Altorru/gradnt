@@ -783,7 +783,18 @@ export const fr = {
       footnote:
         'GRADNT est prêt à construire ton point de départ. Aucune analyse automatique n’a été lancée pour le moment.',
       start: 'Entrer dans GRADNT',
+      account: 'Sécuriser mon compte',
       restart: 'Recommencer l’onboarding',
+    },
+
+    account: {
+      title: 'Crée ton espace GRADNT',
+      subtitle:
+        'Ton compte garde ton profil, tes objectifs, tes sensations et tes analyses privées, sur tous tes appareils.',
+      google: 'Continuer avec Google',
+      or: 'ou avec ton email',
+      privacy:
+        'Tes données restent privées. Tu gardes le contrôle de tes connexions et de tes analyses.',
     },
   },
 
