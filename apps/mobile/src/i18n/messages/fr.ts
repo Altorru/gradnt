@@ -91,6 +91,12 @@ export const fr = {
       loadPoints: '{{value}} points',
       explanation:
         'La charge est un indicateur GRADNT cohérent, pas une mesure médicale. L’explication IA viendra au-dessus de ces faits vérifiés.',
+      open: 'Voir l’analyse',
+      aiTitle: 'Coach GRADNT',
+      aiLoading: 'Le Coach prépare ton débrief personnalisé…',
+      aiUnavailable:
+        'Le Coach n’est pas disponible pour le moment. Les faits vérifiés restent affichés ci-dessus.',
+      aiRetry: 'Réessayer le Coach',
       aiNextStep: 'Prochaine étape du coach',
     },
     comparison: {

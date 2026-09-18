@@ -24,11 +24,12 @@ export async function fetchAiRideAnalysis(input: {
   } | null
 }): Promise<AiRideAnalysis | null> {
   const client = getSupabaseClient()
-  if (!client) return null
+  if (!client) throw new Error('Supabase client is unavailable')
   const { data, error } = await client.functions.invoke('ride-analysis', {
     body: { locale: input.locale, facts: input.facts, feedback: input.feedback },
   })
-  if (error) return null
+  if (error) throw error
   const parsed = z.object({ analysis: aiAnalysisSchema }).safeParse(data)
-  return parsed.success ? parsed.data.analysis : null
+  if (!parsed.success) throw new Error('Invalid ride-analysis response')
+  return parsed.data.analysis
 }

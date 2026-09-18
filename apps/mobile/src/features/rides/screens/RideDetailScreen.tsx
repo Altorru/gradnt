@@ -224,18 +224,37 @@ export function RideDetailScreen() {
                     )}{' '}
                     {t('rides.analysis.explanation')}
                   </GradntText>
-                  {aiAnalysisQuery.data ? (
-                    <GradntCard backgroundColor="$backgroundSubtle" gap="$2" padding="$3">
-                      <GradntText weight="semibold">{aiAnalysisQuery.data.headline}</GradntText>
-                      <GradntText>{aiAnalysisQuery.data.explanation}</GradntText>
-                      <GradntText>
-                        {t('rides.analysis.aiNextStep')}: {aiAnalysisQuery.data.nextStep}
-                      </GradntText>
-                      {aiAnalysisQuery.data.caution ? (
-                        <GradntText color="$warning">{aiAnalysisQuery.data.caution}</GradntText>
-                      ) : null}
-                    </GradntCard>
-                  ) : null}
+                  <GradntCard backgroundColor="$backgroundSubtle" gap="$2" padding="$3">
+                    <GradntText weight="semibold">{t('rides.analysis.aiTitle')}</GradntText>
+                    {aiAnalysisQuery.isPending ? (
+                      <GradntText muted>{t('rides.analysis.aiLoading')}</GradntText>
+                    ) : aiAnalysisQuery.isError ? (
+                      <>
+                        <GradntText color="$warning">
+                          {t('rides.analysis.aiUnavailable')}
+                        </GradntText>
+                        <GradntButton
+                          tone="secondary"
+                          onPress={() => void aiAnalysisQuery.refetch()}
+                        >
+                          {t('rides.analysis.aiRetry')}
+                        </GradntButton>
+                      </>
+                    ) : aiAnalysisQuery.data ? (
+                      <>
+                        <GradntText weight="semibold">{aiAnalysisQuery.data.headline}</GradntText>
+                        <GradntText>{aiAnalysisQuery.data.explanation}</GradntText>
+                        <GradntText>
+                          {t('rides.analysis.aiNextStep')}: {aiAnalysisQuery.data.nextStep}
+                        </GradntText>
+                        {aiAnalysisQuery.data.caution ? (
+                          <GradntText color="$warning">{aiAnalysisQuery.data.caution}</GradntText>
+                        ) : null}
+                      </>
+                    ) : (
+                      <GradntText muted>{t('rides.analysis.aiUnavailable')}</GradntText>
+                    )}
+                  </GradntCard>
                 </GradntCard>
               ) : null}
               {comparison?.kind === 'matched' ? (

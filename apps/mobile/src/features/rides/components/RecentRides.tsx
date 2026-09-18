@@ -43,6 +43,14 @@ export function RecentRides({
           </GradntText>
           <GradntButton
             onPress={() =>
+              router.push({ pathname: '/rides/[activityId]', params: { activityId: activity.id } })
+            }
+          >
+            {t('rides.analysis.open')}
+          </GradntButton>
+          <GradntButton
+            tone="ghost"
+            onPress={() =>
               router.push({
                 pathname: '/rides/[activityId]/feedback',
                 params: { activityId: activity.id },
@@ -50,14 +58,6 @@ export function RecentRides({
             }
           >
             {t('rides.feedback.add')}
-          </GradntButton>
-          <GradntButton
-            tone="ghost"
-            onPress={() =>
-              router.push({ pathname: '/rides/[activityId]', params: { activityId: activity.id } })
-            }
-          >
-            {t('rides.open')}
           </GradntButton>
         </GradntCard>
       ))}
