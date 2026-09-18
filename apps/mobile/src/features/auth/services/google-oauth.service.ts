@@ -29,6 +29,13 @@ function tokensFromCallback(callbackUrl: string) {
   return { access_token: accessToken, refresh_token: refreshToken }
 }
 
+export async function completeGoogleCallback(callbackUrl: string) {
+  const client = getSupabaseClient()
+  if (!client) throw new Error('supabase_unavailable')
+  const { error } = await client.auth.setSession(tokensFromCallback(callbackUrl))
+  if (error) throw new GoogleAuthError('failed')
+}
+
 /** Opens Google's hosted consent screen and persists the returned Supabase session. */
 export async function signInWithGoogle() {
   const client = getSupabaseClient()
@@ -52,6 +59,5 @@ export async function signInWithGoogle() {
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo)
   if (result.type !== 'success') throw new GoogleAuthError('cancelled')
 
-  const { error: sessionError } = await client.auth.setSession(tokensFromCallback(result.url))
-  if (sessionError) throw new GoogleAuthError('failed')
+  await completeGoogleCallback(result.url)
 }
