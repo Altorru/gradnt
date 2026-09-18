@@ -6,7 +6,6 @@
     "@expo-google-fonts/geist": "^0.4.2",
     "@expo/ui": "~57.0.16",
     "@gorhom/bottom-sheet": "^5.2.14",
-    "@gorhom/portal": "1.0.14",
     "@hookform/resolvers": "^5.9.1",
     "@maplibre/maplibre-react-native": "^11.3.10",
     "@supabase/supabase-js": "^2.116.0",

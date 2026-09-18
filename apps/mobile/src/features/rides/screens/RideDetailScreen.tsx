@@ -1,8 +1,9 @@
 import { ArrowLeft } from '@tamagui/lucide-icons-2'
 import { format } from 'date-fns'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { Modal, ScrollView } from 'react-native'
 import { useState } from 'react'
-import { Dialog, ScrollView, XStack, YStack } from 'tamagui'
+import { XStack, YStack } from 'tamagui'
 
 import {
   GradntButton,
@@ -380,11 +381,20 @@ export function RideDetailScreen() {
           )}
         </YStack>
       </GradntScrollView>
-      <Dialog open={analysisOpen} onOpenChange={setAnalysisOpen} modal>
-        <Dialog.Portal>
-          <Dialog.Overlay key="analysis-overlay" backgroundColor="$background" opacity={0.82} />
-          <Dialog.Content
-            key="analysis-content"
+      <Modal
+        animationType="fade"
+        transparent
+        visible={analysisOpen}
+        onRequestClose={() => setAnalysisOpen(false)}
+      >
+        <YStack
+          flex={1}
+          justifyContent="center"
+          padding="$5"
+          backgroundColor="$background"
+          opacity={0.96}
+        >
+          <YStack
             backgroundColor="$backgroundElevated"
             borderColor="$border"
             borderWidth={1}
@@ -393,10 +403,12 @@ export function RideDetailScreen() {
             width="90%"
             maxWidth={560}
             maxHeight="82%"
+            alignSelf="center"
+            accessibilityViewIsModal
           >
             <ScrollView showsVerticalScrollIndicator={false}>
               <YStack gap="$4">
-                <Dialog.Title>{t('rides.analysis.aiTitle')}</Dialog.Title>
+                <GradntHeading level={2}>{t('rides.analysis.aiTitle')}</GradntHeading>
                 {savedAnalysisQuery.data ? (
                   <>
                     <GradntHeading level={3}>{savedAnalysisQuery.data.headline}</GradntHeading>
@@ -426,9 +438,9 @@ export function RideDetailScreen() {
                 </GradntButton>
               </YStack>
             </ScrollView>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog>
+          </YStack>
+        </YStack>
+      </Modal>
     </GradntScreen>
   )
 }
