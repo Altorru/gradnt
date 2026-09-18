@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router'
+import { PortalProvider } from '@gorhom/portal'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -41,11 +42,13 @@ export default function RootLayout() {
                 <GradntNotificationSync />
 
                 <GradntThemeProvider scheme={scheme}>
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                    }}
-                  />
+                  <PortalProvider>
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                      }}
+                    />
+                  </PortalProvider>
                 </GradntThemeProvider>
               </GradntQueryProvider>
             </OnboardingHydration>
