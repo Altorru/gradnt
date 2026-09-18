@@ -53,6 +53,34 @@ function clientOrThrow() {
   return client
 }
 
+/**
+ * Edge Functions must receive the same current access token as the user who
+ * requested the analysis. Although supabase-js normally injects it, a mobile
+ * app can resume with an access token close to expiry before its refresh loop
+ * has run. Resolve it here so that the coaching request is never anonymous.
+ */
+async function activeSession(client: NonNullable<ReturnType<typeof getSupabaseClient>>) {
+  const current = await client.auth.getSession()
+  let session = current.data.session
+
+  if (current.error || !session) {
+    throw new RideAnalysisRequestError('authentication_required')
+  }
+
+  const expiresSoon =
+    session.expires_at !== undefined && session.expires_at * 1000 <= Date.now() + 60_000
+
+  if (expiresSoon) {
+    const refreshed = await client.auth.refreshSession()
+    session = refreshed.data.session
+    if (refreshed.error || !session) {
+      throw new RideAnalysisRequestError('authentication_required')
+    }
+  }
+
+  return session
+}
+
 function diagnosticFromPayload(payload: unknown): { code: string; providerMessage: string | null } {
   const parsed = z
     .object({
@@ -163,8 +191,12 @@ export async function loadSavedRideAnalysis(activityId: string): Promise<AiRideA
 
 export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<AiRideAnalysis> {
   const client = clientOrThrow()
+  const session = await activeSession(client)
   const { data, error } = await client.functions.invoke('ride-analysis', {
     body: requestBody(input),
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
   })
   if (error) {
     const diagnostic = await responseError(error)

@@ -119,6 +119,7 @@ export function RideDetailScreen() {
   const analysisErrorKey = (() => {
     const error = generateAnalysisMutation.error
     if (!(error instanceof RideAnalysisRequestError)) return 'rides.analysis.errors.request'
+    if (error.code === 'authentication_required') return 'rides.analysis.errors.authentication'
     if (error.code === 'ai_not_configured') return 'rides.analysis.errors.configuration'
     if (error.code === 'ai_provider_timeout') return 'rides.analysis.errors.timeout'
     if (error.code === 'ai_provider_failed_401' || error.code === 'ai_provider_failed_403')

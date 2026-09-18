@@ -98,6 +98,7 @@ export const en = {
       refreshAi: 'Refresh analysis',
       goalImpact: 'Impact on your goal',
       errors: {
+        authentication: 'Your GRADNT session has expired. Open Account, sign in again, then retry.',
         configuration: 'The Coach is not configured on the server yet.',
         timeout: 'The Coach took too long to respond. Try again shortly.',
         apiKey: 'The Coach API key was rejected. Gemini configuration needs attention.',
