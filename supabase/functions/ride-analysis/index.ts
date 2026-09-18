@@ -91,7 +91,9 @@ const responseSchema = z.object({
   explanation: z.string().min(1).max(1000),
   goalImpact: z.string().min(1).max(500),
   nextStep: z.string().min(1).max(300),
-  caution: z.string().max(300).nullable(),
+  // Gemini may omit a warning entirely. Its absence means “no caution”, not a
+  // failed debrief, so normalise that case before persisting the response.
+  caution: z.string().max(300).nullable().optional().default(null),
 })
 
 function json(body: unknown, status = 200): Response {
@@ -153,9 +155,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
                 explanation: { type: 'STRING' },
                 goalImpact: { type: 'STRING' },
                 nextStep: { type: 'STRING' },
-                caution: { type: 'STRING', nullable: true },
+                caution: { type: 'STRING' },
               },
-              required: ['headline', 'explanation', 'goalImpact', 'nextStep', 'caution'],
+              required: ['headline', 'explanation', 'goalImpact', 'nextStep'],
             },
           },
         }),
