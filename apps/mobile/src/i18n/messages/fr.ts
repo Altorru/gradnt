@@ -100,6 +100,17 @@ export const fr = {
         'L’analyse n’a pas abouti. Vérifie ta connexion puis réessaie : tes données ne sont pas perdues.',
       refreshAi: 'Actualiser l’analyse',
       goalImpact: 'Impact sur ton objectif',
+      errors: {
+        configuration: 'Le Coach n’est pas encore configuré sur le serveur.',
+        timeout: 'Le Coach a mis trop de temps à répondre. Réessaie dans un instant.',
+        apiKey: 'La clé du Coach est refusée. La configuration Gemini doit être vérifiée.',
+        model: 'Le modèle du Coach est introuvable. La valeur GEMINI_MODEL doit être vérifiée.',
+        quota: 'Le quota du Coach est atteint. Réessaie plus tard.',
+        storage: 'Le Coach a répondu, mais son analyse n’a pas pu être sauvegardée.',
+        data: 'Les données de cette sortie ne sont pas encore prêtes pour l’analyse. Actualise les sorties puis réessaie.',
+        provider: 'Le Coach a refusé la demande. Vérifie sa configuration puis réessaie.',
+        request: 'L’analyse n’a pas pu être demandée. Vérifie ta connexion puis réessaie.',
+      },
       aiNextStep: 'Prochaine étape du coach',
     },
     comparison: {

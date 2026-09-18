@@ -97,6 +97,17 @@ export const en = {
         'The analysis did not complete. Check your connection and try again: your data is safe.',
       refreshAi: 'Refresh analysis',
       goalImpact: 'Impact on your goal',
+      errors: {
+        configuration: 'The Coach is not configured on the server yet.',
+        timeout: 'The Coach took too long to respond. Try again shortly.',
+        apiKey: 'The Coach API key was rejected. Gemini configuration needs attention.',
+        model: 'The Coach model was not found. Check GEMINI_MODEL.',
+        quota: 'The Coach quota has been reached. Try again later.',
+        storage: 'The Coach responded, but its analysis could not be saved.',
+        data: 'This ride’s data is not ready for analysis yet. Refresh rides and try again.',
+        provider: 'The Coach rejected this request. Check its configuration and try again.',
+        request: 'The analysis could not be requested. Check your connection and try again.',
+      },
       aiNextStep: 'Coach’s next step',
     },
     comparison: {

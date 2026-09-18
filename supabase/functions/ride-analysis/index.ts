@@ -164,7 +164,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
   } catch {
     return json({ error: 'ai_provider_timeout' }, 504)
   }
-  if (!response.ok) return json({ error: 'ai_provider_failed' }, 502)
+  if (!response.ok) {
+    // Keep the provider payload in server logs only: it can contain operational
+    // details, while the client only needs a stable, actionable category.
+    console.error('Gemini ride analysis failed', response.status, await response.text())
+    return json({ error: 'ai_provider_failed', providerStatus: response.status }, 502)
+  }
   const provider = (await response.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
   }

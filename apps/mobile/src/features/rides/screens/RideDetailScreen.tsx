@@ -33,6 +33,7 @@ import {
   useGenerateRideAnalysisMutation,
   useSavedRideAnalysisQuery,
 } from '../hooks/use-ride-analysis'
+import { RideAnalysisRequestError } from '../services/ride-analysis.service'
 import { workoutTitle } from '@/features/app/domain/workout-labels'
 
 export function RideDetailScreen() {
@@ -115,6 +116,19 @@ export function RideDetailScreen() {
       { onSuccess: () => setAnalysisOpen(true) },
     )
   }
+  const analysisErrorKey = (() => {
+    const error = generateAnalysisMutation.error
+    if (!(error instanceof RideAnalysisRequestError)) return 'rides.analysis.errors.request'
+    if (error.code === 'ai_not_configured') return 'rides.analysis.errors.configuration'
+    if (error.code === 'ai_provider_timeout') return 'rides.analysis.errors.timeout'
+    if (error.code === 'ai_provider_failed_401' || error.code === 'ai_provider_failed_403')
+      return 'rides.analysis.errors.apiKey'
+    if (error.code === 'ai_provider_failed_404') return 'rides.analysis.errors.model'
+    if (error.code === 'ai_provider_failed_429') return 'rides.analysis.errors.quota'
+    if (error.code === 'analysis_storage_failed') return 'rides.analysis.errors.storage'
+    if (error.code === 'invalid_analysis_input') return 'rides.analysis.errors.data'
+    return 'rides.analysis.errors.provider'
+  })()
   return (
     <GradntScreen>
       <GradntScrollView>
@@ -285,7 +299,7 @@ export function RideDetailScreen() {
                     </GradntButton>
                   )}
                   {generateAnalysisMutation.isError ? (
-                    <GradntText color="$warning">{t('rides.analysis.aiUnavailable')}</GradntText>
+                    <GradntText color="$warning">{t(analysisErrorKey)}</GradntText>
                   ) : null}
                 </GradntCard>
               ) : null}

@@ -20,6 +20,13 @@ const storedRowSchema = z.object({
 
 export type AiRideAnalysis = z.infer<typeof aiAnalysisSchema>
 
+export class RideAnalysisRequestError extends Error {
+  constructor(public readonly code: string) {
+    super(code)
+    this.name = 'RideAnalysisRequestError'
+  }
+}
+
 export type RideAnalysisRequest = {
   locale: Language
   activity: Activity
@@ -41,6 +48,23 @@ function clientOrThrow() {
   const client = getSupabaseClient()
   if (!client) throw new Error('Supabase client is unavailable')
   return client
+}
+
+async function responseErrorCode(error: unknown): Promise<string> {
+  if (typeof error !== 'object' || error === null || !('context' in error)) return 'request_failed'
+  const context = (error as { context?: unknown }).context
+  if (typeof context !== 'object' || context === null || !('json' in context))
+    return 'request_failed'
+  const json = (context as { json?: unknown }).json
+  if (typeof json !== 'function') return 'request_failed'
+  const payload = await (json as () => Promise<unknown>)().catch(() => null)
+  const parsed = z
+    .object({ error: z.string().min(1), providerStatus: z.number().int().optional() })
+    .safeParse(payload)
+  if (!parsed.success) return 'request_failed'
+  return parsed.data.providerStatus
+    ? `${parsed.data.error}_${parsed.data.providerStatus}`
+    : parsed.data.error
 }
 
 function requestBody(input: RideAnalysisRequest) {
@@ -125,7 +149,7 @@ export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<
   const { data, error } = await client.functions.invoke('ride-analysis', {
     body: requestBody(input),
   })
-  if (error) throw error
+  if (error) throw new RideAnalysisRequestError(await responseErrorCode(error))
   const parsed = z.object({ analysis: aiAnalysisSchema }).safeParse(data)
   if (!parsed.success) throw new Error('Invalid ride-analysis response')
   return parsed.data.analysis
