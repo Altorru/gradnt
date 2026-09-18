@@ -93,6 +93,20 @@ export const fr = {
         'La charge est un indicateur GRADNT cohérent, pas une mesure médicale. L’explication IA viendra au-dessus de ces faits vérifiés.',
       aiNextStep: 'Prochaine étape du coach',
     },
+    comparison: {
+      title: 'Prévu et réalisé',
+      matched: 'Cette sortie correspond à : {{workout}}.',
+      planned: 'Prévu {{value}} min',
+      actual: 'Réalisé {{value}} min',
+      shorter: '{{value}} min de moins que prévu.',
+      onTarget: 'Durée proche de ce qui était prévu.',
+      longer: '{{value}} min de plus que prévu.',
+      control: 'GRADNT n’a pas modifié ton plan. Vérifie la séance avant de la confirmer.',
+      review: 'Vérifier cette séance',
+      unplannedTitle: 'Une sortie ajoutée',
+      unplanned:
+        'Cette sortie ne correspond pas à une séance planifiée. Elle compte tout de même dans ta charge et les recommandations à venir.',
+    },
     guidance: {
       recover:
         'Tu décris un effort très exigeant ou beaucoup de fatigue. Prévois de récupérer avant ta prochaine séance intense et réévalue tes sensations.',

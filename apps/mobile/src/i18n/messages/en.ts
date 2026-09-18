@@ -90,6 +90,20 @@ export const en = {
         'The load is a consistent GRADNT indicator, not a medical measure. AI explanations will be added on top of these verified facts.',
       aiNextStep: 'Coach’s next step',
     },
+    comparison: {
+      title: 'Planned and completed',
+      matched: 'This ride matches: {{workout}}.',
+      planned: 'Planned {{value}} min',
+      actual: 'Completed {{value}} min',
+      shorter: '{{value}} min shorter than planned.',
+      onTarget: 'Close to the planned duration.',
+      longer: '{{value}} min longer than planned.',
+      control: 'GRADNT has not changed your plan. Review the session before confirming it.',
+      review: 'Review this session',
+      unplannedTitle: 'An extra ride',
+      unplanned:
+        'This ride is not matched to a planned session. It still contributes to your load and future recommendations.',
+    },
     guidance: {
       recover:
         'You reported a very demanding effort or high fatigue. Allow recovery before your next intense session and reassess how you feel.',

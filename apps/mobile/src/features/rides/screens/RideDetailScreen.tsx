@@ -16,13 +16,18 @@ import {
   GradntText,
 } from '@/design-system'
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
-import { useActivitiesQuery, useCurrentFtpQuery } from '@/hooks/use-gradnt-data'
-import { analyzeRide } from '@/lib/domain'
+import {
+  useActivitiesQuery,
+  useCurrentFtpQuery,
+  useTrainingPlanQuery,
+} from '@/hooks/use-gradnt-data'
+import { analyzeRide, compareRideToPlan } from '@/lib/domain'
 import { useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { feedbackGuidance } from '../domain/ride-feedback'
 import { useRideFeedbackQuery } from '../hooks/use-ride-feedback'
 import { useRideAnalysisQuery } from '../hooks/use-ride-analysis'
+import { workoutTitle } from '@/features/app/domain/workout-labels'
 
 export function RideDetailScreen() {
   const { t } = useTranslation()
@@ -32,6 +37,7 @@ export function RideDetailScreen() {
   const { activityId = '' } = useLocalSearchParams<{ activityId: string }>()
   const activitiesQuery = useActivitiesQuery()
   const ftpQuery = useCurrentFtpQuery()
+  const planQuery = useTrainingPlanQuery()
   const feedbackQuery = useRideFeedbackQuery(activityId)
   const [advanced, setAdvanced] = useState(false)
   const ready = useOnboardingStore(
@@ -62,6 +68,9 @@ export function RideDetailScreen() {
       )[analysis.nextAction]
     : null
   const aiAnalysisQuery = useRideAnalysisQuery(activity, analysis, feedback?.responses)
+  const comparison = activity
+    ? compareRideToPlan(activity, planQuery.data?.weeks.flatMap((week) => week.workouts) ?? [])
+    : null
   return (
     <GradntScreen>
       <GradntScrollView>
@@ -227,6 +236,53 @@ export function RideDetailScreen() {
                       ) : null}
                     </GradntCard>
                   ) : null}
+                </GradntCard>
+              ) : null}
+              {comparison?.kind === 'matched' ? (
+                <GradntCard gap="$3">
+                  <GradntHeading level={3}>{t('rides.comparison.title')}</GradntHeading>
+                  <GradntText>
+                    {t('rides.comparison.matched', {
+                      workout: workoutTitle(t, comparison.workout.type),
+                    })}
+                  </GradntText>
+                  <XStack flexWrap="wrap" gap="$2">
+                    <GradntBadge>
+                      {t('rides.comparison.planned', { value: comparison.workout.durationMinutes })}
+                    </GradntBadge>
+                    <GradntBadge>
+                      {t('rides.comparison.actual', { value: comparison.actualMinutes })}
+                    </GradntBadge>
+                  </XStack>
+                  <GradntText>
+                    {t(
+                      (
+                        {
+                          shorter: 'rides.comparison.shorter',
+                          on_target: 'rides.comparison.onTarget',
+                          longer: 'rides.comparison.longer',
+                        } as const
+                      )[comparison.outcome],
+                      { value: Math.abs(comparison.differenceMinutes) },
+                    )}
+                  </GradntText>
+                  <GradntText muted fontSize={12}>
+                    {t('rides.comparison.control')}
+                  </GradntText>
+                  {comparison.workout.status === 'planned' ||
+                  comparison.workout.status === 'moved' ? (
+                    <GradntButton
+                      tone="secondary"
+                      onPress={() => router.push(`/plan/${comparison.workout.id}`)}
+                    >
+                      {t('rides.comparison.review')}
+                    </GradntButton>
+                  ) : null}
+                </GradntCard>
+              ) : comparison?.kind === 'unplanned' ? (
+                <GradntCard gap="$2">
+                  <GradntText weight="semibold">{t('rides.comparison.unplannedTitle')}</GradntText>
+                  <GradntText muted>{t('rides.comparison.unplanned')}</GradntText>
                 </GradntCard>
               ) : null}
               {feedback ? (
