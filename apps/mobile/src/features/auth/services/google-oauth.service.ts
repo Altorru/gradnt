@@ -12,7 +12,9 @@ export class GoogleAuthError extends Error {
   }
 }
 
-function tokensFromCallback(callbackUrl: string) {
+type GoogleCallbackCredentials = { code: string } | { access_token: string; refresh_token: string }
+
+function tokensFromCallback(callbackUrl: string): GoogleCallbackCredentials {
   const callback = new URL(callbackUrl)
   const search = new URLSearchParams(callback.search)
   const fragment = new URLSearchParams(callback.hash.replace(/^#/, ''))
@@ -20,11 +22,13 @@ function tokensFromCallback(callbackUrl: string) {
   const error = value('error_description') ?? value('error')
   const accessToken = value('access_token')
   const refreshToken = value('refresh_token')
+  const code = value('code')
 
   if (error) {
     if (error.toLowerCase().includes('provider')) throw new GoogleAuthError('provider_disabled')
     throw new GoogleAuthError('failed')
   }
+  if (code) return { code }
   if (!accessToken || !refreshToken) throw new GoogleAuthError('failed')
   return { access_token: accessToken, refresh_token: refreshToken }
 }
@@ -32,7 +36,11 @@ function tokensFromCallback(callbackUrl: string) {
 export async function completeGoogleCallback(callbackUrl: string) {
   const client = getSupabaseClient()
   if (!client) throw new Error('supabase_unavailable')
-  const { error } = await client.auth.setSession(tokensFromCallback(callbackUrl))
+  const credentials = tokensFromCallback(callbackUrl)
+  const { error } =
+    'code' in credentials
+      ? await client.auth.exchangeCodeForSession(credentials.code)
+      : await client.auth.setSession(credentials)
   if (error) throw new GoogleAuthError('failed')
 }
 
