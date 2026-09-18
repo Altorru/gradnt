@@ -205,7 +205,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       {
         error: 'ai_provider_failed',
         providerStatus: response.status,
-        providerMessage: providerMessage.success ? providerMessage.data.error.message : null,
+        providerMessage: providerMessage.success
+          ? providerMessage.data.error.message
+          : `Gemini HTTP ${response.status}`,
       },
       502,
     )
@@ -230,8 +232,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
       }
     })
     .find((candidate) => candidate?.success)
-  if (!result?.success)
-    return json({ error: texts.length ? 'ai_invalid_response' : 'ai_empty_response' }, 502)
+  if (!result?.success) {
+    const preview = JSON.stringify(texts.length ? texts : provider).slice(0, 900)
+    console.error('Gemini coaching response could not be normalised', preview)
+    return json(
+      {
+        error: texts.length ? 'ai_invalid_response' : 'ai_empty_response',
+        providerMessage: preview,
+      },
+      502,
+    )
+  }
 
   const url = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
