@@ -129,6 +129,13 @@ function normaliseCoachResponse(value: unknown) {
 }
 
 function json(body: unknown, status = 200): Response {
+  if (status >= 400) {
+    const code =
+      typeof body === 'object' && body !== null && 'error' in body
+        ? String((body as { error: unknown }).error)
+        : 'unknown_error'
+    console.error('ride-analysis request failed', { code, status })
+  }
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
