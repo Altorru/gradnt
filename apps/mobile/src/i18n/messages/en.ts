@@ -90,10 +90,13 @@ export const en = {
         'The load is a consistent GRADNT indicator, not a medical measure. AI explanations will be added on top of these verified facts.',
       open: 'View analysis',
       aiTitle: 'GRADNT Coach',
-      aiLoading: 'Your Coach is preparing a personalised debrief…',
+      generate: 'Analyse my ride',
+      viewAi: 'View AI analysis',
+      aiLoading: 'Analysis in progress…',
       aiUnavailable:
-        'The Coach is unavailable right now. The verified facts remain available above.',
-      aiRetry: 'Retry Coach',
+        'The analysis did not complete. Check your connection and try again: your data is safe.',
+      refreshAi: 'Refresh analysis',
+      goalImpact: 'Impact on your goal',
       aiNextStep: 'Coach’s next step',
     },
     comparison: {

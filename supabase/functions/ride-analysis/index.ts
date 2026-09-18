@@ -9,6 +9,20 @@ const corsHeaders = {
 
 const requestSchema = z.object({
   locale: z.enum(['fr', 'en']).default('fr'),
+  activity: z.object({
+    id: z
+      .string()
+      .min(1)
+      .max(128)
+      .regex(/^[a-zA-Z0-9_-]+$/),
+    startAt: z.string().datetime(),
+    sportType: z.enum(['road', 'gravel', 'mtb', 'indoor_cycling']),
+    durationMinutes: z.number().nonnegative(),
+    distanceKm: z.number().nonnegative(),
+    elevationMeters: z.number().nonnegative(),
+    averageHeartRate: z.number().nonnegative().nullable(),
+    averagePower: z.number().nonnegative().nullable(),
+  }),
   facts: z.object({
     durationMinutes: z.number().nonnegative(),
     distanceKm: z.number().nonnegative(),
@@ -28,11 +42,54 @@ const requestSchema = z.object({
       note: z.string().max(2000),
     })
     .nullable(),
+  context: z.object({
+    profile: z
+      .object({
+        discipline: z.enum(['road', 'gravel', 'mtb']),
+        experience: z.enum(['beginner', 'regular', 'advanced']),
+        weeklyVolume: z.enum(['lt3', '3to6', '6to10', 'gt10']),
+      })
+      .nullable(),
+    goal: z
+      .object({
+        type: z.enum(['ftp', 'distance', 'event', 'climbing', 'fitness']),
+        targetValue: z.number().positive().nullable(),
+        targetUnit: z.enum(['w', 'km', 'm', 'h', 'none']),
+        targetDate: z.string().datetime().nullable(),
+      })
+      .nullable(),
+    plan: z.object({
+      matchedWorkout: z
+        .object({ type: z.string(), durationMinutes: z.number().positive(), status: z.string() })
+        .nullable(),
+      upcomingWorkouts: z
+        .array(
+          z.object({
+            type: z.string(),
+            durationMinutes: z.number().positive(),
+            date: z.string().datetime(),
+          }),
+        )
+        .max(3),
+    }),
+    recentRides: z
+      .array(
+        z.object({
+          startAt: z.string().datetime(),
+          durationMinutes: z.number().nonnegative(),
+          distanceKm: z.number().nonnegative(),
+          elevationMeters: z.number().nonnegative(),
+          averagePower: z.number().nonnegative().nullable(),
+        }),
+      )
+      .max(6),
+  }),
 })
 
 const responseSchema = z.object({
   headline: z.string().min(1).max(140),
-  explanation: z.string().min(1).max(600),
+  explanation: z.string().min(1).max(1000),
+  goalImpact: z.string().min(1).max(500),
   nextStep: z.string().min(1).max(300),
   caution: z.string().max(300).nullable(),
 })
@@ -44,20 +101,21 @@ function json(body: unknown, status = 200): Response {
   })
 }
 
-async function authenticated(req: Request): Promise<boolean> {
+async function authenticated(req: Request): Promise<{ id: string } | null> {
   const authorization = req.headers.get('Authorization')
   const url = Deno.env.get('SUPABASE_URL')
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  if (!authorization || !url || !key) return false
+  if (!authorization || !url || !key) return null
   const client = createClient(url, key, { global: { headers: { Authorization: authorization } } })
   const { data } = await client.auth.getUser()
-  return data.user !== null
+  return data.user ? { id: data.user.id } : null
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
-  if (!(await authenticated(req))) return json({ error: 'authentication_required' }, 401)
+  const user = await authenticated(req)
+  if (!user) return json({ error: 'authentication_required' }, 401)
 
   const parsed = requestSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return json({ error: 'invalid_analysis_input' }, 400)
@@ -67,10 +125,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const language = parsed.data.locale === 'fr' ? 'French' : 'English'
   const prompt = [
     `You are the GRADNT cycling coach. Reply in ${language}.`,
-    'Interpret the verified facts and the rider feelings below.',
-    'Do not calculate new metrics, diagnose health, or invent missing data.',
+    'Interpret the verified ride facts, rider feedback, objective, training plan and recent rides below.',
+    'Use only the provided context. Do not calculate metrics, diagnose health, or invent missing data.',
+    'Explain the ride relative to the rider’s goal and recent pattern. Give an actionable next step that respects the upcoming plan.',
     'Keep the tone concrete, encouraging and useful to a beginner and a trained rider.',
-    'Return only JSON with headline, explanation, nextStep and caution.',
+    'Return only JSON with headline, explanation, goalImpact, nextStep and caution.',
     JSON.stringify(parsed.data),
   ].join('\n')
   const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash'
@@ -89,10 +148,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
             properties: {
               headline: { type: 'STRING' },
               explanation: { type: 'STRING' },
+              goalImpact: { type: 'STRING' },
               nextStep: { type: 'STRING' },
               caution: { type: 'STRING', nullable: true },
             },
-            required: ['headline', 'explanation', 'nextStep', 'caution'],
+            required: ['headline', 'explanation', 'goalImpact', 'nextStep', 'caution'],
           },
         },
       }),
@@ -111,7 +171,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'ai_invalid_response' }, 502)
   }
   const result = responseSchema.safeParse(decoded)
-  return result.success
-    ? json({ analysis: result.data })
-    : json({ error: 'ai_invalid_response' }, 502)
+  if (!result.success) return json({ error: 'ai_invalid_response' }, 502)
+
+  const url = Deno.env.get('SUPABASE_URL')
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!url || !serviceRoleKey) return json({ error: 'storage_not_configured' }, 503)
+  const database = createClient(url, serviceRoleKey)
+  const { error: storageError } = await database.from('ride_ai_analyses').upsert(
+    {
+      user_id: user.id,
+      activity_id: parsed.data.activity.id,
+      locale: parsed.data.locale,
+      analysis: result.data,
+      context: parsed.data,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id,activity_id' },
+  )
+  if (storageError) return json({ error: 'analysis_storage_failed' }, 503)
+  return json({ analysis: result.data })
 })

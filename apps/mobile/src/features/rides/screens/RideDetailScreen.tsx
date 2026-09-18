@@ -2,7 +2,7 @@ import { ArrowLeft } from '@tamagui/lucide-icons-2'
 import { format } from 'date-fns'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
-import { XStack, YStack } from 'tamagui'
+import { Dialog, ScrollView, XStack, YStack } from 'tamagui'
 
 import {
   GradntButton,
@@ -18,28 +18,37 @@ import {
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import {
   useActivitiesQuery,
+  useAthleteQuery,
   useCurrentFtpQuery,
+  useGoalQuery,
   useTrainingPlanQuery,
 } from '@/hooks/use-gradnt-data'
 import { analyzeRide, compareRideToPlan } from '@/lib/domain'
-import { useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
+import { useAppLanguage, useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { feedbackGuidance } from '../domain/ride-feedback'
 import { useRideFeedbackQuery } from '../hooks/use-ride-feedback'
-import { useRideAnalysisQuery } from '../hooks/use-ride-analysis'
+import {
+  useGenerateRideAnalysisMutation,
+  useSavedRideAnalysisQuery,
+} from '../hooks/use-ride-analysis'
 import { workoutTitle } from '@/features/app/domain/workout-labels'
 
 export function RideDetailScreen() {
   const { t } = useTranslation()
+  const language = useAppLanguage()
   const locale = useDateLocale()
   const number = useNumberFormat()
   const router = useRouter()
   const { activityId = '' } = useLocalSearchParams<{ activityId: string }>()
   const activitiesQuery = useActivitiesQuery()
   const ftpQuery = useCurrentFtpQuery()
+  const athleteQuery = useAthleteQuery()
+  const goalQuery = useGoalQuery()
   const planQuery = useTrainingPlanQuery()
   const feedbackQuery = useRideFeedbackQuery(activityId)
   const [advanced, setAdvanced] = useState(false)
+  const [analysisOpen, setAnalysisOpen] = useState(false)
   const ready = useOnboardingStore(
     (state) => state.hydrated && state.completed && !state.persistenceError,
   )
@@ -67,10 +76,44 @@ export function RideDetailScreen() {
         } as const
       )[analysis.nextAction]
     : null
-  const aiAnalysisQuery = useRideAnalysisQuery(activity, analysis, feedback?.responses)
   const comparison = activity
     ? compareRideToPlan(activity, planQuery.data?.weeks.flatMap((week) => week.workouts) ?? [])
     : null
+  const savedAnalysisQuery = useSavedRideAnalysisQuery(activityId)
+  const generateAnalysisMutation = useGenerateRideAnalysisMutation(activityId)
+  const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
+  const upcomingWorkouts = workouts
+    .filter(
+      (workout) =>
+        Date.parse(workout.date) >= Date.parse(activity?.startAt ?? '') &&
+        workout.status !== 'skipped',
+    )
+    .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))
+    .slice(0, 3)
+  const recentRides = (activitiesQuery.data ?? [])
+    .filter(
+      (ride) =>
+        ride.id !== activityId && Date.parse(ride.startAt) < Date.parse(activity?.startAt ?? ''),
+    )
+    .sort((a, b) => Date.parse(b.startAt) - Date.parse(a.startAt))
+    .slice(0, 6)
+  const requestAnalysis = () => {
+    if (!activity || !analysis) return
+    generateAnalysisMutation.mutate(
+      {
+        locale: language,
+        activity,
+        facts: analysis,
+        feedback: feedback?.responses ?? null,
+        profile: athleteQuery.data ?? null,
+        goal: goalQuery.data ?? null,
+        matchedWorkout: comparison?.kind === 'matched' ? comparison.workout : null,
+        upcomingWorkouts,
+        recentRides,
+      },
+      { onSuccess: () => setAnalysisOpen(true) },
+    )
+  }
   return (
     <GradntScreen>
       <GradntScrollView>
@@ -224,37 +267,25 @@ export function RideDetailScreen() {
                     )}{' '}
                     {t('rides.analysis.explanation')}
                   </GradntText>
-                  <GradntCard backgroundColor="$backgroundSubtle" gap="$2" padding="$3">
-                    <GradntText weight="semibold">{t('rides.analysis.aiTitle')}</GradntText>
-                    {aiAnalysisQuery.isPending ? (
-                      <GradntText muted>{t('rides.analysis.aiLoading')}</GradntText>
-                    ) : aiAnalysisQuery.isError ? (
-                      <>
-                        <GradntText color="$warning">
-                          {t('rides.analysis.aiUnavailable')}
-                        </GradntText>
-                        <GradntButton
-                          tone="secondary"
-                          onPress={() => void aiAnalysisQuery.refetch()}
-                        >
-                          {t('rides.analysis.aiRetry')}
-                        </GradntButton>
-                      </>
-                    ) : aiAnalysisQuery.data ? (
-                      <>
-                        <GradntText weight="semibold">{aiAnalysisQuery.data.headline}</GradntText>
-                        <GradntText>{aiAnalysisQuery.data.explanation}</GradntText>
-                        <GradntText>
-                          {t('rides.analysis.aiNextStep')}: {aiAnalysisQuery.data.nextStep}
-                        </GradntText>
-                        {aiAnalysisQuery.data.caution ? (
-                          <GradntText color="$warning">{aiAnalysisQuery.data.caution}</GradntText>
-                        ) : null}
-                      </>
-                    ) : (
-                      <GradntText muted>{t('rides.analysis.aiUnavailable')}</GradntText>
-                    )}
-                  </GradntCard>
+                  {savedAnalysisQuery.data ? (
+                    <GradntButton onPress={() => setAnalysisOpen(true)}>
+                      {t('rides.analysis.viewAi')}
+                    </GradntButton>
+                  ) : (
+                    <GradntButton
+                      disabled={generateAnalysisMutation.isPending}
+                      onPress={requestAnalysis}
+                    >
+                      {t(
+                        generateAnalysisMutation.isPending
+                          ? 'rides.analysis.aiLoading'
+                          : 'rides.analysis.generate',
+                      )}
+                    </GradntButton>
+                  )}
+                  {generateAnalysisMutation.isError ? (
+                    <GradntText color="$warning">{t('rides.analysis.aiUnavailable')}</GradntText>
+                  ) : null}
                 </GradntCard>
               ) : null}
               {comparison?.kind === 'matched' ? (
@@ -349,6 +380,55 @@ export function RideDetailScreen() {
           )}
         </YStack>
       </GradntScrollView>
+      <Dialog open={analysisOpen} onOpenChange={setAnalysisOpen} modal>
+        <Dialog.Portal>
+          <Dialog.Overlay key="analysis-overlay" backgroundColor="$background" opacity={0.82} />
+          <Dialog.Content
+            key="analysis-content"
+            backgroundColor="$backgroundElevated"
+            borderColor="$border"
+            borderWidth={1}
+            borderRadius="$6"
+            padding="$5"
+            width="90%"
+            maxWidth={560}
+            maxHeight="82%"
+          >
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <YStack gap="$4">
+                <Dialog.Title>{t('rides.analysis.aiTitle')}</Dialog.Title>
+                {savedAnalysisQuery.data ? (
+                  <>
+                    <GradntHeading level={3}>{savedAnalysisQuery.data.headline}</GradntHeading>
+                    <GradntText>{savedAnalysisQuery.data.explanation}</GradntText>
+                    <YStack gap="$1">
+                      <GradntText weight="semibold">{t('rides.analysis.goalImpact')}</GradntText>
+                      <GradntText>{savedAnalysisQuery.data.goalImpact}</GradntText>
+                    </YStack>
+                    <YStack gap="$1">
+                      <GradntText weight="semibold">{t('rides.analysis.aiNextStep')}</GradntText>
+                      <GradntText>{savedAnalysisQuery.data.nextStep}</GradntText>
+                    </YStack>
+                    {savedAnalysisQuery.data.caution ? (
+                      <GradntText color="$warning">{savedAnalysisQuery.data.caution}</GradntText>
+                    ) : null}
+                  </>
+                ) : null}
+                <GradntButton tone="secondary" onPress={() => setAnalysisOpen(false)}>
+                  {t('common.closePanel')}
+                </GradntButton>
+                <GradntButton
+                  tone="ghost"
+                  disabled={generateAnalysisMutation.isPending}
+                  onPress={requestAnalysis}
+                >
+                  {t('rides.analysis.refreshAi')}
+                </GradntButton>
+              </YStack>
+            </ScrollView>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
     </GradntScreen>
   )
 }

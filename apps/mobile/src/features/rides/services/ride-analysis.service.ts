@@ -1,20 +1,28 @@
 import { z } from 'zod'
 
 import type { Language } from '@/i18n'
-import type { RideAnalysis } from '@/lib/domain'
+import type { Activity, AthleteProfile, Goal, PlannedWorkout, RideAnalysis } from '@/lib/domain'
 import { getSupabaseClient } from '@/services/supabase/client'
 
 const aiAnalysisSchema = z.object({
   headline: z.string().min(1).max(140),
-  explanation: z.string().min(1).max(600),
+  explanation: z.string().min(1).max(1000),
+  goalImpact: z.string().min(1).max(500),
   nextStep: z.string().min(1).max(300),
   caution: z.string().max(300).nullable(),
 })
 
+const storedRowSchema = z.object({
+  activity_id: z.string().min(1),
+  analysis: aiAnalysisSchema,
+  updated_at: z.string().datetime({ offset: true }),
+})
+
 export type AiRideAnalysis = z.infer<typeof aiAnalysisSchema>
 
-export async function fetchAiRideAnalysis(input: {
+export type RideAnalysisRequest = {
   locale: Language
+  activity: Activity
   facts: RideAnalysis
   feedback: {
     perceivedEffort: number | null
@@ -22,11 +30,100 @@ export async function fetchAiRideAnalysis(input: {
     fatigue: 'low' | 'moderate' | 'high' | null
     note: string
   } | null
-}): Promise<AiRideAnalysis | null> {
+  profile: AthleteProfile | null
+  goal: Goal | null
+  matchedWorkout: PlannedWorkout | null
+  upcomingWorkouts: PlannedWorkout[]
+  recentRides: Activity[]
+}
+
+function clientOrThrow() {
   const client = getSupabaseClient()
   if (!client) throw new Error('Supabase client is unavailable')
+  return client
+}
+
+function requestBody(input: RideAnalysisRequest) {
+  return {
+    locale: input.locale,
+    activity: {
+      id: input.activity.id,
+      startAt: input.activity.startAt,
+      sportType: input.activity.sportType,
+      durationMinutes: Math.round(input.activity.durationSeconds / 60),
+      distanceKm: Math.round((input.activity.distanceMeters / 1000) * 10) / 10,
+      elevationMeters: Math.round(input.activity.elevationGainMeters),
+      averageHeartRate: input.activity.averageHeartRate,
+      averagePower: input.activity.averagePower,
+    },
+    facts: {
+      durationMinutes: input.facts.facts.durationMinutes,
+      distanceKm: input.facts.facts.distanceKm,
+      elevationMeters: input.facts.facts.elevationMeters,
+      powerWatts: input.facts.facts.powerWatts,
+      intensityFactor: input.facts.facts.intensityFactor,
+      loadScore: input.facts.loadScore,
+      comparedRides: input.facts.comparedRides,
+      trend: input.facts.trend,
+      intensity: input.facts.intensity,
+    },
+    feedback: input.feedback,
+    context: {
+      profile: input.profile
+        ? {
+            discipline: input.profile.primaryDiscipline,
+            experience: input.profile.experienceLevel,
+            weeklyVolume: input.profile.weeklyVolumeBand,
+          }
+        : null,
+      goal: input.goal
+        ? {
+            type: input.goal.type,
+            targetValue: input.goal.targetValue,
+            targetUnit: input.goal.targetUnit,
+            targetDate: input.goal.targetDate,
+          }
+        : null,
+      plan: {
+        matchedWorkout: input.matchedWorkout
+          ? {
+              type: input.matchedWorkout.type,
+              durationMinutes: input.matchedWorkout.durationMinutes,
+              status: input.matchedWorkout.status,
+            }
+          : null,
+        upcomingWorkouts: input.upcomingWorkouts.slice(0, 3).map((workout) => ({
+          type: workout.type,
+          durationMinutes: workout.durationMinutes,
+          date: workout.date,
+        })),
+      },
+      recentRides: input.recentRides.slice(0, 6).map((ride) => ({
+        startAt: ride.startAt,
+        durationMinutes: Math.round(ride.durationSeconds / 60),
+        distanceKm: Math.round((ride.distanceMeters / 1000) * 10) / 10,
+        elevationMeters: Math.round(ride.elevationGainMeters),
+        averagePower: ride.averagePower,
+      })),
+    },
+  }
+}
+
+export async function loadSavedRideAnalysis(activityId: string): Promise<AiRideAnalysis | null> {
+  const client = clientOrThrow()
+  const { data, error } = await client
+    .from('ride_ai_analyses')
+    .select('activity_id, analysis, updated_at')
+    .eq('activity_id', activityId)
+    .maybeSingle()
+  if (error) throw error
+  return data === null ? null : storedRowSchema.parse(data).analysis
+}
+
+export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<AiRideAnalysis> {
+  const client = clientOrThrow()
   const { data, error } = await client.functions.invoke('ride-analysis', {
-    body: { locale: input.locale, facts: input.facts, feedback: input.feedback },
+    body: requestBody(input),
   })
   if (error) throw error
   const parsed = z.object({ analysis: aiAnalysisSchema }).safeParse(data)

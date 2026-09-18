@@ -93,10 +93,13 @@ export const fr = {
         'La charge est un indicateur GRADNT cohérent, pas une mesure médicale. L’explication IA viendra au-dessus de ces faits vérifiés.',
       open: 'Voir l’analyse',
       aiTitle: 'Coach GRADNT',
-      aiLoading: 'Le Coach prépare ton débrief personnalisé…',
+      generate: 'Analyser ma sortie',
+      viewAi: 'Voir l’analyse IA',
+      aiLoading: 'Analyse en cours…',
       aiUnavailable:
-        'Le Coach n’est pas disponible pour le moment. Les faits vérifiés restent affichés ci-dessus.',
-      aiRetry: 'Réessayer le Coach',
+        'L’analyse n’a pas abouti. Vérifie ta connexion puis réessaie : tes données ne sont pas perdues.',
+      refreshAi: 'Actualiser l’analyse',
+      goalImpact: 'Impact sur ton objectif',
       aiNextStep: 'Prochaine étape du coach',
     },
     comparison: {
