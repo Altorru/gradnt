@@ -14,7 +14,7 @@ import {
   GradntScrollView,
   GradntText,
 } from '@/design-system'
-import { signInWithGoogle } from '@/features/auth/services/google-oauth.service'
+import { GoogleAuthError, signInWithGoogle } from '@/features/auth/services/google-oauth.service'
 import { useTranslation } from '@/i18n'
 import { getSupabaseClient } from '@/services/supabase/client'
 
@@ -31,7 +31,9 @@ export function OnboardingAccountScreen() {
   const { field: emailField } = useController({ control, name: 'email' })
   const { field: passwordField } = useController({ control, name: 'password' })
   const [pending, setPending] = useState(false)
-  const [message, setMessage] = useState<'checkEmail' | 'failed' | 'invalid' | null>(null)
+  const [message, setMessage] = useState<
+    'checkEmail' | 'failed' | 'invalid' | 'googleDisabled' | null
+  >(null)
 
   function currentDraft(): OnboardingSnapshot {
     const draft = useOnboardingStore.getState()
@@ -92,8 +94,12 @@ export function OnboardingAccountScreen() {
     try {
       await signInWithGoogle()
       await finish(draft)
-    } catch {
-      setMessage('failed')
+    } catch (error) {
+      setMessage(
+        error instanceof GoogleAuthError && error.code === 'provider_disabled'
+          ? 'googleDisabled'
+          : 'failed',
+      )
     } finally {
       setPending(false)
     }

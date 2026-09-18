@@ -202,6 +202,8 @@ export const en = {
     checkEmail: 'Check your email to confirm your account, then sign in here.',
     unavailable: 'Account sign-in is not configured in this version yet.',
     failed: 'The operation failed. Check your credentials and connection, then try again.',
+    googleDisabled:
+      'Google is not enabled in Supabase yet. Use email or enable Google under Authentication > Providers.',
     invalid:
       'Enter a valid email and a password. Creating an account requires at least 8 characters.',
     importTitle: 'Keep your current settings?',

@@ -212,6 +212,8 @@ export const fr = {
     checkEmail: 'Vérifie ton email pour confirmer le compte, puis connecte-toi ici.',
     unavailable: 'La connexion aux comptes n’est pas encore configurée dans cette version.',
     failed: 'L’opération a échoué. Vérifie tes identifiants et ta connexion, puis réessaie.',
+    googleDisabled:
+      'Google n’est pas encore activé dans Supabase. Utilise ton email ou active le fournisseur Google dans Authentication > Providers.',
     invalid:
       'Indique un email valide et un mot de passe. Pour créer un compte : au moins 8 caractères.',
     importTitle: 'Reprendre tes réglages actuels ?',

@@ -5,6 +5,13 @@ import { getSupabaseClient } from '@/services/supabase/client'
 
 WebBrowser.maybeCompleteAuthSession()
 
+export class GoogleAuthError extends Error {
+  constructor(public readonly code: 'provider_disabled' | 'cancelled' | 'failed') {
+    super(code)
+    this.name = 'GoogleAuthError'
+  }
+}
+
 function tokensFromCallback(callbackUrl: string) {
   const callback = new URL(callbackUrl)
   const search = new URLSearchParams(callback.search)
@@ -14,8 +21,11 @@ function tokensFromCallback(callbackUrl: string) {
   const accessToken = value('access_token')
   const refreshToken = value('refresh_token')
 
-  if (error) throw new Error(error)
-  if (!accessToken || !refreshToken) throw new Error('google_callback_missing_session')
+  if (error) {
+    if (error.toLowerCase().includes('provider')) throw new GoogleAuthError('provider_disabled')
+    throw new GoogleAuthError('failed')
+  }
+  if (!accessToken || !refreshToken) throw new GoogleAuthError('failed')
   return { access_token: accessToken, refresh_token: refreshToken }
 }
 
@@ -33,11 +43,15 @@ export async function signInWithGoogle() {
       queryParams: { prompt: 'select_account' },
     },
   })
-  if (error || !data.url) throw error ?? new Error('google_authorization_unavailable')
+  if (error || !data.url) {
+    if (error?.message.toLowerCase().includes('provider'))
+      throw new GoogleAuthError('provider_disabled')
+    throw error ?? new GoogleAuthError('failed')
+  }
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo)
-  if (result.type !== 'success') throw new Error('google_authorization_cancelled')
+  if (result.type !== 'success') throw new GoogleAuthError('cancelled')
 
   const { error: sessionError } = await client.auth.setSession(tokensFromCallback(result.url))
-  if (sessionError) throw sessionError
+  if (sessionError) throw new GoogleAuthError('failed')
 }
