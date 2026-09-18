@@ -133,31 +133,37 @@ Deno.serve(async (req: Request): Promise<Response> => {
     JSON.stringify(parsed.data),
   ].join('\n')
   const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash'
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              headline: { type: 'STRING' },
-              explanation: { type: 'STRING' },
-              goalImpact: { type: 'STRING' },
-              nextStep: { type: 'STRING' },
-              caution: { type: 'STRING', nullable: true },
+  let response: Response
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(25_000),
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                headline: { type: 'STRING' },
+                explanation: { type: 'STRING' },
+                goalImpact: { type: 'STRING' },
+                nextStep: { type: 'STRING' },
+                caution: { type: 'STRING', nullable: true },
+              },
+              required: ['headline', 'explanation', 'goalImpact', 'nextStep', 'caution'],
             },
-            required: ['headline', 'explanation', 'goalImpact', 'nextStep', 'caution'],
           },
-        },
-      }),
-    },
-  )
+        }),
+      },
+    )
+  } catch {
+    return json({ error: 'ai_provider_timeout' }, 504)
+  }
   if (!response.ok) return json({ error: 'ai_provider_failed' }, 502)
   const provider = (await response.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
