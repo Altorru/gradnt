@@ -148,17 +148,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
           generationConfig: {
             temperature: 0.2,
             responseMimeType: 'application/json',
-            responseSchema: {
-              type: 'OBJECT',
-              properties: {
-                headline: { type: 'STRING' },
-                explanation: { type: 'STRING' },
-                goalImpact: { type: 'STRING' },
-                nextStep: { type: 'STRING' },
-                caution: { type: 'STRING' },
-              },
-              required: ['headline', 'explanation', 'goalImpact', 'nextStep'],
-            },
           },
         }),
       },
