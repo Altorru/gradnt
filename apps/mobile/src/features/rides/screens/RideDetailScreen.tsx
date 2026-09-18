@@ -22,6 +22,7 @@ import { useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { feedbackGuidance } from '../domain/ride-feedback'
 import { useRideFeedbackQuery } from '../hooks/use-ride-feedback'
+import { useRideAnalysisQuery } from '../hooks/use-ride-analysis'
 
 export function RideDetailScreen() {
   const { t } = useTranslation()
@@ -60,6 +61,7 @@ export function RideDetailScreen() {
         } as const
       )[analysis.nextAction]
     : null
+  const aiAnalysisQuery = useRideAnalysisQuery(activity, analysis, feedback?.responses)
   return (
     <GradntScreen>
       <GradntScrollView>
@@ -213,6 +215,18 @@ export function RideDetailScreen() {
                     )}{' '}
                     {t('rides.analysis.explanation')}
                   </GradntText>
+                  {aiAnalysisQuery.data ? (
+                    <GradntCard backgroundColor="$backgroundSubtle" gap="$2" padding="$3">
+                      <GradntText weight="semibold">{aiAnalysisQuery.data.headline}</GradntText>
+                      <GradntText>{aiAnalysisQuery.data.explanation}</GradntText>
+                      <GradntText>
+                        {t('rides.analysis.aiNextStep')}: {aiAnalysisQuery.data.nextStep}
+                      </GradntText>
+                      {aiAnalysisQuery.data.caution ? (
+                        <GradntText color="$warning">{aiAnalysisQuery.data.caution}</GradntText>
+                      ) : null}
+                    </GradntCard>
+                  ) : null}
                 </GradntCard>
               ) : null}
               {feedback ? (

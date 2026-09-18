@@ -88,6 +88,7 @@ export const en = {
       loadPoints: '{{value}} points',
       explanation:
         'The load is a consistent GRADNT indicator, not a medical measure. AI explanations will be added on top of these verified facts.',
+      aiNextStep: 'Coach’s next step',
     },
     guidance: {
       recover:

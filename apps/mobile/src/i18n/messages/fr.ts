@@ -91,6 +91,7 @@ export const fr = {
       loadPoints: '{{value}} points',
       explanation:
         'La charge est un indicateur GRADNT cohérent, pas une mesure médicale. L’explication IA viendra au-dessus de ces faits vérifiés.',
+      aiNextStep: 'Prochaine étape du coach',
     },
     guidance: {
       recover:

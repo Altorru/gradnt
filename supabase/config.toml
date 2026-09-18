@@ -426,3 +426,6 @@ verify_jwt = false
 
 [functions.strava-webhook]
 verify_jwt = false
+
+[functions.ride-analysis]
+verify_jwt = true
