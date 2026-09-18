@@ -179,18 +179,27 @@ Deno.serve(async (req: Request): Promise<Response> => {
     )
   }
   const provider = (await response.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string; thought?: boolean }> } }>
   }
-  const text = provider.candidates?.[0]?.content?.parts?.[0]?.text
-  if (!text) return json({ error: 'ai_empty_response' }, 502)
-  let decoded: unknown
-  try {
-    decoded = JSON.parse(text)
-  } catch {
-    return json({ error: 'ai_invalid_response' }, 502)
-  }
-  const result = responseSchema.safeParse(decoded)
-  if (!result.success) return json({ error: 'ai_invalid_response' }, 502)
+  const texts = (provider.candidates?.[0]?.content?.parts ?? [])
+    .filter((part) => !part.thought && typeof part.text === 'string')
+    .map((part) => part.text?.trim())
+    .filter((text): text is string => Boolean(text))
+
+  // Gemini 2.5 can emit several parts. Reading only parts[0] mistakes a
+  // thinking part for the answer; inspect the final textual parts instead.
+  const result = texts
+    .reverse()
+    .map((text) => {
+      try {
+        return responseSchema.safeParse(JSON.parse(text.replace(/^```json\s*|\s*```$/g, '')))
+      } catch {
+        return null
+      }
+    })
+    .find((candidate) => candidate?.success)
+  if (!result?.success)
+    return json({ error: texts.length ? 'ai_invalid_response' : 'ai_empty_response' }, 502)
 
   const url = Deno.env.get('SUPABASE_URL')
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
