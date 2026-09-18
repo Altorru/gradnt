@@ -147,8 +147,10 @@ async function authenticated(req: Request): Promise<{ id: string } | null> {
   const url = Deno.env.get('SUPABASE_URL')
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (!authorization || !url || !key) return null
-  const client = createClient(url, key, { global: { headers: { Authorization: authorization } } })
-  const { data } = await client.auth.getUser()
+  const token = authorization.replace(/^Bearer\s+/i, '').trim()
+  if (!token) return null
+  const client = createClient(url, key)
+  const { data } = await client.auth.getUser(token)
   return data.user ? { id: data.user.id } : null
 }
 
