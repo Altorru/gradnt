@@ -53,17 +53,7 @@ function clientOrThrow() {
   return client
 }
 
-async function responseError(
-  error: unknown,
-): Promise<{ code: string; providerMessage: string | null }> {
-  if (typeof error !== 'object' || error === null || !('context' in error))
-    return { code: 'request_failed', providerMessage: null }
-  const context = (error as { context?: unknown }).context
-  if (typeof context !== 'object' || context === null || !('json' in context))
-    return { code: 'request_failed', providerMessage: null }
-  const json = (context as { json?: unknown }).json
-  if (typeof json !== 'function') return { code: 'request_failed', providerMessage: null }
-  const payload = await (json as () => Promise<unknown>)().catch(() => null)
+function diagnosticFromPayload(payload: unknown): { code: string; providerMessage: string | null } {
   const parsed = z
     .object({
       error: z.string().min(1),
@@ -78,6 +68,20 @@ async function responseError(
       : parsed.data.error,
     providerMessage: parsed.data.providerMessage ?? null,
   }
+}
+
+async function responseError(
+  error: unknown,
+): Promise<{ code: string; providerMessage: string | null }> {
+  if (typeof error !== 'object' || error === null || !('context' in error))
+    return { code: 'request_failed', providerMessage: null }
+  const context = (error as { context?: unknown }).context
+  if (typeof context !== 'object' || context === null || !('json' in context))
+    return { code: 'request_failed', providerMessage: null }
+  const json = (context as { json?: unknown }).json
+  if (typeof json !== 'function') return { code: 'request_failed', providerMessage: null }
+  const payload = await (json as () => Promise<unknown>)().catch(() => null)
+  return diagnosticFromPayload(payload)
 }
 
 function requestBody(input: RideAnalysisRequest) {
@@ -166,6 +170,9 @@ export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<
     const diagnostic = await responseError(error)
     throw new RideAnalysisRequestError(diagnostic.code, diagnostic.providerMessage)
   }
+  const returnedError = diagnosticFromPayload(data)
+  if (returnedError.code !== 'request_failed')
+    throw new RideAnalysisRequestError(returnedError.code, returnedError.providerMessage)
   const parsed = z.object({ analysis: aiAnalysisSchema }).safeParse(data)
   if (!parsed.success) throw new Error('Invalid ride-analysis response')
   return parsed.data.analysis
