@@ -59,6 +59,39 @@ export const fr = {
     heartRate: 'Fréquence cardiaque moyenne : {{value}} bpm',
     missingSensors:
       'Un tiret signifie que la mesure manque. Sans les données nécessaires, GRADNT n’estime pas ta FTP ni ta puissance normalisée.',
+    analysis: {
+      title: 'Ce que cette sortie t’apprend',
+      subtitle:
+        'Une lecture claire des chiffres, enrichie par tes sensations si tu les renseignes.',
+      confidencePower: 'Analyse basée sur la puissance',
+      confidenceDuration: 'Analyse basée sur la durée',
+      intensity: 'Intensité',
+      load: 'Charge de la sortie',
+      compared: 'Comparaison avec tes sorties récentes',
+      firstRide: 'Première sortie de référence',
+      trendAbove: 'Plus exigeante que tes sorties récentes',
+      trendNear: 'Proche de ta moyenne récente',
+      trendBelow: 'Plus facile que tes sorties récentes',
+      nextAction: 'Prochaine étape',
+      nextRecover: 'Privilégie la récupération avant une nouvelle séance difficile.',
+      nextEndurance: 'Choisis une sortie d’endurance facile si ton énergie le permet.',
+      nextProgress: 'Tes sensations et ton intensité permettent de poursuivre le plan.',
+      intensityLabels: {
+        recovery: 'Récupération',
+        endurance: 'Endurance',
+        tempo: 'Tempo',
+        threshold: 'Seuil',
+        high: 'Intensité élevée',
+      },
+      minutes: '{{value}} min',
+      distance: '{{value}} km',
+      elevation: '{{value}} m D+',
+      power: '{{value}} W',
+      factor: 'IF {{value}}',
+      loadPoints: '{{value}} points',
+      explanation:
+        'La charge est un indicateur GRADNT cohérent, pas une mesure médicale. L’explication IA viendra au-dessus de ces faits vérifiés.',
+    },
     guidance: {
       recover:
         'Tu décris un effort très exigeant ou beaucoup de fatigue. Prévois de récupérer avant ta prochaine séance intense et réévalue tes sensations.',

@@ -6,6 +6,7 @@ import { XStack, YStack } from 'tamagui'
 
 import {
   GradntButton,
+  GradntBadge,
   GradntCard,
   GradntHeading,
   GradntIconButton,
@@ -15,7 +16,8 @@ import {
   GradntText,
 } from '@/design-system'
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
-import { useActivitiesQuery } from '@/hooks/use-gradnt-data'
+import { useActivitiesQuery, useCurrentFtpQuery } from '@/hooks/use-gradnt-data'
+import { analyzeRide } from '@/lib/domain'
 import { useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { feedbackGuidance } from '../domain/ride-feedback'
@@ -28,6 +30,7 @@ export function RideDetailScreen() {
   const router = useRouter()
   const { activityId = '' } = useLocalSearchParams<{ activityId: string }>()
   const activitiesQuery = useActivitiesQuery()
+  const ftpQuery = useCurrentFtpQuery()
   const feedbackQuery = useRideFeedbackQuery(activityId)
   const [advanced, setAdvanced] = useState(false)
   const ready = useOnboardingStore(
@@ -35,6 +38,28 @@ export function RideDetailScreen() {
   )
   const activity = activitiesQuery.data?.find((ride) => ride.id === activityId)
   const feedback = feedbackQuery.data?.feedback
+  const analysis = activity
+    ? analyzeRide(activity, activitiesQuery.data ?? [], ftpQuery.data ?? null, feedback?.responses)
+    : null
+  const analysisTrendKey = analysis
+    ? (
+        {
+          above: 'rides.analysis.trendAbove',
+          near: 'rides.analysis.trendNear',
+          below: 'rides.analysis.trendBelow',
+          first: 'rides.analysis.firstRide',
+        } as const
+      )[analysis.trend]
+    : null
+  const analysisNextActionKey = analysis
+    ? (
+        {
+          recover: 'rides.analysis.nextRecover',
+          endurance: 'rides.analysis.nextEndurance',
+          progress: 'rides.analysis.nextProgress',
+        } as const
+      )[analysis.nextAction]
+    : null
   return (
     <GradntScreen>
       <GradntScrollView>
@@ -147,6 +172,49 @@ export function RideDetailScreen() {
                   {t(feedback ? 'rides.feedback.edit' : 'rides.feedback.add')}
                 </GradntButton>
               </GradntCard>
+              {analysis ? (
+                <GradntCard gap="$3">
+                  <GradntHeading level={3}>{t('rides.analysis.title')}</GradntHeading>
+                  <GradntText muted>{t('rides.analysis.subtitle')}</GradntText>
+                  <XStack flexWrap="wrap" gap="$2">
+                    <GradntMetric
+                      label={t('rides.analysis.intensity')}
+                      value={t(`rides.analysis.intensityLabels.${analysis.intensity}`)}
+                    />
+                    <GradntMetric
+                      label={t('rides.analysis.load')}
+                      value={t('rides.analysis.loadPoints', { value: analysis.loadScore })}
+                    />
+                  </XStack>
+                  <GradntText>{analysisTrendKey ? t(analysisTrendKey) : null}</GradntText>
+                  <XStack flexWrap="wrap" gap="$2">
+                    <GradntBadge>
+                      {t('rides.analysis.minutes', { value: analysis.facts.durationMinutes })}
+                    </GradntBadge>
+                    <GradntBadge>
+                      {t('rides.analysis.distance', { value: analysis.facts.distanceKm })}
+                    </GradntBadge>
+                    <GradntBadge>
+                      {t('rides.analysis.elevation', { value: analysis.facts.elevationMeters })}
+                    </GradntBadge>
+                    {analysis.facts.powerWatts !== null ? (
+                      <GradntBadge>
+                        {t('rides.analysis.power', { value: analysis.facts.powerWatts })}
+                      </GradntBadge>
+                    ) : null}
+                  </XStack>
+                  <GradntText weight="semibold">{t('rides.analysis.nextAction')}</GradntText>
+                  <GradntText>{analysisNextActionKey ? t(analysisNextActionKey) : null}</GradntText>
+                  <GradntText muted fontSize={12}>
+                    {t(
+                      analysis.confidence === 'power'
+                        ? 'rides.analysis.confidencePower'
+                        : 'rides.analysis.confidenceDuration',
+                    )}{' '}
+                    {t('rides.analysis.explanation')}
+                  </GradntText>
+                </GradntCard>
+              ) : null}
               {feedback ? (
                 <GradntCard gap="$3">
                   <GradntText weight="semibold">{t('rides.nextStep')}</GradntText>

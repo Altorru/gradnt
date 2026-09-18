@@ -1,5 +1,6 @@
 export * from './first-plan'
 export * from './metrics'
+export * from './ride-analysis'
 export * from './schemas'
 export * from './selectors'
 export * from './workout-calendar'

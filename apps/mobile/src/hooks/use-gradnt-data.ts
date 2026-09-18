@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { planRepository } from '../services/plan.repository'
 import { gradntRepository } from '../services/gradnt.repository'
+import { loadCurrentFtp } from '../services/ftp/ftp.persistence'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 
 /**
@@ -51,6 +52,15 @@ export function useActivitiesQuery({ enabled = true }: QueryGate = {}) {
     queryKey: ['activities'],
     enabled: ready,
     queryFn: () => gradntRepository.getActivities(),
+  })
+}
+
+export function useCurrentFtpQuery({ enabled = true }: QueryGate = {}) {
+  const ready = useDataReady(enabled)
+  return useQuery({
+    queryKey: ['ftp-current'],
+    enabled: ready,
+    queryFn: loadCurrentFtp,
   })
 }
 

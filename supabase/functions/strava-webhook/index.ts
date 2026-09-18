@@ -145,7 +145,7 @@ async function processEvent(event: ReturnType<typeof parseEvent>): Promise<void>
     .from('ride_feedback')
     .select('activity_id')
     .eq('user_id', connection.user_id)
-    .eq('activity_id', String(event.objectId))
+    .eq('activity_id', `strava-${event.objectId}`)
     .maybeSingle()
   if (existingFeedback) {
     await client

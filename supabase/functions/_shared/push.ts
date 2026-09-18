@@ -24,7 +24,11 @@ export async function sendRideFeedbackPush(
         title: 'Belle sortie 🚴',
         body: 'Ajoute tes sensations pour recevoir ton analyse personnalisée.',
         sound: 'default',
-        data: { url: `/rides/${activityId}/feedback`, activityId, kind: 'ride_feedback' },
+        data: {
+          url: `/rides/strava-${activityId}/feedback`,
+          activityId: `strava-${activityId}`,
+          kind: 'ride_feedback',
+        },
         channelId: 'sessions',
       })),
     ),

@@ -57,6 +57,38 @@ export const en = {
     heartRate: 'Average heart rate: {{value}} bpm',
     missingSensors:
       'A dash means the measurement is missing. Without the necessary data, GRADNT does not estimate your FTP or normalized power.',
+    analysis: {
+      title: 'What this ride tells you',
+      subtitle: 'A clear reading of the numbers, with your feelings when you share them.',
+      confidencePower: 'Power-based analysis',
+      confidenceDuration: 'Duration-based analysis',
+      intensity: 'Intensity',
+      load: 'Ride load',
+      compared: 'Compared with recent rides',
+      firstRide: 'First reference ride',
+      trendAbove: 'More demanding than your recent rides',
+      trendNear: 'Close to your recent average',
+      trendBelow: 'Easier than your recent rides',
+      nextAction: 'Next step',
+      nextRecover: 'Prioritise recovery before another hard session.',
+      nextEndurance: 'Choose an easy endurance ride next if your energy allows it.',
+      nextProgress: 'Your sensations and intensity support continuing the plan.',
+      intensityLabels: {
+        recovery: 'Recovery',
+        endurance: 'Endurance',
+        tempo: 'Tempo',
+        threshold: 'Threshold',
+        high: 'High intensity',
+      },
+      minutes: '{{value}} min',
+      distance: '{{value}} km',
+      elevation: '{{value}} m D+',
+      power: '{{value}} W',
+      factor: 'IF {{value}}',
+      loadPoints: '{{value}} points',
+      explanation:
+        'The load is a consistent GRADNT indicator, not a medical measure. AI explanations will be added on top of these verified facts.',
+    },
     guidance: {
       recover:
         'You reported a very demanding effort or high fatigue. Allow recovery before your next intense session and reassess how you feel.',
