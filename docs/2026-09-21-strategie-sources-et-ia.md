@@ -131,12 +131,12 @@ Le message doit indiquer le moteur utilisé : `Lecture GRADNT` ou `Coach IA`.
 
 ### Offre et lancement
 
-- [ ] Définir l’offre gratuite : connexion, objectif, lecture déterministe, plan de base.
-- [ ] Définir Premium : plan adaptatif, parcours, objectifs multiples, IA autorisée, Garmin/FIT.
-- [ ] Ajouter abonnement Google Play à 9,99 €/mois ou 79,99 €/an après validation pilote.
-- [ ] Créer les cartes partageables de progression et de prochaine action.
-- [ ] Préparer le pilote de 10–15 débutants et 5 cyclistes avancés.
-- [ ] Préparer la fiche Play Store et mesurer activation, rétention et conversion.
+- [x] Définir l’offre gratuite : connexion, objectif, lecture déterministe, plan de base.
+- [x] Définir Premium : plan adaptatif, parcours, objectifs multiples, IA autorisée, Garmin/FIT.
+- [x] Ajouter le flux d’abonnement Google Play côté client via RevenueCat à 9,99 €/mois ou 79,99 €/an ; configuration Play Console et RevenueCat restante avant publication.
+- [x] Créer les cartes partageables de progression et de prochaine action.
+- [x] Préparer le pilote de 10–15 débutants et 5 cyclistes avancés.
+- [x] Préparer la fiche Play Store et mesurer activation, rétention et conversion.
 
 ## Audit UX/UI runtime du 21 septembre 2026
 
