@@ -54,12 +54,14 @@ import type { FtpEntry } from '@/services/ftp/ftp.persistence'
 import { loadFtpHistory } from '@/services/ftp/ftp.service'
 import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
 import { recordProductEvent } from '@/services/product-events'
+import { shouldShowStravaConnect } from '../domain/strava-visibility'
 
 export function HomeScreen() {
   const { t, plural } = useTranslation()
   const dateLocale = useDateLocale()
   const router = useRouter()
   const setStrava = useOnboardingStore((state) => state.setStrava)
+  const onboardingHydrated = useOnboardingStore((state) => state.hydrated)
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
@@ -74,6 +76,15 @@ export function HomeScreen() {
   const currentGoalValue = currentValueQuery.data?.value ?? null
   const nextWorkout = getNextWorkout(workoutsQuery.data ?? [])
   const activities = activitiesQuery.data ?? []
+  // A loaded Strava activity is also authoritative evidence that the account is
+  // linked. This prevents the connect card from flashing while the store catches
+  // up with the server connection state.
+  const showStravaConnect = shouldShowStravaConnect({
+    hydrated: onboardingHydrated,
+    connected,
+    activitiesReady: activitiesQuery.isSuccess,
+    activities,
+  })
   const afterRideActivity = getAfterRideActivity(activities)
   const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
   const activityState = getActivityDataState(activities)
@@ -297,7 +308,7 @@ export function HomeScreen() {
             <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
           ) : null}
 
-          {!connected ? (
+          {showStravaConnect ? (
             <GradntStravaConnectBlock
               onConnect={() => void connectStrava()}
               isConnecting={isConnecting}

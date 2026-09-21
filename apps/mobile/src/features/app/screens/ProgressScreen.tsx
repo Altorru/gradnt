@@ -41,6 +41,7 @@ import { reconcileStoredStravaConnection } from '@/services/strava/strava-connec
 import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
 import { goalUnitSymbol } from '../domain/goal-labels'
+import { shouldShowStravaConnect } from '../domain/strava-visibility'
 
 /**
  * The goal words and the volume bands are the onboarding ones.
@@ -68,6 +69,7 @@ export function ProgressScreen() {
   const router = useRouter()
   const dateLocale = useDateLocale()
   const setStrava = useOnboardingStore((state) => state.setStrava)
+  const onboardingHydrated = useOnboardingStore((state) => state.hydrated)
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
@@ -78,6 +80,12 @@ export function ProgressScreen() {
   const activitiesQuery = useActivitiesQuery()
 
   const activities = activitiesQuery.data ?? []
+  const showStravaConnect = shouldShowStravaConnect({
+    hydrated: onboardingHydrated,
+    connected,
+    activitiesReady: activitiesQuery.isSuccess,
+    activities,
+  })
   const activityState = getActivityDataState(activities)
   const volumeSeries = getWeeklyVolumeSeries(activities)
   const rideSeries = getWeeklyRideCountSeries(activities)
@@ -139,7 +147,7 @@ export function ProgressScreen() {
   // Every figure on this screen is computed from rides, so with no connection
   // there is genuinely nothing to report — and offering the way to change that
   // is more useful than a screen of zeroes.
-  if (!connected && activities.length === 0) {
+  if (showStravaConnect && activities.length === 0) {
     return (
       <AppShell header={<AppBrandHeader />}>
         <AppScrollView>
@@ -179,7 +187,7 @@ export function ProgressScreen() {
           <GradntButton tone="secondary" onPress={() => router.push('/rides/new')}>
             {t('rides.add.action')}
           </GradntButton>
-          {!connected ? (
+          {showStravaConnect ? (
             <GradntStravaConnectBlock
               onConnect={() => void connectStrava()}
               isConnecting={isConnecting}
