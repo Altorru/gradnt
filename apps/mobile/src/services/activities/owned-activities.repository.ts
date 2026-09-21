@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto'
 import { z } from 'zod'
 
-import { activitySchema, type Activity } from '@/lib/domain'
+import { activitySchema, provenanceForSource, type Activity } from '@/lib/domain'
 import { getSupabaseClient } from '@/services/supabase/client'
 
 const rowSchema = z.object({
@@ -52,7 +52,12 @@ export async function saveOwnedActivity(
   const { client, userId } = await userClient()
   if ((input.source === 'file') !== Boolean(file)) throw new Error('invalid_activity_source')
   const id = Crypto.randomUUID()
-  const activity = activitySchema.parse({ ...input, id: `${input.source}-${id}`, externalId: null })
+  const activity = activitySchema.parse({
+    ...input,
+    id: `${input.source}-${id}`,
+    externalId: null,
+    provenanceDetails: input.provenanceDetails ?? provenanceForSource(input.source),
+  })
   const { error } = await client.from('owned_activities').insert({
     id,
     user_id: userId,

@@ -1,4 +1,4 @@
-import type { Activity } from './schemas'
+import type { Activity, ActivityProvenance } from './schemas'
 
 export type ActivitySource = Activity['source']
 export type CoachMode = 'deterministic' | 'ai'
@@ -15,6 +15,32 @@ export function coachModeForSource(source: ActivitySource): CoachMode {
 
 export function canUseAiForSource(source: ActivitySource): boolean {
   return coachModeForSource(source) === 'ai'
+}
+
+export function provenanceForSource(
+  source: ActivitySource,
+  collectedAt = new Date().toISOString(),
+): ActivityProvenance {
+  return {
+    provider: source === 'strava' || source === 'garmin' ? source : 'user',
+    consentGrantedAt: source === 'manual' || source === 'file' ? collectedAt : null,
+    collectedAt,
+    freshness: 'current',
+    attribution: source === 'garmin' ? 'Garmin Connect' : null,
+  }
+}
+
+/** AI requires a complete, source-specific provenance record. */
+export function canUseAiForActivity(
+  activity: Pick<Activity, 'source' | 'provenanceDetails'>,
+): boolean {
+  if (!canUseAiForSource(activity.source)) return false
+  const details = activity.provenanceDetails
+  if (!details || details.freshness !== 'current') return false
+  if (activity.source === 'garmin') {
+    return details.provider === 'garmin' && details.attribution === 'Garmin Connect'
+  }
+  return details.provider === 'user'
 }
 
 export function sourcePolicyLabel(

@@ -39,6 +39,11 @@ describe('normalizeStravaActivity', () => {
       weightedPower: 203.9,
       calories: 847,
       provenance: 'observed',
+      provenanceDetails: expect.objectContaining({
+        provider: 'strava',
+        freshness: 'current',
+        attribution: null,
+      }),
     })
   })
 

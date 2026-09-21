@@ -4,6 +4,16 @@ export const dataProvenanceSchema = z.enum(['declared', 'observed'])
 
 export type DataProvenance = z.infer<typeof dataProvenanceSchema>
 
+export const activityProvenanceSchema = z.object({
+  provider: z.enum(['strava', 'garmin', 'user']).nullable(),
+  consentGrantedAt: z.string().datetime().nullable(),
+  collectedAt: z.string().datetime(),
+  freshness: z.enum(['current', 'stale', 'unknown']),
+  attribution: z.string().min(1).nullable(),
+})
+
+export type ActivityProvenance = z.infer<typeof activityProvenanceSchema>
+
 export const athleteProfileSchema = z.object({
   id: z.string(),
   displayName: z.string().min(1),
@@ -55,6 +65,8 @@ export const activitySchema = z.object({
   weightedPower: z.number().positive().nullable(),
   calories: z.number().nonnegative().nullable(),
   provenance: dataProvenanceSchema,
+  /** Details required to explain how an activity may be used by the Coach. */
+  provenanceDetails: activityProvenanceSchema.optional(),
 })
 
 export const workoutTypeSchema = z.enum([

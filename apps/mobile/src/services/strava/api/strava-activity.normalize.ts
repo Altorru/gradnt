@@ -1,4 +1,4 @@
-import { activitySchema, type Activity } from '@/lib/domain'
+import { activitySchema, provenanceForSource, type Activity } from '@/lib/domain'
 
 import { stravaActivitySchema, type StravaActivity } from './strava-activity.schema'
 
@@ -61,6 +61,7 @@ export function normalizeStravaActivity(raw: unknown): Activity | null {
     // on a bike, where roughly a quarter of the energy is actually delivered.
     calories: strava.kilojoules == null ? null : Math.round(strava.kilojoules),
     provenance: 'observed' as const,
+    provenanceDetails: provenanceForSource('strava'),
   }
 
   const validated = activitySchema.safeParse(candidate)

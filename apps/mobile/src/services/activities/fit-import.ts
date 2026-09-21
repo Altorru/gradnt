@@ -2,7 +2,7 @@ import { Decoder, Stream } from '@garmin/fitsdk'
 import * as Crypto from 'expo-crypto'
 import { File } from 'expo-file-system'
 
-import type { Activity } from '@/lib/domain'
+import { provenanceForSource, type Activity } from '@/lib/domain'
 
 import { saveOwnedActivity, type OwnedActivityInput } from './owned-activities.repository'
 
@@ -52,6 +52,7 @@ export function parseFitActivity(buffer: ArrayBuffer): OwnedActivityInput {
     weightedPower: null,
     calories: positive(session.totalCalories),
     provenance: 'observed',
+    provenanceDetails: provenanceForSource('file'),
   }
 }
 
