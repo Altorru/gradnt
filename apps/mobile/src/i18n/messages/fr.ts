@@ -73,6 +73,7 @@ export const fr = {
     sourceStrava: 'Données de sortie : Strava. Sensations : tes réponses dans GRADNT.',
     sourceManual: 'Données de sortie : saisie manuelle. Ces chiffres sont déclarés par toi.',
     sourceFile: 'Données de sortie : fichier FIT original importé par toi.',
+    sourceGarmin: 'Données de sortie : Garmin Connect. Attribution Garmin conservée.',
     nextStep: 'Que faire ensuite ?',
     adaptation: {
       title: 'Proposition pour la suite',

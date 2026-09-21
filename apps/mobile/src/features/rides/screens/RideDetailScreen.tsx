@@ -194,7 +194,9 @@ export function RideDetailScreen() {
                       ? 'rides.sourceManual'
                       : activity?.source === 'file'
                         ? 'rides.sourceFile'
-                        : 'rides.sourceStrava',
+                        : activity?.source === 'garmin'
+                          ? 'rides.sourceGarmin'
+                          : 'rides.sourceStrava',
                   )}
                 </GradntText>
               </GradntCard>

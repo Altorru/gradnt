@@ -106,7 +106,8 @@ Le message doit indiquer le moteur utilisé : `Lecture GRADNT` ou `Coach IA`.
 - [x] Bloquer Strava côté mobile et Edge Function pour les appels IA.
 - [x] Retirer les sorties Strava du contexte IA des sorties possédées.
 - [x] Ajouter des tests de provenance et de mode Coach.
-- [ ] Ajouter provenance, fournisseur, consentement, fraîcheur et attribution au modèle métier.
+- [x] Afficher la provenance Strava, FIT, saisie manuelle et Garmin dans le détail d’une sortie.
+- [ ] Ajouter fournisseur, consentement, fraîcheur et attribution complète au modèle métier.
 - [ ] Obtenir une revue contractuelle Strava avant toute extension IA.
 
 ### Valeur produit

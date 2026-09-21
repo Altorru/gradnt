@@ -70,6 +70,7 @@ export const en = {
     sourceStrava: 'Ride data: Strava. Feelings: your answers in GRADNT.',
     sourceManual: 'Ride data: manual entry. These numbers were declared by you.',
     sourceFile: 'Ride data: an original FIT file you imported.',
+    sourceGarmin: 'Ride data: Garmin Connect. Garmin attribution is retained.',
     nextStep: 'What should I do next?',
     adaptation: {
       title: 'A proposal for what comes next',
