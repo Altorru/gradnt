@@ -185,19 +185,48 @@ export function HomeScreen() {
             changeRising={goal?.type === 'ftp' && ftpDelta !== null && ftpDelta > 0}
           />
 
-          <GradntCard gap="$3">
-            <GradntHeading level={3}>{t('home.week.title')}</GradntHeading>
-            <XStack justifyContent="space-between">
-              <GradntText muted>
-                {t('home.week.summary', {
-                  completed: completedThisWeek.length,
-                  total: currentWeekWorkouts.length,
-                })}
-              </GradntText>
-              <GradntText weight="semibold">{weekCompletion}%</GradntText>
-            </XStack>
-            <GradntProgressBar value={weekCompletion} />
-          </GradntCard>
+          {/* State follows the goal: observed facts explain where the rider is now. */}
+          {/* An account with manual or FIT rides has real progress without Strava. */}
+          {connected || activities.length > 0 ? (
+            <YStack gap="$4">
+              <GradntSectionHeader
+                title={t('home.yourState')}
+                action={t('common.seeMore')}
+                onPress={() => openTab('/progress')}
+              />
+              <YStack gap="$3">
+                <XStack gap="$3">
+                  <GradntStatTile
+                    label={t('home.tiles.volume')}
+                    value={volumeDelta ? String(volumeDelta.current) : '—'}
+                    unit="h"
+                    delta={volumeDelta?.delta ?? null}
+                  />
+                  <GradntStatTile
+                    label={t('home.tiles.rides')}
+                    value={rideDelta ? String(rideDelta.current) : '—'}
+                    delta={rideDelta?.delta ?? null}
+                  />
+                </XStack>
+                <XStack gap="$3">
+                  <GradntStatTile
+                    label={t('home.tiles.distance')}
+                    value={distanceDelta ? String(distanceDelta.current) : '—'}
+                    unit="km"
+                    delta={distanceDelta?.delta ?? null}
+                  />
+                  {latestFtp !== null ? (
+                    <GradntStatTile
+                      label="FTP"
+                      value={String(latestFtp.value)}
+                      unit="W"
+                      delta={ftpDelta}
+                    />
+                  ) : null}
+                </XStack>
+              </YStack>
+            </YStack>
+          ) : null}
 
           <GradntCard accent gap="$3">
             <GradntText weight="semibold">{t('home.coach.title')}</GradntText>
@@ -237,59 +266,24 @@ export function HomeScreen() {
             </GradntCard>
           ) : null}
 
+          <GradntCard gap="$3">
+            <GradntHeading level={3}>{t('home.week.title')}</GradntHeading>
+            <XStack justifyContent="space-between">
+              <GradntText muted>
+                {t('home.week.summary', {
+                  completed: completedThisWeek.length,
+                  total: currentWeekWorkouts.length,
+                })}
+              </GradntText>
+              <GradntText weight="semibold">{weekCompletion}%</GradntText>
+            </XStack>
+            <GradntProgressBar value={weekCompletion} />
+          </GradntCard>
+
           {afterRideActivity ? (
             <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
           ) : null}
 
-          {/* An account with manual or FIT rides has real progress without Strava. */}
-          {connected || activities.length > 0 ? (
-            <YStack gap="$4">
-              <GradntSectionHeader
-                title={t('home.yourState')}
-                action={t('common.seeMore')}
-                onPress={() => openTab('/progress')}
-              />
-
-              {/* Two columns, so a tile keeps a readable width and the grid
-                  stays even whether the FTP tile is there or not. */}
-              <YStack gap="$3">
-                <XStack gap="$3">
-                  <GradntStatTile
-                    label={t('home.tiles.volume')}
-                    value={volumeDelta ? String(volumeDelta.current) : '—'}
-                    unit="h"
-                    delta={volumeDelta?.delta ?? null}
-                  />
-
-                  <GradntStatTile
-                    label={t('home.tiles.rides')}
-                    value={rideDelta ? String(rideDelta.current) : '—'}
-                    delta={rideDelta?.delta ?? null}
-                  />
-                </XStack>
-
-                <XStack gap="$3">
-                  <GradntStatTile
-                    label={t('home.tiles.distance')}
-                    value={distanceDelta ? String(distanceDelta.current) : '—'}
-                    unit="km"
-                    delta={distanceDelta?.delta ?? null}
-                  />
-
-                  {/* Only where a figure is on record: an empty FTP tile would
-                      be a permanent hole for a rider who has never set one. */}
-                  {latestFtp !== null ? (
-                    <GradntStatTile
-                      label="FTP"
-                      value={String(latestFtp.value)}
-                      unit="W"
-                      delta={ftpDelta}
-                    />
-                  ) : null}
-                </XStack>
-              </YStack>
-            </YStack>
-          ) : null}
           {!connected ? (
             <GradntStravaConnectBlock
               onConnect={() => void connectStrava()}

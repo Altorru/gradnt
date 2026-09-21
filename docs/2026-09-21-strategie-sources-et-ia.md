@@ -113,7 +113,7 @@ Le message doit indiquer le moteur utilisé : `Lecture GRADNT` ou `Coach IA`.
 ### Valeur produit
 
 - [x] Ajouter une première décision déterministe du Coach sur la Home.
-- [ ] Remplacer la Home par la hiérarchie objectif → état → action → semaine.
+- [x] Remplacer la Home par la hiérarchie objectif → état → action → semaine.
 - [x] Ajouter le Coach déterministe au détail post-sortie.
 - [x] Ajouter une proposition d’adaptation du plan visible et validable.
 - [x] Ajouter une première disponibilité exceptionnelle persistée et un report d’un jour validable.
@@ -169,7 +169,7 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
 - [x] remplacer la distinction technique « analyse IA disponible / indisponible »
       par une explication de provenance utile ;
 - [x] afficher sur chaque insight sa source et son niveau de confiance ;
-- faire de la Home le point d’entrée objectif → état → prochaine action ;
+- [x] faire de la Home le point d’entrée objectif → état → prochaine action ;
 - conserver Strava dans la boucle de progression déterministe ;
 - [x] ajouter un parcours FIT visible après connexion Strava.
 
