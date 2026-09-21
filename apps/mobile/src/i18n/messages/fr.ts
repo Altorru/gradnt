@@ -214,6 +214,8 @@ export const fr = {
     failed: 'L’opération a échoué. Vérifie tes identifiants et ta connexion, puis réessaie.',
     googleDisabled:
       'Google n’est pas encore activé dans Supabase. Utilise ton email ou active le fournisseur Google dans Authentication > Providers.',
+    googleSaveFailed:
+      'La connexion Google a réussi, mais tes réglages n’ont pas pu être sauvegardés. Réessaie sans recréer de compte.',
     invalid:
       'Indique un email valide et un mot de passe. Pour créer un compte : au moins 8 caractères.',
     importTitle: 'Reprendre tes réglages actuels ?',

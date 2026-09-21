@@ -2,14 +2,17 @@ import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 
-import { GradntScreen, GradntText } from '@/design-system'
-import { completeGoogleCallback } from '@/features/auth/services/google-oauth.service'
+import { GradntButton, GradntScreen, GradntText } from '@/design-system'
+import {
+  completeGoogleCallback,
+  GoogleAuthError,
+} from '@/features/auth/services/google-oauth.service'
 import { useTranslation } from '@/i18n'
 
 export default function GoogleAuthCallbackScreen() {
   const { t } = useTranslation()
   const router = useRouter()
-  const [failed, setFailed] = useState(false)
+  const [failure, setFailure] = useState<'failed' | 'googleSaveFailed' | null>(null)
   const handledUrl = useRef<string | null>(null)
 
   useEffect(() => {
@@ -18,9 +21,16 @@ export default function GoogleAuthCallbackScreen() {
       if (!mounted || !callbackUrl || handledUrl.current === callbackUrl) return
       handledUrl.current = callbackUrl
       void completeGoogleCallback(callbackUrl)
-        .then(() => router.replace('/onboarding/account'))
-        .catch(() => {
-          if (mounted) setFailed(true)
+        .then((destination) => {
+          if (mounted) router.replace(destination)
+        })
+        .catch((error: unknown) => {
+          if (mounted)
+            setFailure(
+              error instanceof GoogleAuthError && error.code === 'save_failed'
+                ? 'googleSaveFailed'
+                : 'failed',
+            )
         })
     }
 
@@ -34,7 +44,12 @@ export default function GoogleAuthCallbackScreen() {
 
   return (
     <GradntScreen>
-      <GradntText muted>{failed ? t('account.failed') : t('common.loading')}</GradntText>
+      <GradntText muted>{t(failure ? `account.${failure}` : 'common.loading')}</GradntText>
+      {failure ? (
+        <GradntButton tone="secondary" onPress={() => router.replace('/onboarding/account')}>
+          {t('common.retry')}
+        </GradntButton>
+      ) : null}
     </GradntScreen>
   )
 }

@@ -32,7 +32,7 @@ export function OnboardingAccountScreen() {
   const { field: passwordField } = useController({ control, name: 'password' })
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState<
-    'checkEmail' | 'failed' | 'invalid' | 'googleDisabled' | null
+    'checkEmail' | 'failed' | 'invalid' | 'googleDisabled' | 'googleSaveFailed' | null
   >(null)
 
   function currentDraft(): OnboardingSnapshot {
@@ -90,15 +90,16 @@ export function OnboardingAccountScreen() {
     if (pending) return
     setPending(true)
     setMessage(null)
-    const draft = currentDraft()
     try {
-      await signInWithGoogle()
-      await finish(draft)
+      const destination = await signInWithGoogle()
+      router.replace(destination)
     } catch (error) {
       setMessage(
         error instanceof GoogleAuthError && error.code === 'provider_disabled'
           ? 'googleDisabled'
-          : 'failed',
+          : error instanceof GoogleAuthError && error.code === 'save_failed'
+            ? 'googleSaveFailed'
+            : 'failed',
       )
     } finally {
       setPending(false)

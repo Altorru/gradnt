@@ -19,7 +19,7 @@ export const onboardingSnapshotSchema = z.object({
   goal: cyclistGoalSchema.nullable(),
   availability: weeklyAvailabilitySchema.nullable(),
   strava: stravaConnectionSchema.nullable(),
-  currentStep: z.number().int().min(1).max(7),
+  currentStep: z.number().int().min(1).max(8),
   completed: z.boolean(),
 })
 
@@ -65,6 +65,18 @@ async function writeStoredValue(value: string, key = onboardingStorageKey): Prom
   await SecureStore.setItemAsync(key, value)
 }
 
+/** The pre-account answers remain on this device while OAuth opens a browser. */
+export async function loadLocalOnboardingSnapshot(): Promise<OnboardingSnapshot | null> {
+  const storedValue = await readStoredValue()
+  if (!storedValue) return null
+  try {
+    const result = onboardingSnapshotSchema.safeParse(JSON.parse(storedValue))
+    return result.success ? result.data : null
+  } catch {
+    return null
+  }
+}
+
 export async function loadOnboardingSnapshot(): Promise<OnboardingSnapshot | null> {
   const document = await readCloudDocument('onboarding')
   if (document.mode === 'cloud') {
@@ -79,20 +91,7 @@ export async function loadOnboardingSnapshot(): Promise<OnboardingSnapshot | nul
       deviceStrava === null ? null : stravaConnectionSchema.parse(JSON.parse(deviceStrava))
     return { ...snapshot, strava, cloud: document.metadata }
   }
-  try {
-    const storedValue = await readStoredValue()
-
-    if (!storedValue) {
-      return null
-    }
-
-    const parsedValue: unknown = JSON.parse(storedValue)
-    const result = onboardingSnapshotSchema.safeParse(parsedValue)
-
-    return result.success ? result.data : null
-  } catch {
-    return null
-  }
+  return loadLocalOnboardingSnapshot()
 }
 
 export async function saveOnboardingSnapshot(

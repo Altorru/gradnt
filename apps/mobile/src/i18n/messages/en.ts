@@ -204,6 +204,8 @@ export const en = {
     failed: 'The operation failed. Check your credentials and connection, then try again.',
     googleDisabled:
       'Google is not enabled in Supabase yet. Use email or enable Google under Authentication > Providers.',
+    googleSaveFailed:
+      'Google sign-in succeeded, but your settings could not be saved. Retry without creating another account.',
     invalid:
       'Enter a valid email and a password. Creating an account requires at least 8 characters.',
     importTitle: 'Keep your current settings?',

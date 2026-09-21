@@ -90,7 +90,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
       update({ availability, currentStep: Math.max(get().currentStep, 4) }),
     setStrava: (strava) => update({ strava, currentStep: Math.max(get().currentStep, 5) }),
     setNotificationsSeen: () => update({ currentStep: Math.max(get().currentStep, 6) }),
-    complete: () => update({ currentStep: 7, completed: true }),
+    complete: () => update({ currentStep: 8, completed: true }),
     hydrate: async () => {
       await pending
       set({ hydrated: false, persistenceError: false })
