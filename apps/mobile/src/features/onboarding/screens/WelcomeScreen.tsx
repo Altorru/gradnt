@@ -62,11 +62,11 @@ export function WelcomeScreen() {
               <GradntWordmark />
 
               <GradntText muted fontSize={12} weight="medium">
-                1 / 8
+                1 / 7
               </GradntText>
             </XStack>
 
-            <OnboardingProgress step={1} total={8} />
+            <OnboardingProgress step={1} total={7} />
 
             <YStack gap="$3" paddingTop="$4">
               <GradntHeading fontSize={40} lineHeight={43} letterSpacing={-1.6}>

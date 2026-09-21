@@ -40,7 +40,7 @@ export function NotificationsScreen() {
 
   const leave = async () => {
     if (!(await markSeen())) return
-    router.push('/onboarding/review')
+    router.replace('/onboarding/account')
   }
 
   const submit = async () => {
@@ -70,11 +70,11 @@ export function NotificationsScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              6 / 8
+              6 / 7
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={6} total={8} />
+          <OnboardingProgress step={6} total={7} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.notifications.title')}</GradntHeading>

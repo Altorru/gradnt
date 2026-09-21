@@ -64,6 +64,7 @@ describe('onboarding saves', () => {
       cloud: { userId: 'owner', revision: (snapshot.cloud?.revision ?? 0) + 1 },
     }))
     await useOnboardingStore.getState().setNotificationsSeen()
+    expect(useOnboardingStore.getState().currentStep).toBe(8)
     await useOnboardingStore.getState().complete()
     expect(persistence.save.mock.calls.at(-1)?.[0].cloud.revision).toBe(2)
     expect(useOnboardingStore.getState().cloud?.revision).toBe(3)

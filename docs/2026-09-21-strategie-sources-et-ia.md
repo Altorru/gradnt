@@ -149,8 +149,10 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
       séance puis le suivi post-sortie, sans carte de prochaine action dupliquée.
 - [ ] Réduire la hauteur de la carte objectif sur petit écran et rendre la
       prochaine action visible sans scroll initial.
-- [ ] Simplifier l’onboarding en regroupant les étapes secondaires et clarifier
-      ce qui est obligatoire avant la création du compte.
+- [x] Simplifier l’onboarding en regroupant les étapes secondaires et clarifier
+      ce qui est obligatoire avant la création du compte : le récapitulatif
+      redondant est retiré du parcours principal et le compte est la dernière
+      étape obligatoire.
 - [ ] Retirer ou masquer le Garage tant que l’ajout de vélo n’est pas fonctionnel.
 - [ ] Ajouter un état vide crédible pour Explorer au lieu de laisser croire à
       une génération de parcours toujours disponible.

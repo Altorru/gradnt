@@ -75,11 +75,11 @@ export function StravaScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              5 / 8
+              5 / 7
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={5} total={8} />
+          <OnboardingProgress step={5} total={7} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.strava.title')}</GradntHeading>

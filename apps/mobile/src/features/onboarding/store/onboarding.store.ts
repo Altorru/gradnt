@@ -29,11 +29,13 @@ type OnboardingState = {
   setAvailability: (availability: WeeklyAvailabilityForm) => Promise<boolean>
   setStrava: (strava: StravaConnection) => Promise<boolean>
   /**
-   * Records that the rider got past the notifications step.
+   * Records that the rider got past the notifications step and is ready to
+   * create an account. The review page is kept as a legacy deep link, but is
+   * no longer part of the first-run flow.
    *
    * That step owns no data of its own — the switches write straight to the
-   * preferences store — so all this keeps is the resume point. Without it a
-   * rider killed on the review screen would come back to Strava.
+   * preferences store — so all this keeps is the resume point before the
+   * mandatory account step.
    */
   setNotificationsSeen: () => Promise<boolean>
   complete: () => Promise<boolean>
@@ -89,7 +91,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => {
     setAvailability: (availability) =>
       update({ availability, currentStep: Math.max(get().currentStep, 4) }),
     setStrava: (strava) => update({ strava, currentStep: Math.max(get().currentStep, 5) }),
-    setNotificationsSeen: () => update({ currentStep: Math.max(get().currentStep, 6) }),
+    setNotificationsSeen: () => update({ currentStep: Math.max(get().currentStep, 8) }),
     complete: () => update({ currentStep: 8, completed: true }),
     hydrate: async () => {
       await pending
@@ -146,7 +148,7 @@ export function getOnboardingResumeRoute(
     return '/onboarding/notifications'
   }
 
-  return step >= 8 ? '/onboarding/account' : '/onboarding/review'
+  return '/onboarding/account'
 }
 
 export function resetOnboardingForDevelopment(): void {
