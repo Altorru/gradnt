@@ -4,6 +4,7 @@ import { ActivityIndicator } from 'react-native'
 import { YStack } from 'tamagui'
 
 import { GradntScreen } from '@/design-system'
+import { completeAuthenticatedOnboarding } from '@/features/auth/services/google-oauth.service'
 import {
   getOnboardingResumeRoute,
   useOnboardingStore,
@@ -46,13 +47,19 @@ export default function AppEntryScreen() {
 
     const client = getSupabaseClient()
     if (!client) {
-      router.replace('/onboarding/account')
+      router.replace(launchDestination(false, currentStep))
       return
     }
     void client.auth.getSession().then(({ data }) => {
-      router.replace(
-        data.session ? launchDestination(completed, currentStep) : '/onboarding/account',
-      )
+      if (!data.session) {
+        router.replace(launchDestination(false, currentStep))
+      } else if (completed) {
+        router.replace('/home')
+      } else {
+        void completeAuthenticatedOnboarding()
+          .then((destination) => router.replace(destination))
+          .catch(() => router.replace('/onboarding/account'))
+      }
     })
   }, [completed, currentStep, hydrated, router])
 

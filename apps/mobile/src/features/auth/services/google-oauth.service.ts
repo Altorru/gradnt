@@ -3,8 +3,10 @@ import * as WebBrowser from 'expo-web-browser'
 
 import {
   loadLocalOnboardingSnapshot,
+  loadOnboardingSnapshot,
   saveOnboardingSnapshot,
 } from '@/features/onboarding/services/onboarding.persistence'
+import { nextRequiredOnboardingStep } from '@/features/onboarding/domain/onboarding-progress'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { waitForAuthTransition } from '@/services/auth/auth-transition'
 import { getSupabaseClient } from '@/services/supabase/client'
@@ -19,9 +21,11 @@ export class GoogleAuthError extends Error {
   }
 }
 
-type GoogleSignInDestination = '/home' | '/onboarding/account'
+type GoogleSignInDestination =
+  '/home' | '/onboarding/profile' | '/onboarding/goal' | '/onboarding/availability'
 
 let callbackInProgress: { key: string; promise: Promise<GoogleSignInDestination> } | null = null
+let onboardingCompletionInProgress: Promise<GoogleSignInDestination> | null = null
 
 type GoogleCallbackCredentials = { code: string } | { access_token: string; refresh_token: string }
 
@@ -44,6 +48,57 @@ function tokensFromCallback(callbackUrl: string): GoogleCallbackCredentials {
   return { access_token: accessToken, refresh_token: refreshToken }
 }
 
+async function completeAuthenticatedOnboardingOnce(): Promise<GoogleSignInDestination> {
+  await waitForAuthTransition()
+  const cloud = await readCloudDocument('onboarding')
+  if (cloud.mode !== 'cloud') throw new Error('google_session_missing')
+
+  // A previous sign-in may already have saved a partial cloud document. Use
+  // that account's answers rather than silently replacing them with local data.
+  const snapshot =
+    cloud.value === null ? await loadLocalOnboardingSnapshot() : await loadOnboardingSnapshot()
+  const missing = nextRequiredOnboardingStep(snapshot)
+  const step =
+    missing === '/onboarding/profile'
+      ? 2
+      : missing === '/onboarding/goal'
+        ? 3
+        : missing === '/onboarding/availability'
+          ? 4
+          : 8
+
+  if (
+    snapshot &&
+    (cloud.value === null ||
+      snapshot.completed !== (missing === null) ||
+      snapshot.currentStep !== step)
+  ) {
+    await saveOnboardingSnapshot({
+      ...snapshot,
+      cloud: cloud.metadata,
+      currentStep: step,
+      completed: missing === null,
+    })
+  }
+  await useOnboardingStore.getState().hydrate()
+  if (useOnboardingStore.getState().persistenceError) throw new Error('cloud_load_failed')
+  return missing ?? '/home'
+}
+
+/** Also repairs an already authenticated account after an interrupted callback. */
+export function completeAuthenticatedOnboarding(): Promise<GoogleSignInDestination> {
+  if (onboardingCompletionInProgress) return onboardingCompletionInProgress
+  const promise = completeAuthenticatedOnboardingOnce()
+    .catch(() => {
+      throw new GoogleAuthError('save_failed')
+    })
+    .finally(() => {
+      if (onboardingCompletionInProgress === promise) onboardingCompletionInProgress = null
+    })
+  onboardingCompletionInProgress = promise
+  return promise
+}
+
 async function completeGoogleCallbackOnce(
   credentials: GoogleCallbackCredentials,
 ): Promise<GoogleSignInDestination> {
@@ -55,24 +110,7 @@ async function completeGoogleCallbackOnce(
       : await client.auth.setSession(credentials)
   if (error) throw new GoogleAuthError('failed')
 
-  await waitForAuthTransition()
-  try {
-    const cloud = await readCloudDocument('onboarding')
-    if (cloud.mode !== 'cloud') throw new Error('google_session_missing')
-    if (cloud.value === null) {
-      const draft = await loadLocalOnboardingSnapshot()
-      if (!draft?.profile || !draft.goal || !draft.availability) {
-        await useOnboardingStore.getState().hydrate()
-        return '/onboarding/account'
-      }
-      await saveOnboardingSnapshot({ ...draft, currentStep: 8, completed: true })
-    }
-    await useOnboardingStore.getState().hydrate()
-    if (useOnboardingStore.getState().persistenceError) throw new Error('cloud_load_failed')
-    return useOnboardingStore.getState().completed ? '/home' : '/onboarding/account'
-  } catch {
-    throw new GoogleAuthError('save_failed')
-  }
+  return completeAuthenticatedOnboarding()
 }
 
 /** Both the browser result and Android deep link may deliver the same one-use code. */

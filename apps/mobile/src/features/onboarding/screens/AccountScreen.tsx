@@ -1,6 +1,6 @@
 import { ArrowLeft } from '@tamagui/lucide-icons-2'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useController, useForm } from 'react-hook-form'
 import { YStack } from 'tamagui'
 import { z } from 'zod'
@@ -14,7 +14,11 @@ import {
   GradntScrollView,
   GradntText,
 } from '@/design-system'
-import { GoogleAuthError, signInWithGoogle } from '@/features/auth/services/google-oauth.service'
+import {
+  completeAuthenticatedOnboarding,
+  GoogleAuthError,
+  signInWithGoogle,
+} from '@/features/auth/services/google-oauth.service'
 import { useTranslation } from '@/i18n'
 import { getSupabaseClient } from '@/services/supabase/client'
 
@@ -31,9 +35,32 @@ export function OnboardingAccountScreen() {
   const { field: emailField } = useController({ control, name: 'email' })
   const { field: passwordField } = useController({ control, name: 'password' })
   const [pending, setPending] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(Boolean(client))
   const [message, setMessage] = useState<
     'checkEmail' | 'failed' | 'invalid' | 'googleDisabled' | 'googleSaveFailed' | null
   >(null)
+
+  useEffect(() => {
+    let active = true
+    if (!client) return
+    void client.auth.getSession().then(async ({ data, error }) => {
+      if (!active) return
+      if (error) {
+        setMessage('failed')
+      } else if (data.session) {
+        try {
+          const destination = await completeAuthenticatedOnboarding()
+          if (active) router.replace(destination)
+        } catch {
+          if (active) setMessage('googleSaveFailed')
+        }
+      }
+      if (active) setCheckingSession(false)
+    })
+    return () => {
+      active = false
+    }
+  }, [client, router])
 
   function currentDraft(): OnboardingSnapshot {
     const draft = useOnboardingStore.getState()
@@ -120,6 +147,22 @@ export function OnboardingAccountScreen() {
           </YStack>
           {!client ? (
             <GradntText color="$danger">{t('account.unavailable')}</GradntText>
+          ) : checkingSession ? (
+            <GradntText muted>{t('common.loading')}</GradntText>
+          ) : message === 'googleSaveFailed' ? (
+            <GradntButton
+              tone="secondary"
+              onPress={() => {
+                setCheckingSession(true)
+                setMessage(null)
+                void completeAuthenticatedOnboarding()
+                  .then((destination) => router.replace(destination))
+                  .catch(() => setMessage('googleSaveFailed'))
+                  .finally(() => setCheckingSession(false))
+              }}
+            >
+              {t('common.retry')}
+            </GradntButton>
           ) : (
             <YStack gap="$3">
               <GradntButton
