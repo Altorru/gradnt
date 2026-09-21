@@ -226,6 +226,28 @@ Prix pilote proposés, à valider avant publication : **9,99 € par mois** ou
 **79,99 € par an**. L’offre annuelle doit afficher explicitement son économie
 par rapport au mensuel, sans masquer le prix total facturé.
 
+### Configuration Google Play / RevenueCat
+
+Le client utilise `react-native-purchases` avec l’entitlement `premium` et une
+offre courante RevenueCat. Avant une build native de production :
+
+1. créer l’application Android `com.altorru.gradnt` dans Google Play Console ;
+2. créer les abonnements mensuel et annuel avec les prix validés ;
+3. connecter Google Play à RevenueCat ;
+4. créer l’entitlement `premium` ;
+5. rattacher les deux produits à l’offering courant ;
+6. renseigner `EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY` dans l’environnement EAS ;
+7. construire une development build Android, car Expo Go ne réalise pas les
+   achats natifs ;
+8. tester achat, restauration, expiration et changement de compte avec des
+   comptes de licence Google Play ;
+9. ne publier qu’après vérification de l’état Premium après redémarrage et
+   après déconnexion/reconnexion.
+
+La clé RevenueCat utilisée dans l’application est une clé publique SDK. Aucun
+secret Google Play, RevenueCat ou Supabase service role ne doit être ajouté à
+`EXPO_PUBLIC_*` ou au dépôt.
+
 ### Activation, rétention et conversion
 
 Les événements mesurés par `product_events` sont volontairement minimaux. Les

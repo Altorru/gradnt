@@ -262,6 +262,17 @@ export const en = {
     continue: 'Return to my app',
     privateNote:
       'Settings and sessions are private in your account. Strava tokens remain on this device; Strava API activities are not copied into this backup.',
+    premium: {
+      title: 'GRADNT Premium',
+      description: 'Unlock the adaptive plan, multiple goals and the AI Coach on allowed sources.',
+      active: 'Premium is active on this account.',
+      price: 'Google Play offer: {{value}}',
+      subscribe: 'Enable Premium',
+      processing: 'Opening Google Play…',
+      restore: 'Restore my purchases',
+      unavailable: 'Google Play purchases will be available in the next production build.',
+      error: 'The subscription could not be checked. Try again later.',
+    },
   },
 
   settings: {

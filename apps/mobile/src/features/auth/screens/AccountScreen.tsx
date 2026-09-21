@@ -1,7 +1,7 @@
 import { ArrowLeft } from '@tamagui/lucide-icons-2'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useController, useForm } from 'react-hook-form'
 import { YStack } from 'tamagui'
 import { z } from 'zod'
@@ -31,6 +31,12 @@ import {
 } from '@/services/strava/oauth/strava-token.persistence'
 import { getSupabaseClient } from '@/services/supabase/client'
 import { waitForAuthTransition } from '@/services/auth/auth-transition'
+import {
+  loadPremiumState,
+  purchasePremium,
+  restorePremium,
+  type PurchasesPackage,
+} from '@/services/subscription.service'
 
 export function AccountScreen() {
   const { t } = useTranslation()
@@ -48,6 +54,11 @@ export function AccountScreen() {
   const password = passwordField.value
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState<'checkEmail' | 'failed' | 'invalid' | null>(null)
+  const [premiumConfigured, setPremiumConfigured] = useState(false)
+  const [premiumActive, setPremiumActive] = useState(false)
+  const [premiumPackage, setPremiumPackage] = useState<PurchasesPackage | null>(null)
+  const [premiumPending, setPremiumPending] = useState(false)
+  const [premiumError, setPremiumError] = useState(false)
   const account = useQuery({
     queryKey: ['account'],
     queryFn: async () => {
@@ -61,6 +72,46 @@ export function AccountScreen() {
     },
   })
   const profile = useOnboardingStore((state) => state.profile)
+
+  useEffect(() => {
+    const userId = account.data?.id
+    if (!userId) return
+    void loadPremiumState(userId)
+      .then((state) => {
+        setPremiumConfigured(state.configured)
+        setPremiumActive(state.active)
+        setPremiumPackage(state.package)
+      })
+      .catch(() => setPremiumError(true))
+  }, [account.data?.id])
+
+  async function buyPremium() {
+    const userId = account.data?.id
+    if (!userId || !premiumPackage) return
+    setPremiumPending(true)
+    setPremiumError(false)
+    try {
+      setPremiumActive(await purchasePremium(userId, premiumPackage))
+    } catch {
+      setPremiumError(true)
+    } finally {
+      setPremiumPending(false)
+    }
+  }
+
+  async function restorePremiumPurchase() {
+    const userId = account.data?.id
+    if (!userId) return
+    setPremiumPending(true)
+    setPremiumError(false)
+    try {
+      setPremiumActive(await restorePremium(userId))
+    } catch {
+      setPremiumError(true)
+    } finally {
+      setPremiumPending(false)
+    }
+  }
   const goToApp = () => {
     const state = useOnboardingStore.getState()
     if (!state.hydrated || state.persistenceError) {
@@ -169,6 +220,39 @@ export function AccountScreen() {
           ) : account.data ? (
             <YStack gap="$4">
               <GradntText>{t('account.signedIn', { email: account.data.email ?? '' })}</GradntText>
+              <GradntCard gap="$3">
+                <GradntHeading level={3}>{t('account.premium.title')}</GradntHeading>
+                <GradntText muted>{t('account.premium.description')}</GradntText>
+                {premiumActive ? (
+                  <GradntText color="$positive">{t('account.premium.active')}</GradntText>
+                ) : premiumConfigured && premiumPackage ? (
+                  <>
+                    <GradntText weight="semibold">
+                      {t('account.premium.price', { value: premiumPackage.product.priceString })}
+                    </GradntText>
+                    <GradntButton
+                      disabled={pending || premiumPending}
+                      onPress={() => void buyPremium()}
+                    >
+                      {t(
+                        premiumPending ? 'account.premium.processing' : 'account.premium.subscribe',
+                      )}
+                    </GradntButton>
+                  </>
+                ) : (
+                  <GradntText muted>{t('account.premium.unavailable')}</GradntText>
+                )}
+                <GradntButton
+                  tone="ghost"
+                  disabled={pending || premiumPending}
+                  onPress={() => void restorePremiumPurchase()}
+                >
+                  {t('account.premium.restore')}
+                </GradntButton>
+                {premiumError ? (
+                  <GradntText color="$danger">{t('account.premium.error')}</GradntText>
+                ) : null}
+              </GradntCard>
               {!profile && original.profile ? (
                 <GradntCard gap="$3">
                   <GradntHeading level={3}>{t('account.importTitle')}</GradntHeading>

@@ -273,6 +273,19 @@ export const fr = {
     continue: 'Retrouver mon app',
     privateNote:
       'Les réglages et les séances sont privés dans ton compte. Les jetons Strava restent sur cet appareil ; les activités de l’API Strava ne sont pas copiées dans cette sauvegarde.',
+    premium: {
+      title: 'GRADNT Premium',
+      description:
+        'Débloque le plan adaptatif, les objectifs multiples et le Coach IA sur les sources autorisées.',
+      active: 'Premium est actif sur ce compte.',
+      price: '{{value}} · 9,99 € / mois ou 79,99 € / an selon l’offre configurée',
+      subscribe: 'Activer Premium',
+      processing: 'Ouverture de Google Play…',
+      restore: 'Restaurer mes achats',
+      unavailable:
+        'Les achats Google Play seront disponibles dans la prochaine build de production.',
+      error: 'Impossible de vérifier l’abonnement. Réessaie plus tard.',
+    },
   },
 
   settings: {
