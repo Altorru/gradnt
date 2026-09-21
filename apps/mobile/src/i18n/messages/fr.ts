@@ -228,7 +228,7 @@ export const fr = {
   tabs: {
     home: 'Accueil',
     plan: 'Plan',
-    progress: 'Progrès',
+    progress: 'Progression',
     explore: 'Explorer',
     garage: 'Garage',
   },
@@ -604,7 +604,7 @@ export const fr = {
         'Garde un rythme régulier. Ajoute une disponibilité ou prépare ta prochaine sortie.',
       openPlan: 'Voir la prochaine séance',
     },
-    yourState: 'Ton état',
+    yourState: 'Ton état actuel',
     tiles: {
       volume: 'Volume 7 j',
       rides: 'Sorties 7 j',

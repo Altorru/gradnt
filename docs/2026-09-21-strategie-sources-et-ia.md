@@ -159,8 +159,8 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
 - [x] Ajouter un état vide crédible pour Explorer au lieu de laisser croire à
       une génération de parcours toujours disponible : l’écran explique la
       disponibilité du moteur et renvoie vers Plan.
-- [ ] Harmoniser les libellés « Progrès », « Progression », « État » et
-      « Coach » pour éviter quatre mots qui décrivent la même idée.
+- [x] Harmoniser les libellés « Progression », « État actuel » et « Coach »
+      pour éviter quatre mots qui décrivent la même idée.
 - [ ] Vérifier chaque écran en français et en anglais avec texte long, clavier,
       rotation interdite et taille de police augmentée.
 

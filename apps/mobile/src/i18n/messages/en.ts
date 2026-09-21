@@ -556,7 +556,7 @@ export const en = {
       build_consistency: 'Keep a steady rhythm. Add availability or prepare your next ride.',
       openPlan: 'View next session',
     },
-    yourState: 'Your form',
+    yourState: 'Your current state',
     tiles: {
       volume: '7-day volume',
       rides: '7-day rides',
