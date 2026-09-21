@@ -191,3 +191,171 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
   remplacement de Strava ;
 - obtenir un avis juridique écrit avant toute utilisation IA de données Strava ;
 - ne pas lancer de campagne promettant une capacité non autorisée.
+
+## Offre et lancement — version pilote
+
+### Offre gratuite
+
+L’offre gratuite doit permettre de comprendre la valeur de GRADNT avant tout
+paiement :
+
+- création de compte et profil cycliste ;
+- un objectif principal ;
+- connexion Strava et synchronisation de l’historique visible ;
+- lecture déterministe de l’état et de la prochaine action ;
+- plan de base sur quatre semaines ;
+- feedback post-sortie ;
+- import FIT et saisie manuelle disponibles, sans garantie de fonctionnalités
+  Premium futures ;
+- aucune promesse de Coach IA sur les données Strava.
+
+### GRADNT Premium
+
+L’abonnement Premium débloque :
+
+- plan adaptatif ;
+- objectifs multiples ;
+- parcours quand le moteur est disponible ;
+- Coach IA sur FIT, Garmin et saisie GRADNT ;
+- import et historique FIT avancés ;
+- synchronisation Garmin après approbation ;
+- export des séances vers Garmin après approbation ;
+- cartes partageables avancées.
+
+Prix pilote proposés, à valider avant publication : **9,99 € par mois** ou
+**79,99 € par an**. L’offre annuelle doit afficher explicitement son économie
+par rapport au mensuel, sans masquer le prix total facturé.
+
+### Activation, rétention et conversion
+
+Les événements mesurés par `product_events` sont volontairement minimaux. Les
+indicateurs sont :
+
+| Étape           | Événement / définition                                         | Cible pilote                               |
+| --------------- | -------------------------------------------------------------- | ------------------------------------------ |
+| Activation      | compte terminé + objectif enregistré + première ouverture Home | ≥ 70 %                                     |
+| Première valeur | première décision Coach affichée                               | ≥ 60 % des activés                         |
+| Première sortie | première sortie Strava, FIT ou manuelle                        | ≥ 50 % des activés                         |
+| Feedback        | `ride_feedback_saved` après une sortie                         | ≥ 35 % des activés                         |
+| Adaptation      | `adaptation_accepted` lorsqu’une proposition est validée       | ≥ 20 % des feedbacks                       |
+| Rétention J7    | `app_opened` au moins un jour entre J3 et J10                  | ≥ 35 %                                     |
+| Conversion      | achat Premium parmi les activés éligibles                      | à mesurer, sans seuil artificiel au pilote |
+
+Le calcul de rétention doit utiliser des utilisateurs agrégés et des dates,
+jamais le contenu d’une sortie, d’une note ou d’un prompt IA.
+
+## Pilote utilisateurs
+
+### Échantillon
+
+- 10 à 15 cyclistes débutants ;
+- 5 cyclistes avancés ;
+- au moins trois utilisateurs Android avec Google Play actif ;
+- au moins trois utilisateurs en français et deux en anglais ;
+- au moins deux utilisateurs avec capteur de puissance ;
+- au moins trois utilisateurs sans historique Strava exploitable pour tester FIT
+  et la saisie manuelle.
+
+### Parcours à observer
+
+1. onboarding et choix de l’objectif ;
+2. connexion Strava ou démarrage sans Strava ;
+3. lecture de la Home `objectif → état → action → semaine` ;
+4. ajout d’une sortie FIT ou manuelle ;
+5. feedback post-sortie ;
+6. proposition d’adaptation ;
+7. retour entre J3 et J10 ;
+8. compréhension de la différence `Lecture GRADNT` / `Coach IA` ;
+9. compréhension de la provenance affichée ;
+10. intention de payer, sans forcer l’achat pendant les premiers tests.
+
+### Questionnaire court
+
+Après chaque parcours, noter de 1 à 5 :
+
+- « Je comprends où j’en suis. »
+- « Je sais quoi faire ensuite. »
+- « Je comprends d’où viennent les données. »
+- « Je sais quand GRADNT utilise l’IA. »
+- « Je ferais confiance à cette recommandation. »
+
+Ajouter une question ouverte : **« Qu’est-ce qui t’a semblé inutile ou confus ? »**
+
+### Critères de sortie du pilote
+
+Le pilote est exploitable lorsque chaque segment a réalisé au moins une sortie,
+un feedback et un retour à sept jours, et que les incompréhensions critiques sont
+classées par fréquence et non corrigées par une promesse marketing.
+
+## Fiche Google Play — brouillon
+
+### Nom court
+
+**GRADNT — Coach vélo**
+
+### Accroche
+
+**Transforme tes sorties en prochaine décision utile.**
+
+### Description courte
+
+**Un coach vélo qui relie objectif, état, prochaine séance et vraie vie.**
+
+### Description longue — français
+
+GRADNT t’aide à savoir quoi faire ensuite, sans te noyer dans les chiffres.
+
+Définis ton objectif, indique tes disponibilités et connecte Strava pour obtenir
+une lecture déterministe de ton point de départ. GRADNT affiche la provenance de
+chaque insight et sépare clairement la Lecture GRADNT du Coach IA.
+
+Tu peux aussi importer un fichier FIT original ou saisir une sortie manuellement.
+Ces sources peuvent activer le Coach IA lorsqu’elles remplissent les conditions
+de provenance requises. Les données Strava ne sont pas envoyées au Coach IA tant
+qu’un accord spécifique n’existe pas.
+
+Avec GRADNT :
+
+- vois ton objectif et ton état actuel ;
+- reçois une prochaine action concrète ;
+- suis un plan adapté à tes disponibilités ;
+- partage un feedback après ta sortie ;
+- valide toi-même toute adaptation du plan ;
+- comprends la source et le niveau de confiance de tes insights.
+
+Garmin et les fonctionnalités Premium seront disponibles uniquement après les
+validations nécessaires. GRADNT ne remplace pas un avis médical.
+
+### Description longue — anglais
+
+GRADNT helps you know what to do next without drowning you in numbers.
+
+Set your goal, choose your availability and connect Strava to get a deterministic
+reading of your starting point. GRADNT shows the provenance of every insight and
+clearly separates the GRADNT reading from the AI Coach.
+
+You can also import an original FIT file or enter a ride manually. These sources
+may activate the AI Coach when their provenance requirements are met. Strava data
+is not sent to the AI Coach while a specific agreement is unavailable.
+
+With GRADNT you can:
+
+- see your goal and current state;
+- receive one concrete next action;
+- follow a plan that respects your availability;
+- record post-ride feedback;
+- approve every plan adaptation yourself;
+- understand the source and confidence of each insight.
+
+Garmin and Premium features will be available only after the required approvals.
+GRADNT does not replace medical advice.
+
+### Assets à préparer
+
+- icône adaptive Android ;
+- captures Home en français et en anglais ;
+- capture détail de sortie avec provenance ;
+- capture import FIT ;
+- capture Coach IA sur source autorisée ;
+- capture plan et adaptation validable ;
+- visuel avant/après illustrant la prochaine action.
