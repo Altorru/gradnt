@@ -18,6 +18,8 @@ import { planRepository } from './plan.repository'
 
 import { loadCurrentFtp } from './ftp/ftp.persistence'
 import { fetchRecentActivities, historyWindowStart } from './strava/api/strava-activity.service'
+import { listOwnedActivities } from './activities/owned-activities.repository'
+import { mergeActivities } from './activities/merge-activities'
 
 /** Used when a snapshot predates the profile, or stored a band we no longer know. */
 const DEFAULT_WEEKLY_VOLUME_BAND = '3to6' as const
@@ -202,11 +204,13 @@ export class MockGradntRepository implements GradntRepository {
    * zeroes with nothing to explain them.
    */
   async getActivities(): Promise<Activity[]> {
-    const result = await fetchRecentActivities()
+    const [owned, result] = await Promise.all([listOwnedActivities(), fetchRecentActivities()])
 
     if (result.status === 'ready') {
-      return result.activities
+      return mergeActivities(owned, result.activities)
     }
+
+    if (result.status === 'disconnected') return owned
 
     throw new StravaActivitiesError(
       result.status,

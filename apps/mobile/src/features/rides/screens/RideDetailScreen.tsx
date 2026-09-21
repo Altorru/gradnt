@@ -181,7 +181,13 @@ export function RideDetailScreen() {
                   />
                 </XStack>
                 <GradntText muted fontSize={12}>
-                  {t('rides.sourceStrava')}
+                  {t(
+                    activity?.source === 'manual'
+                      ? 'rides.sourceManual'
+                      : activity?.source === 'file'
+                        ? 'rides.sourceFile'
+                        : 'rides.sourceStrava',
+                  )}
                 </GradntText>
               </GradntCard>
               <GradntCard accent gap="$3">

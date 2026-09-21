@@ -2,11 +2,13 @@ import { RecentRides } from '@/features/rides/components/RecentRides'
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import { ArrowUpRight, CalendarDays } from '@tamagui/lucide-icons-2'
 import { format as formatDate } from 'date-fns'
+import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { XStack, YStack } from 'tamagui'
 
 import {
   GradntCard,
+  GradntButton,
   GradntChartCard,
   GradntProgressRing,
   GradntStravaConnectBlock,
@@ -34,6 +36,7 @@ import {
   getWeeklyVolumeSeries,
 } from '@/lib/domain'
 import { describeActivityFailure } from '@/services/gradnt.repository'
+import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
 
 import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
@@ -62,6 +65,7 @@ const VOLUME_KEYS: Record<string, MessageKey> = {
 
 export function ProgressScreen() {
   const { t, plural } = useTranslation()
+  const router = useRouter()
   const dateLocale = useDateLocale()
   const setStrava = useOnboardingStore((state) => state.setStrava)
   const connected = useOnboardingStore((state) => state.strava?.status === 'connected')
@@ -123,6 +127,7 @@ export function ProgressScreen() {
 
     if (result.ok) {
       await setStrava(result.connection)
+      await reconcileStoredStravaConnection()
       await activitiesQuery.refetch()
     } else {
       setConnectError(t(STRAVA_ERROR_KEYS[result.error.code], result.error.params))
@@ -134,7 +139,7 @@ export function ProgressScreen() {
   // Every figure on this screen is computed from rides, so with no connection
   // there is genuinely nothing to report — and offering the way to change that
   // is more useful than a screen of zeroes.
-  if (!connected) {
+  if (!connected && activities.length === 0) {
     return (
       <AppShell header={<AppBrandHeader />}>
         <AppScrollView>
@@ -151,6 +156,9 @@ export function ProgressScreen() {
               connectLabel={t('settings.strava.connect')}
               connectingLabel={t('settings.strava.connecting')}
             />
+            <GradntButton tone="secondary" onPress={() => router.push('/rides/new')}>
+              {t('rides.add.action')}
+            </GradntButton>
           </YStack>
         </AppScrollView>
       </AppShell>
@@ -162,6 +170,20 @@ export function ProgressScreen() {
       <AppScrollView>
         <YStack gap="$7">
           <AppScreenIntro title={t('progress.title')} description={t('progress.description')} />
+          <GradntButton tone="secondary" onPress={() => router.push('/rides/new')}>
+            {t('rides.add.action')}
+          </GradntButton>
+          {!connected ? (
+            <GradntStravaConnectBlock
+              onConnect={() => void connectStrava()}
+              isConnecting={isConnecting}
+              errorMessage={connectError}
+              title={t('onboarding.strava.title')}
+              description={t('settings.strava.connectNote')}
+              connectLabel={t('settings.strava.connect')}
+              connectingLabel={t('settings.strava.connecting')}
+            />
+          ) : null}
 
           {hasError ? (
             <GradntText color="$danger" fontSize={13}>

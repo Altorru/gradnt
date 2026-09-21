@@ -29,6 +29,27 @@ export const fr = {
   },
 
   rides: {
+    add: {
+      action: 'Ajouter une sortie',
+      title: 'Ajouter une sortie',
+      subtitle: 'Importe ton fichier FIT original ou saisis les chiffres dont tu disposes.',
+      fitTitle: 'Fichier du compteur',
+      fitDescription:
+        'Le fichier FIT est lu sur ton appareil. Ses mesures sont sauvegardées dans ton compte GRADNT ; le fichier lui-même n’est pas envoyé.',
+      chooseFit: 'Choisir un fichier FIT',
+      manualTitle: 'Saisie manuelle',
+      dateTime: 'Départ · AAAA-MM-JJ HH:mm',
+      sport: 'Type de sortie',
+      duration: 'Durée en minutes',
+      distance: 'Distance en kilomètres',
+      elevation: 'Dénivelé positif en mètres',
+      save: 'Enregistrer la sortie',
+      invalid: 'Vérifie la date, la durée, la distance et le dénivelé.',
+      duplicate: 'Ce fichier FIT a déjà été importé dans ton compte.',
+      fitError:
+        'Impossible de lire ce fichier FIT. Vérifie qu’il s’agit d’une sortie vélo complète.',
+      sports: { road: 'Route', gravel: 'Gravel', mtb: 'VTT', indoor_cycling: 'Home trainer' },
+    },
     prompt: {
       title: 'Et tes sensations ?',
       answered: 'Tes sensations préparent la suite',
@@ -50,6 +71,8 @@ export const fr = {
     elevation: 'Dénivelé',
     minutes: 'min',
     sourceStrava: 'Données de sortie : Strava. Sensations : tes réponses dans GRADNT.',
+    sourceManual: 'Données de sortie : saisie manuelle. Ces chiffres sont déclarés par toi.',
+    sourceFile: 'Données de sortie : fichier FIT original importé par toi.',
     nextStep: 'Que faire ensuite ?',
     viewPlan: 'Voir mon plan',
     showAdvanced: 'Comprendre les données des capteurs',

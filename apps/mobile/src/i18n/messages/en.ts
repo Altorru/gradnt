@@ -27,6 +27,26 @@ export const en = {
   },
 
   rides: {
+    add: {
+      action: 'Add a ride',
+      title: 'Add a ride',
+      subtitle: 'Import your original FIT file or enter the numbers you have.',
+      fitTitle: 'Computer file',
+      fitDescription:
+        'The FIT file is read on your device. Its measurements are saved to your GRADNT account; the file itself is not uploaded.',
+      chooseFit: 'Choose a FIT file',
+      manualTitle: 'Manual entry',
+      dateTime: 'Start · YYYY-MM-DD HH:mm',
+      sport: 'Ride type',
+      duration: 'Duration in minutes',
+      distance: 'Distance in kilometres',
+      elevation: 'Elevation gain in metres',
+      save: 'Save ride',
+      invalid: 'Check the date, duration, distance and elevation.',
+      duplicate: 'This FIT file has already been imported into your account.',
+      fitError: 'Could not read this FIT file. Check that it is a complete cycling ride.',
+      sports: { road: 'Road', gravel: 'Gravel', mtb: 'MTB', indoor_cycling: 'Indoor' },
+    },
     prompt: {
       title: 'And how did you feel?',
       answered: 'Your feelings help prepare what’s next',
@@ -48,6 +68,8 @@ export const en = {
     elevation: 'Elevation gain',
     minutes: 'min',
     sourceStrava: 'Ride data: Strava. Feelings: your answers in GRADNT.',
+    sourceManual: 'Ride data: manual entry. These numbers were declared by you.',
+    sourceFile: 'Ride data: an original FIT file you imported.',
     nextStep: 'What should I do next?',
     viewPlan: 'View my plan',
     showAdvanced: 'Understand sensor data',

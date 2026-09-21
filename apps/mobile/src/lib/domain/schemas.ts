@@ -41,7 +41,7 @@ export const goalSchema = z.object({
 
 export const activitySchema = z.object({
   id: z.string(),
-  source: z.enum(['strava', 'garmin', 'manual']),
+  source: z.enum(['strava', 'garmin', 'manual', 'file']),
   externalId: z.string().nullable(),
   sportType: z.enum(['road', 'gravel', 'mtb', 'indoor_cycling']),
   startAt: z.string().datetime(),
@@ -54,11 +54,7 @@ export const activitySchema = z.object({
   normalizedPower: z.number().positive().nullable(),
   weightedPower: z.number().positive().nullable(),
   calories: z.number().nonnegative().nullable(),
-  /**
-   * Always observed: an activity only ever enters the app from Strava. The demo
-   * fixtures were the sole producer of `'mock'`, and they are gone.
-   */
-  provenance: z.literal('observed'),
+  provenance: dataProvenanceSchema,
 })
 
 export const workoutTypeSchema = z.enum([

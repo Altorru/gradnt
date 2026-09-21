@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { getSupabaseClient } from './client'
 
-export type DocumentKind = 'onboarding' | 'training_plan'
+export type DocumentKind = 'onboarding' | 'training_plan' | 'ftp_history'
 export type CloudMetadata = { userId: string; revision: number }
 
 const documentSchema = z.object({ payload: z.unknown(), revision: z.number().int().positive() })

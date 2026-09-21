@@ -46,6 +46,7 @@ import { stravaService } from '@/features/onboarding/services/strava.service'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import type { FtpEntry } from '@/services/ftp/ftp.persistence'
 import { loadFtpHistory } from '@/services/ftp/ftp.service'
+import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
 
 export function HomeScreen() {
   const { t, plural } = useTranslation()
@@ -117,6 +118,7 @@ export function HomeScreen() {
 
     if (result.ok) {
       await setStrava(result.connection)
+      await reconcileStoredStravaConnection()
       // The activities come from Strava, so the figures on this screen are
       // stale the moment the connection lands.
       await activitiesQuery.refetch()
@@ -172,7 +174,7 @@ export function HomeScreen() {
             changeRising={goal?.type === 'ftp' && ftpDelta !== null && ftpDelta > 0}
           />
 
-          {connected && afterRideActivity ? (
+          {afterRideActivity ? (
             <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
           ) : null}
 
@@ -201,12 +203,8 @@ export function HomeScreen() {
             )}
           </YStack>
 
-          {/*
-            Keyed on the connection, not on the activity list. A rider who is
-            connected but has not ridden yet also has no activities, and asking
-            them to connect again would be plainly wrong.
-          */}
-          {connected ? (
+          {/* An account with manual or FIT rides has real progress without Strava. */}
+          {connected || activities.length > 0 ? (
             <YStack gap="$4">
               <GradntSectionHeader
                 title={t('home.yourState')}
@@ -253,7 +251,8 @@ export function HomeScreen() {
                 </XStack>
               </YStack>
             </YStack>
-          ) : (
+          ) : null}
+          {!connected ? (
             <GradntStravaConnectBlock
               onConnect={() => void connectStrava()}
               isConnecting={isConnecting}
@@ -263,7 +262,7 @@ export function HomeScreen() {
               connectLabel={t('settings.strava.connect')}
               connectingLabel={t('settings.strava.connecting')}
             />
-          )}
+          ) : null}
 
           {/*
             Only where the split can actually be known — it needs an FTP and

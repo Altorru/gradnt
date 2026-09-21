@@ -1,8 +1,22 @@
 import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { z } from 'zod'
+import {
+  readCloudDocument,
+  writeCloudDocument,
+  type CloudMetadata,
+} from '@/services/supabase/documents'
 
 const ftpHistoryStorageKey = 'gradnt.ftp.history.v1'
+const ftpDocumentSchema = z.object({
+  entries: z.array(
+    z.object({
+      value: z.number().positive(),
+      source: z.enum(['strava', 'declared']),
+      recordedAt: z.string().datetime(),
+    }),
+  ),
+})
 
 /**
  * Where an FTP figure came from.
@@ -46,7 +60,7 @@ async function writeStoredValue(value: string): Promise<void> {
 }
 
 /** The history, oldest first. Empty when nothing has been recorded or it is unreadable. */
-export async function loadFtpHistory(): Promise<FtpEntry[]> {
+async function loadLocalFtpHistory(): Promise<FtpEntry[]> {
   try {
     const storedValue = await readStoredValue()
 
@@ -61,6 +75,51 @@ export async function loadFtpHistory(): Promise<FtpEntry[]> {
   }
 }
 
+async function currentHistory(): Promise<{ entries: FtpEntry[]; cloud?: CloudMetadata }> {
+  const document = await readCloudDocument('ftp_history')
+  if (document.mode === 'local') return { entries: await loadLocalFtpHistory() }
+  return {
+    entries: document.value === null ? [] : ftpDocumentSchema.parse(document.value).entries,
+    cloud: document.metadata,
+  }
+}
+
+export async function loadFtpHistory(): Promise<FtpEntry[]> {
+  return (await currentHistory()).entries
+}
+
+let migration: Promise<void> | null = null
+
+/** Transfer an old device-only FTP history once after the GRADNT account exists. */
+export function migrateLegacyFtpHistoryToCloud(): Promise<void> {
+  if (migration) return migration
+  const task = (async () => {
+    const document = await readCloudDocument('ftp_history')
+    if (document.mode !== 'cloud' || document.value !== null) return
+    const entries = await loadLocalFtpHistory()
+    if (entries.length === 0) return
+    await writeCloudDocument('ftp_history', { entries }, document.metadata)
+    await clearFtpHistory()
+  })().finally(() => {
+    migration = null
+  })
+  migration = task
+  return task
+}
+
+let writes: Promise<unknown> = Promise.resolve()
+
+function updateHistory(change: (entries: FtpEntry[]) => FtpEntry[]): Promise<void> {
+  const task = writes.then(async () => {
+    const state = await currentHistory()
+    const entries = ftpHistorySchema.parse(change(state.entries))
+    if (state.cloud) await writeCloudDocument('ftp_history', { entries }, state.cloud)
+    else await writeStoredValue(JSON.stringify(entries))
+  })
+  writes = task.catch(() => undefined)
+  return task
+}
+
 /**
  * Appends a figure to the history.
  *
@@ -69,12 +128,11 @@ export async function loadFtpHistory(): Promise<FtpEntry[]> {
  * tracking it at all.
  */
 export async function recordFtp(entry: FtpEntry): Promise<void> {
-  const history = await loadFtpHistory()
-  const next = [...history, ftpEntrySchema.parse(entry)].sort(
-    (left, right) => Date.parse(left.recordedAt) - Date.parse(right.recordedAt),
+  await updateHistory((history) =>
+    [...history, ftpEntrySchema.parse(entry)].sort(
+      (left, right) => Date.parse(left.recordedAt) - Date.parse(right.recordedAt),
+    ),
   )
-
-  await writeStoredValue(JSON.stringify(next))
 }
 
 /**
@@ -85,22 +143,18 @@ export async function recordFtp(entry: FtpEntry): Promise<void> {
  * is added or removed.
  */
 export async function deleteFtpEntry(recordedAt: string): Promise<void> {
-  const history = await loadFtpHistory()
-  const next = history.filter((entry) => entry.recordedAt !== recordedAt)
-
-  await writeStoredValue(JSON.stringify(next))
+  await updateHistory((history) => history.filter((entry) => entry.recordedAt !== recordedAt))
 }
 
 /** Replaces the reading recorded at that instant, keeping it in date order. */
 export async function updateFtpEntry(entry: FtpEntry): Promise<void> {
-  const history = await loadFtpHistory()
-  const next = history
-    .map((current) =>
-      current.recordedAt === entry.recordedAt ? ftpEntrySchema.parse(entry) : current,
-    )
-    .sort((left, right) => Date.parse(left.recordedAt) - Date.parse(right.recordedAt))
-
-  await writeStoredValue(JSON.stringify(next))
+  await updateHistory((history) =>
+    history
+      .map((current) =>
+        current.recordedAt === entry.recordedAt ? ftpEntrySchema.parse(entry) : current,
+      )
+      .sort((left, right) => Date.parse(left.recordedAt) - Date.parse(right.recordedAt)),
+  )
 }
 
 /** The most recent figure in the history, or null when there is none. */
