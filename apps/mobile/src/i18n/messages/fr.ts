@@ -571,6 +571,18 @@ export const fr = {
     afterFirstRides: 'Après tes premières sorties',
     observedProgress: 'Progression observée',
     nextStep: 'Prochaine étape',
+    coach: {
+      title: 'Coach GRADNT',
+      deterministic: 'Lecture GRADNT basée sur tes faits vérifiés. Pas une analyse IA.',
+      start: 'Commence par une sortie : je pourrai ensuite te dire quoi faire ensuite.',
+      recover:
+        'Ta charge récente augmente nettement. Prévois une sortie facile avant de remettre de l’intensité.',
+      next_workout:
+        'Ta prochaine action est déjà prête. Consulte la séance et adapte-la à ton énergie.',
+      build_consistency:
+        'Garde un rythme régulier. Ajoute une disponibilité ou prépare ta prochaine sortie.',
+      openPlan: 'Voir la prochaine séance',
+    },
     yourState: 'Ton état',
     tiles: {
       volume: 'Volume 7 j',

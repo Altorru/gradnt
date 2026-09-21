@@ -526,6 +526,15 @@ export const en = {
     afterFirstRides: 'After your first rides',
     observedProgress: 'Progress observed',
     nextStep: 'Next step',
+    coach: {
+      title: 'GRADNT Coach',
+      deterministic: 'GRADNT reading based on your verified facts. This is not AI analysis.',
+      start: 'Start with a ride and I can tell you what to do next.',
+      recover: 'Your recent load is rising sharply. Plan an easy ride before adding intensity.',
+      next_workout: 'Your next action is ready. Review the session and match it to your energy.',
+      build_consistency: 'Keep a steady rhythm. Add availability or prepare your next ride.',
+      openPlan: 'View next session',
+    },
     yourState: 'Your form',
     tiles: {
       volume: '7-day volume',

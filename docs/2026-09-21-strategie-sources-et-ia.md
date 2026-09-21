@@ -97,6 +97,46 @@ Le message doit indiquer le moteur utilisé : `Lecture GRADNT` ou `Coach IA`.
 
 ## Actions immédiates
 
+## Checklist de livraison
+
+### Fondations et conformité
+
+- [x] Décider une expérience Coach unifiée avec moteur déterministe et moteur IA séparés.
+- [x] Centraliser la politique de provenance dans `source-policy.ts`.
+- [x] Bloquer Strava côté mobile et Edge Function pour les appels IA.
+- [x] Retirer les sorties Strava du contexte IA des sorties possédées.
+- [x] Ajouter des tests de provenance et de mode Coach.
+- [ ] Ajouter provenance, fournisseur, consentement, fraîcheur et attribution au modèle métier.
+- [ ] Obtenir une revue contractuelle Strava avant toute extension IA.
+
+### Valeur produit
+
+- [x] Ajouter une première décision déterministe du Coach sur la Home.
+- [ ] Remplacer la Home par la hiérarchie objectif → état → action → semaine.
+- [ ] Ajouter le Coach déterministe au détail post-sortie.
+- [ ] Ajouter une proposition d’adaptation du plan visible et validable.
+- [ ] Ajouter les disponibilités exceptionnelles et le report intelligent.
+- [ ] Mesurer feedback, adaptation acceptée et retour après sept jours.
+
+### Sources et IA premium
+
+- [x] Conserver Strava comme source de démarrage et de progression déterministe.
+- [x] Conserver l’import FIT comme voie IA immédiatement disponible.
+- [ ] Soumettre GRADNT au Garmin Connect Developer Program.
+- [ ] Implémenter OAuth Garmin côté Edge Function après approbation.
+- [ ] Synchroniser les activités Garmin avec attribution obligatoire.
+- [ ] Publier les workouts via Garmin Training API.
+- [ ] Ajouter Wahoo/COROS seulement via accord officiel ou import FIT.
+
+### Offre et lancement
+
+- [ ] Définir l’offre gratuite : connexion, objectif, lecture déterministe, plan de base.
+- [ ] Définir Premium : plan adaptatif, parcours, objectifs multiples, IA autorisée, Garmin/FIT.
+- [ ] Ajouter abonnement Google Play à 9,99 €/mois ou 79,99 €/an après validation pilote.
+- [ ] Créer les cartes partageables de progression et de prochaine action.
+- [ ] Préparer le pilote de 10–15 débutants et 5 cyclistes avancés.
+- [ ] Préparer la fiche Play Store et mesurer activation, rétention et conversion.
+
 ### Produit
 
 - remplacer la distinction technique « analyse IA disponible / indisponible »

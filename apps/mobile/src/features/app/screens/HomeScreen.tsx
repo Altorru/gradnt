@@ -6,6 +6,7 @@ import { useRouter, type Href } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
   GradntCard,
+  GradntButton,
   GradntGoalCard,
   GradntHeading,
   GradntIntensityBreakdown,
@@ -25,6 +26,7 @@ import {
 import { describeActivityFailure } from '@/services/gradnt.repository'
 import {
   getActivityDataState,
+  getDeterministicCoachDecision,
   getDeterministicTrainingInsight,
   getGoalProgressPercentage,
   getIntensityDistribution,
@@ -70,6 +72,7 @@ export function HomeScreen() {
   const afterRideActivity = getAfterRideActivity(activities)
   const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
   const activityState = getActivityDataState(activities)
+  const coachDecision = getDeterministicCoachDecision(activities, workoutsQuery.data ?? [])
 
   // Every tile compares the last seven days with the seven before, so the change
   // it shows is between two spans of equal length.
@@ -177,6 +180,26 @@ export function HomeScreen() {
           {afterRideActivity ? (
             <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
           ) : null}
+
+          <GradntCard accent gap="$3">
+            <GradntText weight="semibold">{t('home.coach.title')}</GradntText>
+            <GradntText>
+              {t(`home.coach.${coachDecision.kind}`, {
+                hours: coachDecision.recentHours,
+              })}
+            </GradntText>
+            <GradntText muted fontSize={11}>
+              {t('home.coach.deterministic')}
+            </GradntText>
+            {coachDecision.nextWorkoutId ? (
+              <GradntButton
+                tone="secondary"
+                onPress={() => router.push(`/plan/${coachDecision.nextWorkoutId}` as Href)}
+              >
+                {t('home.coach.openPlan')}
+              </GradntButton>
+            ) : null}
+          </GradntCard>
 
           <YStack gap="$4">
             <GradntSectionHeader
