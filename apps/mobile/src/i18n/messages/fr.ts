@@ -145,6 +145,7 @@ export const fr = {
         quota: 'Le quota du Coach est atteint. Réessaie plus tard.',
         storage: 'Le Coach a répondu, mais son analyse n’a pas pu être sauvegardée.',
         data: 'Les données de cette sortie ne sont pas encore prêtes pour l’analyse. Actualise les sorties puis réessaie.',
+        provenance: 'La provenance de cette sortie ne permet pas d’activer le Coach IA.',
         provider: 'Le Coach a refusé la demande. Vérifie sa configuration puis réessaie.',
         request: 'L’analyse n’a pas pu être demandée. Vérifie ta connexion puis réessaie.',
       },

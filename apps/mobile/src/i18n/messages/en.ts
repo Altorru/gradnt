@@ -140,6 +140,7 @@ export const en = {
         quota: 'The Coach quota has been reached. Try again later.',
         storage: 'The Coach responded, but its analysis could not be saved.',
         data: 'This ride’s data is not ready for analysis yet. Refresh rides and try again.',
+        provenance: 'This ride’s provenance does not allow the AI Coach to run.',
         provider: 'The Coach rejected this request. Check its configuration and try again.',
         request: 'The analysis could not be requested. Check your connection and try again.',
       },

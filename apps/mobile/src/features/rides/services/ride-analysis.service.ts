@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import type { Language } from '@/i18n'
 import {
-  canUseAiForSource,
+  canUseAiForActivity,
   type Activity,
   type AthleteProfile,
   type Goal,
@@ -132,6 +132,7 @@ function requestBody(input: RideAnalysisRequest) {
       elevationMeters: Math.round(input.activity.elevationGainMeters),
       averageHeartRate: input.activity.averageHeartRate,
       averagePower: input.activity.averagePower,
+      provenanceDetails: input.activity.provenanceDetails ?? null,
     },
     facts: {
       durationMinutes: input.facts.facts.durationMinutes,
@@ -198,7 +199,7 @@ export async function loadSavedRideAnalysis(activityId: string): Promise<AiRideA
 }
 
 export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<AiRideAnalysis> {
-  if (!canUseAiForSource(input.activity.source)) {
+  if (!canUseAiForActivity(input.activity)) {
     throw new RideAnalysisRequestError('strava_ai_not_permitted')
   }
   const client = clientOrThrow()

@@ -23,6 +23,15 @@ const requestSchema = z.object({
     elevationMeters: z.number().nonnegative(),
     averageHeartRate: z.number().nonnegative().nullable(),
     averagePower: z.number().nonnegative().nullable(),
+    provenanceDetails: z
+      .object({
+        provider: z.enum(['strava', 'garmin', 'user']).nullable(),
+        consentGrantedAt: z.string().datetime().nullable(),
+        collectedAt: z.string().datetime(),
+        freshness: z.enum(['current', 'stale', 'unknown']),
+        attribution: z.string().min(1).nullable(),
+      })
+      .nullable(),
   }),
   facts: z.object({
     durationMinutes: z.number().nonnegative(),
@@ -167,6 +176,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // output to operate an AI feature. Strava rides remain deterministic-only.
   if (parsed.data.activity.source === 'strava') {
     return json({ error: 'strava_ai_not_permitted' }, 403)
+  }
+  const provenance = parsed.data.activity.provenanceDetails
+  const provenanceAllowed =
+    provenance !== null &&
+    provenance.freshness === 'current' &&
+    (parsed.data.activity.source === 'garmin'
+      ? provenance.provider === 'garmin' && provenance.attribution === 'Garmin Connect'
+      : provenance.provider === 'user')
+  if (!provenanceAllowed) {
+    return json({ error: 'activity_provenance_not_permitted' }, 403)
   }
   const apiKey = Deno.env.get('GEMINI_API_KEY')
   if (!apiKey) return json({ error: 'ai_not_configured' }, 503)

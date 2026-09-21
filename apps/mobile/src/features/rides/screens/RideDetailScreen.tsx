@@ -25,7 +25,7 @@ import {
   useMoveWorkoutMutation,
   useTrainingPlanQuery,
 } from '@/hooks/use-gradnt-data'
-import { analyzeRide, canUseAiForSource, compareRideToPlan } from '@/lib/domain'
+import { analyzeRide, canUseAiForActivity, compareRideToPlan } from '@/lib/domain'
 import { useAppLanguage, useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { feedbackGuidance } from '../domain/ride-feedback'
@@ -86,7 +86,7 @@ export function RideDetailScreen() {
   const savedAnalysisQuery = useSavedRideAnalysisQuery(activityId)
   const generateAnalysisMutation = useGenerateRideAnalysisMutation(activityId)
   const moveWorkout = useMoveWorkoutMutation()
-  const canUseAi = activity ? canUseAiForSource(activity.source) : false
+  const canUseAi = activity ? canUseAiForActivity(activity) : false
   const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
   const upcomingWorkouts = workouts
     .filter(
@@ -128,6 +128,8 @@ export function RideDetailScreen() {
     if (!(error instanceof RideAnalysisRequestError)) return 'rides.analysis.errors.request'
     if (error.code === 'authentication_required') return 'rides.analysis.errors.authentication'
     if (error.code === 'strava_ai_not_permitted') return 'rides.analysis.stravaAiUnavailable'
+    if (error.code === 'activity_provenance_not_permitted')
+      return 'rides.analysis.errors.provenance'
     if (error.code === 'ai_not_configured') return 'rides.analysis.errors.configuration'
     if (error.code === 'ai_provider_timeout') return 'rides.analysis.errors.timeout'
     if (error.code === 'ai_provider_failed_401' || error.code === 'ai_provider_failed_403')
