@@ -12,6 +12,7 @@ import {
   GradntProgressBar,
   GradntIntensityBreakdown,
   GradntSectionHeader,
+  GradntShareCard,
   GradntStatTile,
   GradntStravaConnectBlock,
   GradntText,
@@ -279,6 +280,18 @@ export function HomeScreen() {
             </XStack>
             <GradntProgressBar value={weekCompletion} />
           </GradntCard>
+
+          <GradntShareCard
+            eyebrow={t('home.share.eyebrow')}
+            title={t('home.share.title')}
+            body={t('home.share.body')}
+            shareLabel={t('home.share.action')}
+            shareMessage={t('home.share.message', {
+              value: t(`home.coach.${coachDecision.kind}`, {
+                hours: coachDecision.recentHours,
+              }),
+            })}
+          />
 
           {afterRideActivity ? (
             <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />

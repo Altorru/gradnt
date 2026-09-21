@@ -555,6 +555,13 @@ export const en = {
     afterFirstRides: 'After your first rides',
     observedProgress: 'Progress observed',
     nextStep: 'Next step',
+    share: {
+      eyebrow: 'SHAREABLE',
+      title: 'My next decision',
+      body: 'I know where I stand and what I will do next with GRADNT.',
+      action: 'Share my next action',
+      message: 'GRADNT · my next decision: {{value}}',
+    },
     week: {
       title: 'This week',
       summary: '{{completed}}/{{total}} sessions completed',

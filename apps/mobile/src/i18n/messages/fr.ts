@@ -600,6 +600,13 @@ export const fr = {
     afterFirstRides: 'Après tes premières sorties',
     observedProgress: 'Progression observée',
     nextStep: 'Prochaine étape',
+    share: {
+      eyebrow: 'À PARTAGER',
+      title: 'Ma prochaine décision',
+      body: 'Je sais où j’en suis et ce que je vais faire ensuite avec GRADNT.',
+      action: 'Partager ma prochaine action',
+      message: 'GRADNT · ma prochaine décision : {{value}}',
+    },
     week: {
       title: 'Cette semaine',
       summary: '{{completed}}/{{total}} séances réalisées',

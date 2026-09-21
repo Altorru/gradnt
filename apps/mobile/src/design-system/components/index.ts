@@ -5,5 +5,6 @@ export * from './primitives'
 
 export * from './GradntGoalCard'
 export * from './GradntSectionHeader'
+export * from './GradntShareCard'
 export * from './GradntStatTile'
 export * from './GradntWorkoutCard'
