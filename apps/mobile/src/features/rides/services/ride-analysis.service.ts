@@ -1,7 +1,14 @@
 import { z } from 'zod'
 
 import type { Language } from '@/i18n'
-import type { Activity, AthleteProfile, Goal, PlannedWorkout, RideAnalysis } from '@/lib/domain'
+import {
+  canUseAiForSource,
+  type Activity,
+  type AthleteProfile,
+  type Goal,
+  type PlannedWorkout,
+  type RideAnalysis,
+} from '@/lib/domain'
 import { getSupabaseClient } from '@/services/supabase/client'
 
 const aiAnalysisSchema = z.object({
@@ -191,7 +198,7 @@ export async function loadSavedRideAnalysis(activityId: string): Promise<AiRideA
 }
 
 export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<AiRideAnalysis> {
-  if (input.activity.source === 'strava') {
+  if (!canUseAiForSource(input.activity.source)) {
     throw new RideAnalysisRequestError('strava_ai_not_permitted')
   }
   const client = clientOrThrow()

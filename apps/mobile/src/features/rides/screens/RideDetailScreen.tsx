@@ -24,7 +24,7 @@ import {
   useGoalQuery,
   useTrainingPlanQuery,
 } from '@/hooks/use-gradnt-data'
-import { analyzeRide, compareRideToPlan } from '@/lib/domain'
+import { analyzeRide, canUseAiForSource, compareRideToPlan } from '@/lib/domain'
 import { useAppLanguage, useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { feedbackGuidance } from '../domain/ride-feedback'
@@ -83,7 +83,7 @@ export function RideDetailScreen() {
     : null
   const savedAnalysisQuery = useSavedRideAnalysisQuery(activityId)
   const generateAnalysisMutation = useGenerateRideAnalysisMutation(activityId)
-  const canUseAi = activity?.source !== 'strava'
+  const canUseAi = activity ? canUseAiForSource(activity.source) : false
   const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
   const upcomingWorkouts = workouts
     .filter(
