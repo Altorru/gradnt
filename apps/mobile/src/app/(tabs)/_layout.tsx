@@ -1,5 +1,5 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs'
-import { Platform } from 'react-native'
+import { PixelRatio, Platform } from 'react-native'
 import { useTheme } from 'tamagui'
 
 import { useGradntScheme, withAlpha } from '@/design-system'
@@ -23,6 +23,11 @@ export default function TabsLayout() {
   // The chosen appearance, not the phone's: this bar draws its own colours on
   // Android and has to agree with the theme around it.
   const scheme = useGradntScheme()
+  // Four localized labels no longer fit in Android's native bar once the
+  // system font reaches 130%. Keeping only the current destination labelled
+  // preserves a readable target while the icon labels remain available to
+  // TalkBack. At the default scale the full labels stay visible for discovery.
+  const compactAndroidTabLabels = Platform.OS === 'android' && PixelRatio.getFontScale() >= 1.2
 
   /**
    * Reads a role from the active theme.
@@ -93,7 +98,10 @@ export default function TabsLayout() {
   })
 
   return (
-    <NativeTabs labelVisibilityMode="labeled" {...androidColors}>
+    <NativeTabs
+      labelVisibilityMode={compactAndroidTabLabels ? 'selected' : 'labeled'}
+      {...androidColors}
+    >
       <NativeTabs.Trigger name="home">
         <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
