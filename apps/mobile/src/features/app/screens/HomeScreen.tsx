@@ -141,7 +141,7 @@ export function HomeScreen() {
   return (
     <AppShell header={<AppBrandHeader />}>
       <AppScrollView>
-        <YStack gap="$7">
+        <YStack gap="$5">
           <OnboardingSaveFeedback />
           {/*
             The page answers the product question in order: where the rider

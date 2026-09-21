@@ -147,7 +147,7 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
       Coach et répétait la prochaine séance dans une seconde section.
 - [x] La Home affiche désormais l’objectif, le Coach, la semaine, la prochaine
       séance puis le suivi post-sortie, sans carte de prochaine action dupliquée.
-- [ ] Réduire la hauteur de la carte objectif sur petit écran et rendre la
+- [x] Réduire la hauteur de la carte objectif sur petit écran et rendre la
       prochaine action visible sans scroll initial.
 - [x] Simplifier l’onboarding en regroupant les étapes secondaires et clarifier
       ce qui est obligatoire avant la création du compte : le récapitulatif
