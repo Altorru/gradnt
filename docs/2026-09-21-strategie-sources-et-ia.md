@@ -153,7 +153,9 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
       ce qui est obligatoire avant la création du compte : le récapitulatif
       redondant est retiré du parcours principal et le compte est la dernière
       étape obligatoire.
-- [ ] Retirer ou masquer le Garage tant que l’ajout de vélo n’est pas fonctionnel.
+- [x] Retirer ou masquer le Garage tant que l’ajout de vélo n’est pas fonctionnel :
+      la route reste disponible pour la suite, mais ne promet plus une fonction
+      bêta dans la navigation principale.
 - [ ] Ajouter un état vide crédible pour Explorer au lieu de laisser croire à
       une génération de parcours toujours disponible.
 - [ ] Harmoniser les libellés « Progrès », « Progression », « État » et

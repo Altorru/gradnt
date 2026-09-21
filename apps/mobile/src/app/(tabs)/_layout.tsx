@@ -6,7 +6,7 @@ import { useGradntScheme, withAlpha } from '@/design-system'
 import { useTranslation } from '@/i18n'
 
 /**
- * The app's five destinations.
+ * The app's four core destinations.
  *
  * These are real tabs, not routes pushed onto a stack: each screen stays
  * mounted, keeps its scroll position and state, and switching does not grow the
@@ -115,11 +115,6 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="explore">
         <NativeTabs.Trigger.Label>{t('tabs.explore')}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'map', selected: 'map.fill' }} md="map" />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="garage">
-        <NativeTabs.Trigger.Label>{t('tabs.garage')}</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="bicycle" md="directions_bike" />
       </NativeTabs.Trigger>
     </NativeTabs>
   )
