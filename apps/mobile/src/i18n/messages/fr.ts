@@ -33,6 +33,9 @@ export const fr = {
       action: 'Ajouter une sortie',
       title: 'Ajouter une sortie',
       subtitle: 'Importe ton fichier FIT original ou saisis les chiffres dont tu disposes.',
+      fitEntryTitle: 'Activer le Coach IA avec un fichier FIT',
+      fitEntryDescription:
+        'Après Strava, importe une sortie originale pour obtenir une analyse IA sans utiliser ton historique Strava.',
       fitTitle: 'Fichier du compteur',
       fitDescription:
         'Le fichier FIT est lu sur ton appareil. Ses mesures sont sauvegardées dans ton compte GRADNT ; le fichier lui-même n’est pas envoyé.',

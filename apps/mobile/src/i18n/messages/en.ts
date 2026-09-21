@@ -31,6 +31,9 @@ export const en = {
       action: 'Add a ride',
       title: 'Add a ride',
       subtitle: 'Import your original FIT file or enter the numbers you have.',
+      fitEntryTitle: 'Enable the AI Coach with a FIT file',
+      fitEntryDescription:
+        'After Strava, import an original ride to get AI analysis without using your Strava history.',
       fitTitle: 'Computer file',
       fitDescription:
         'The FIT file is read on your device. Its measurements are saved to your GRADNT account; the file itself is not uploaded.',

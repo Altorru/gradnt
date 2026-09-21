@@ -156,9 +156,15 @@ export function ProgressScreen() {
               connectLabel={t('settings.strava.connect')}
               connectingLabel={t('settings.strava.connecting')}
             />
-            <GradntButton tone="secondary" onPress={() => router.push('/rides/new')}>
-              {t('rides.add.action')}
-            </GradntButton>
+            <GradntCard gap="$3">
+              <GradntText weight="semibold">{t('rides.add.fitEntryTitle')}</GradntText>
+              <GradntText muted fontSize={13} lineHeight={19}>
+                {t('rides.add.fitEntryDescription')}
+              </GradntText>
+              <GradntButton tone="secondary" onPress={() => router.push('/rides/new')}>
+                {t('rides.add.action')}
+              </GradntButton>
+            </GradntCard>
           </YStack>
         </AppScrollView>
       </AppShell>

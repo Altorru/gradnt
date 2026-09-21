@@ -171,7 +171,7 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
 - [x] afficher sur chaque insight sa source et son niveau de confiance ;
 - faire de la Home le point d’entrée objectif → état → prochaine action ;
 - conserver Strava dans la boucle de progression déterministe ;
-- ajouter un parcours FIT visible après connexion Strava.
+- [x] ajouter un parcours FIT visible après connexion Strava.
 
 ### Technique
 
