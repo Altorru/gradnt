@@ -22,12 +22,14 @@ import {
   useAthleteQuery,
   useCurrentFtpQuery,
   useGoalQuery,
+  useMoveWorkoutMutation,
   useTrainingPlanQuery,
 } from '@/hooks/use-gradnt-data'
 import { analyzeRide, canUseAiForSource, compareRideToPlan } from '@/lib/domain'
 import { useAppLanguage, useDateLocale, useNumberFormat, useTranslation } from '@/i18n'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
 import { feedbackGuidance } from '../domain/ride-feedback'
+import { getAdaptationProposal } from '../domain/adaptation'
 import { useRideFeedbackQuery } from '../hooks/use-ride-feedback'
 import {
   useGenerateRideAnalysisMutation,
@@ -83,6 +85,7 @@ export function RideDetailScreen() {
     : null
   const savedAnalysisQuery = useSavedRideAnalysisQuery(activityId)
   const generateAnalysisMutation = useGenerateRideAnalysisMutation(activityId)
+  const moveWorkout = useMoveWorkoutMutation()
   const canUseAi = activity ? canUseAiForSource(activity.source) : false
   const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
   const upcomingWorkouts = workouts
@@ -101,6 +104,8 @@ export function RideDetailScreen() {
     .filter((ride) => ride.source !== 'strava')
     .sort((a, b) => Date.parse(b.startAt) - Date.parse(a.startAt))
     .slice(0, 6)
+  const adaptationProposal =
+    activity && feedback ? getAdaptationProposal(activity, feedback.responses, workouts) : null
   const requestAnalysis = () => {
     if (!activity || !analysis || !canUseAi) return
     generateAnalysisMutation.mutate(
@@ -388,6 +393,36 @@ export function RideDetailScreen() {
                   <GradntButton tone="secondary" onPress={() => router.push('/plan')}>
                     {t('rides.viewPlan')}
                   </GradntButton>
+                </GradntCard>
+              ) : null}
+              {adaptationProposal?.kind === 'move' ? (
+                <GradntCard accent gap="$3">
+                  <GradntHeading level={3}>{t('rides.adaptation.title')}</GradntHeading>
+                  <GradntText>
+                    {t('rides.adaptation.move', {
+                      workout: workoutTitle(t, adaptationProposal.workout.type),
+                      date: format(new Date(adaptationProposal.newDate), 'EEEE d MMM', { locale }),
+                    })}
+                  </GradntText>
+                  <GradntText muted fontSize={12}>
+                    {t('rides.adaptation.explanation')}
+                  </GradntText>
+                  <GradntButton
+                    disabled={moveWorkout.isPending}
+                    onPress={() =>
+                      moveWorkout.mutate({
+                        workoutId: adaptationProposal.workout.id,
+                        date: new Date(adaptationProposal.newDate),
+                      })
+                    }
+                  >
+                    {t(
+                      moveWorkout.isPending ? 'rides.adaptation.saving' : 'rides.adaptation.accept',
+                    )}
+                  </GradntButton>
+                  {moveWorkout.isSuccess ? (
+                    <GradntText color="$positive">{t('rides.adaptation.saved')}</GradntText>
+                  ) : null}
                 </GradntCard>
               ) : null}
               <GradntButton tone="ghost" onPress={() => setAdvanced(!advanced)}>

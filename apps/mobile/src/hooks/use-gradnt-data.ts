@@ -4,6 +4,11 @@ import { planRepository } from '../services/plan.repository'
 import { gradntRepository } from '../services/gradnt.repository'
 import { loadCurrentFtp } from '../services/ftp/ftp.persistence'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
+import {
+  loadAvailabilityExceptions,
+  saveAvailabilityException,
+  type AvailabilityException,
+} from '@/services/availability-exceptions.persistence'
 
 /**
  * Whether a caller is ready for the answer yet.
@@ -177,5 +182,23 @@ export function useUpcomingWorkoutsQuery({ enabled = true }: QueryGate = {}) {
       const plan = await planRepository.getPlan()
       return plan.weeks.flatMap((week) => week.workouts)
     },
+  })
+}
+
+export function useAvailabilityExceptionsQuery() {
+  const ready = useDataReady()
+  return useQuery({
+    queryKey: ['availability-exceptions'],
+    enabled: ready,
+    queryFn: loadAvailabilityExceptions,
+  })
+}
+
+export function useSaveAvailabilityExceptionMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (exception: Omit<AvailabilityException, 'createdAt'>) =>
+      saveAvailabilityException(exception),
+    onSuccess: (state) => queryClient.setQueryData(['availability-exceptions'], state),
   })
 }

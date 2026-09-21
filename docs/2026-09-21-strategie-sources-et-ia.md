@@ -114,8 +114,8 @@ Le message doit indiquer le moteur utilisé : `Lecture GRADNT` ou `Coach IA`.
 - [x] Ajouter une première décision déterministe du Coach sur la Home.
 - [ ] Remplacer la Home par la hiérarchie objectif → état → action → semaine.
 - [ ] Ajouter le Coach déterministe au détail post-sortie.
-- [ ] Ajouter une proposition d’adaptation du plan visible et validable.
-- [ ] Ajouter les disponibilités exceptionnelles et le report intelligent.
+- [x] Ajouter une proposition d’adaptation du plan visible et validable.
+- [x] Ajouter une première disponibilité exceptionnelle persistée et un report d’un jour validable.
 - [ ] Mesurer feedback, adaptation acceptée et retour après sept jours.
 
 ### Sources et IA premium

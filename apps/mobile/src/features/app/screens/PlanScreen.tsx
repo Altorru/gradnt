@@ -15,6 +15,8 @@ import {
 import {
   useMoveWorkoutMutation,
   useArchivedPlansQuery,
+  useAvailabilityExceptionsQuery,
+  useSaveAvailabilityExceptionMutation,
   usePlanUpdateReasonQuery,
   useStartNewPlanMutation,
   useSkipWorkoutMutation,
@@ -62,6 +64,8 @@ export function PlanScreen() {
   const [showHistory, setShowHistory] = useState(false)
   const updateReason = usePlanUpdateReasonQuery()
   const startNewPlan = useStartNewPlanMutation()
+  const exceptionsQuery = useAvailabilityExceptionsQuery()
+  const saveException = useSaveAvailabilityExceptionMutation()
   const [confirmingNewPlan, setConfirmingNewPlan] = useState(false)
   const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
   const weeks = groupWorkoutsByWeek(workouts)
@@ -81,7 +85,12 @@ export function PlanScreen() {
     (total, workout) => total + workout.durationMinutes,
     0,
   )
-  const isMutating = skipWorkout.isPending || moveWorkout.isPending || startNewPlan.isPending
+  const isMutating =
+    skipWorkout.isPending ||
+    moveWorkout.isPending ||
+    startNewPlan.isPending ||
+    saveException.isPending
+  const nextPlannedWorkout = plannedWorkouts[0]
 
   return (
     <AppShell header={<AppBrandHeader />}>
@@ -210,6 +219,34 @@ export function PlanScreen() {
               </YStack>
             ) : null}
           </GradntCard>
+
+          {nextPlannedWorkout ? (
+            <GradntCard gap="$3">
+              <GradntHeading level={3}>{t('plan.exception.title')}</GradntHeading>
+              <GradntText muted>{t('plan.exception.description')}</GradntText>
+              <GradntButton
+                tone="secondary"
+                disabled={isMutating}
+                onPress={() => {
+                  const date = new Date(nextPlannedWorkout.date)
+                  saveException.mutate({
+                    date: date.toISOString(),
+                    available: false,
+                    note: 'availability_exception',
+                  })
+                  date.setDate(date.getDate() + 1)
+                  moveWorkout.mutate({ workoutId: nextPlannedWorkout.id, date })
+                }}
+              >
+                {t('plan.exception.action')}
+              </GradntButton>
+              {exceptionsQuery.data?.exceptions.length ? (
+                <GradntText muted fontSize={12}>
+                  {t('plan.exception.saved', { count: exceptionsQuery.data.exceptions.length })}
+                </GradntText>
+              ) : null}
+            </GradntCard>
+          ) : null}
 
           {!planQuery.isPending && !planQuery.isError && workouts.length === 0 ? (
             <GradntCard padding="$4" gap="$2">

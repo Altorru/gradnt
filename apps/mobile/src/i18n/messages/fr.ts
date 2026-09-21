@@ -74,6 +74,15 @@ export const fr = {
     sourceManual: 'Données de sortie : saisie manuelle. Ces chiffres sont déclarés par toi.',
     sourceFile: 'Données de sortie : fichier FIT original importé par toi.',
     nextStep: 'Que faire ensuite ?',
+    adaptation: {
+      title: 'Proposition pour la suite',
+      move: 'Après cette sortie exigeante, déplacer {{workout}} au {{date}} ?',
+      explanation:
+        'GRADNT propose ce changement à partir de tes sensations. Ton plan ne change que si tu valides.',
+      accept: 'Déplacer la séance',
+      saving: 'Enregistrement…',
+      saved: 'Séance déplacée. Tu gardes le contrôle du reste du plan.',
+    },
     viewPlan: 'Voir mon plan',
     showAdvanced: 'Comprendre les données des capteurs',
     hideAdvanced: 'Masquer les données des capteurs',
@@ -381,6 +390,13 @@ export const fr = {
   },
 
   plan: {
+    exception: {
+      title: 'Une indisponibilité cette semaine ?',
+      description:
+        'Signale-la et GRADNT décale ta prochaine séance d’un jour. Tu valides avant toute modification.',
+      action: 'Je ne peux pas ce jour-là',
+      saved: '{{count}} indisponibilité enregistrée',
+    },
     title: 'Ton plan',
     description:
       'Les séances qui te rapprochent de ton objectif, avec de la marge pour la vraie vie.',
@@ -571,6 +587,10 @@ export const fr = {
     afterFirstRides: 'Après tes premières sorties',
     observedProgress: 'Progression observée',
     nextStep: 'Prochaine étape',
+    week: {
+      title: 'Cette semaine',
+      summary: '{{completed}}/{{total}} séances réalisées',
+    },
     coach: {
       title: 'Coach GRADNT',
       deterministic: 'Lecture GRADNT basée sur tes faits vérifiés. Pas une analyse IA.',

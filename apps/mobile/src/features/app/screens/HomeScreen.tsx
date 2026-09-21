@@ -9,6 +9,7 @@ import {
   GradntButton,
   GradntGoalCard,
   GradntHeading,
+  GradntProgressBar,
   GradntIntensityBreakdown,
   GradntSectionHeader,
   GradntStatTile,
@@ -30,6 +31,8 @@ import {
   getDeterministicTrainingInsight,
   getGoalProgressPercentage,
   getIntensityDistribution,
+  getCurrentWeekWorkouts,
+  getPlanCompletionPercentage,
   getNextWorkout,
   getWeeklyDistanceSeries,
   getWeeklyRideCountSeries,
@@ -73,6 +76,9 @@ export function HomeScreen() {
   const progressPercentage = goal ? getGoalProgressPercentage(goal, currentGoalValue) : 0
   const activityState = getActivityDataState(activities)
   const coachDecision = getDeterministicCoachDecision(activities, workoutsQuery.data ?? [])
+  const currentWeekWorkouts = getCurrentWeekWorkouts(workoutsQuery.data ?? [])
+  const completedThisWeek = currentWeekWorkouts.filter((workout) => workout.status === 'completed')
+  const weekCompletion = getPlanCompletionPercentage(currentWeekWorkouts)
 
   // Every tile compares the last seven days with the seven before, so the change
   // it shows is between two spans of equal length.
@@ -180,6 +186,20 @@ export function HomeScreen() {
           {afterRideActivity ? (
             <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
           ) : null}
+
+          <GradntCard gap="$3">
+            <GradntHeading level={3}>{t('home.week.title')}</GradntHeading>
+            <XStack justifyContent="space-between">
+              <GradntText muted>
+                {t('home.week.summary', {
+                  completed: completedThisWeek.length,
+                  total: currentWeekWorkouts.length,
+                })}
+              </GradntText>
+              <GradntText weight="semibold">{weekCompletion}%</GradntText>
+            </XStack>
+            <GradntProgressBar value={weekCompletion} />
+          </GradntCard>
 
           <GradntCard accent gap="$3">
             <GradntText weight="semibold">{t('home.coach.title')}</GradntText>
