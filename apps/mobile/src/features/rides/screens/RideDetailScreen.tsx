@@ -36,6 +36,7 @@ import {
   useSavedRideAnalysisQuery,
 } from '../hooks/use-ride-analysis'
 import { RideAnalysisRequestError } from '../services/ride-analysis.service'
+import { recordProductEvent } from '@/services/product-events'
 import { workoutTitle } from '@/features/app/domain/workout-labels'
 
 export function RideDetailScreen() {
@@ -420,10 +421,13 @@ export function RideDetailScreen() {
                   <GradntButton
                     disabled={moveWorkout.isPending}
                     onPress={() =>
-                      moveWorkout.mutate({
-                        workoutId: adaptationProposal.workout.id,
-                        date: new Date(adaptationProposal.newDate),
-                      })
+                      moveWorkout.mutate(
+                        {
+                          workoutId: adaptationProposal.workout.id,
+                          date: new Date(adaptationProposal.newDate),
+                        },
+                        { onSuccess: () => void recordProductEvent('adaptation_accepted') },
+                      )
                     }
                   >
                     {t(

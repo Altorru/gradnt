@@ -117,7 +117,7 @@ Le message doit indiquer le moteur utilisé : `Lecture GRADNT` ou `Coach IA`.
 - [x] Ajouter le Coach déterministe au détail post-sortie.
 - [x] Ajouter une proposition d’adaptation du plan visible et validable.
 - [x] Ajouter une première disponibilité exceptionnelle persistée et un report d’un jour validable.
-- [ ] Mesurer feedback, adaptation acceptée et retour après sept jours.
+- [x] Mesurer feedback, adaptation acceptée et retour après sept jours.
 
 ### Sources et IA premium
 

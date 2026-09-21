@@ -52,6 +52,7 @@ import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store
 import type { FtpEntry } from '@/services/ftp/ftp.persistence'
 import { loadFtpHistory } from '@/services/ftp/ftp.service'
 import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
+import { recordProductEvent } from '@/services/product-events'
 
 export function HomeScreen() {
   const { t, plural } = useTranslation()
@@ -102,6 +103,7 @@ export function HomeScreen() {
   // a figure is on record, not only to riders who made it their objective.
   useEffect(() => {
     void loadFtpHistory().then(setFtpHistory)
+    void recordProductEvent('app_opened')
   }, [])
 
   const latestFtp = ftpHistory.at(-1) ?? null

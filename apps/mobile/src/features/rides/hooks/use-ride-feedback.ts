@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
+import { recordProductEvent } from '@/services/product-events'
 import { activityIdSchema, type FeedbackDraft } from '../domain/ride-feedback'
 import {
   loadRideFeedback,
@@ -36,7 +37,9 @@ export function useSaveRideFeedbackMutation() {
       snapshot: FeedbackSnapshot
       responses: FeedbackDraft
     }) => saveRideFeedback(snapshot, responses),
-    onSuccess: (snapshot) =>
-      queryClient.setQueryData(feedbackQueryKey(snapshot.activityId, snapshot.scope), snapshot),
+    onSuccess: (snapshot) => {
+      queryClient.setQueryData(feedbackQueryKey(snapshot.activityId, snapshot.scope), snapshot)
+      void recordProductEvent('ride_feedback_saved')
+    },
   })
 }
