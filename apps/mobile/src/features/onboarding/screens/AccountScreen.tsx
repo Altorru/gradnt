@@ -23,6 +23,7 @@ import { useTranslation } from '@/i18n'
 import { getSupabaseClient } from '@/services/supabase/client'
 import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
 import { waitForAuthTransition } from '@/services/auth/auth-transition'
+import { migrateLegacyFtpHistoryToCloud } from '@/services/ftp/ftp.persistence'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { saveOnboardingSnapshot, type OnboardingSnapshot } from '../services/onboarding.persistence'
@@ -85,6 +86,7 @@ export function OnboardingAccountScreen() {
     await useOnboardingStore.getState().hydrate()
     if (useOnboardingStore.getState().persistenceError) throw new Error('onboarding_save_failed')
     await reconcileStoredStravaConnection().catch(() => undefined)
+    await migrateLegacyFtpHistoryToCloud()
     router.replace('/home')
   }
 

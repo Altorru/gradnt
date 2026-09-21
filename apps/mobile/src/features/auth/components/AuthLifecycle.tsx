@@ -13,6 +13,7 @@ import {
   clearStravaTokens,
   clearPendingStravaState,
 } from '@/services/strava/oauth/strava-token.persistence'
+import { clearFtpHistory, migrateLegacyFtpHistoryToCloud } from '@/services/ftp/ftp.persistence'
 
 export function AuthLifecycle() {
   const queryClient = useQueryClient()
@@ -52,11 +53,13 @@ export function AuthLifecycle() {
         // onboarding so it can be verified and linked to the new account.
         // Switching away from an existing account must still erase it.
         if (previousId) await clearStravaTokens()
+        if (previousId) await clearFtpHistory()
         await clearPendingStravaState()
         if (previousId) await unregisterPushDevices()
         if (previousId) await clearDeviceStravaConnection(previousId)
         if (userId !== nextId) return
         await useOnboardingStore.getState().hydrate()
+        if (nextId) await migrateLegacyFtpHistoryToCloud()
       }).catch(() => useOnboardingStore.setState({ hydrated: true, persistenceError: true }))
     })
     const refresh = (state: string) => {

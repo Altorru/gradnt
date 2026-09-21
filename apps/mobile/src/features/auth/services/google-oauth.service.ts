@@ -12,6 +12,7 @@ import { waitForAuthTransition } from '@/services/auth/auth-transition'
 import { getSupabaseClient } from '@/services/supabase/client'
 import { readCloudDocument } from '@/services/supabase/documents'
 import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
+import { migrateLegacyFtpHistoryToCloud } from '@/services/ftp/ftp.persistence'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -84,6 +85,7 @@ async function completeAuthenticatedOnboardingOnce(): Promise<GoogleSignInDestin
   await useOnboardingStore.getState().hydrate()
   if (useOnboardingStore.getState().persistenceError) throw new Error('cloud_load_failed')
   await reconcileStoredStravaConnection().catch(() => undefined)
+  await migrateLegacyFtpHistoryToCloud()
   return missing ?? '/home'
 }
 
