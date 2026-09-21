@@ -84,12 +84,9 @@ export async function loadOnboardingSnapshot(): Promise<OnboardingSnapshot | nul
       document.value === null
         ? emptyOnboardingSnapshot
         : onboardingSnapshotSchema.parse(document.value)
-    const deviceStrava = await readStoredValue(
-      `gradnt.strava.connection.${document.metadata.userId}`,
-    )
-    const strava =
-      deviceStrava === null ? null : stravaConnectionSchema.parse(JSON.parse(deviceStrava))
-    return { ...snapshot, strava, cloud: document.metadata }
+    // A device badge is not proof that the account is still authorized.
+    // The server connection is checked after hydration before we show it.
+    return { ...snapshot, strava: null, cloud: document.metadata }
   }
   return loadLocalOnboardingSnapshot()
 }

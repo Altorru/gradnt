@@ -36,6 +36,7 @@ import { useDateLocale, useTranslation } from '@/i18n'
 import { STRAVA_ERROR_KEYS } from '@/features/onboarding/domain/strava.schema'
 import { usePreferencesStore } from '@/features/app/store/preferences.store'
 import { stravaService } from '@/features/onboarding/services/strava.service'
+import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
 import { goalTypeLabels } from '@/features/onboarding/domain/goal.options'
 import { describeProfile } from '@/features/onboarding/domain/profile.options'
 import {
@@ -337,10 +338,15 @@ export function SettingsScreen() {
     const result = await stravaService.connect()
 
     if (result.ok) {
-      await setStrava(result.connection)
-      await Promise.all(
-        STRAVA_QUERY_KEYS.map((queryKey) => queryClient.refetchQueries({ queryKey })),
-      )
+      try {
+        if (!(await setStrava(result.connection))) throw new Error('connection_save_failed')
+        await reconcileStoredStravaConnection()
+        await Promise.all(
+          STRAVA_QUERY_KEYS.map((queryKey) => queryClient.refetchQueries({ queryKey })),
+        )
+      } catch {
+        setError(t('common.saveFailed'))
+      }
     } else {
       setError(t(STRAVA_ERROR_KEYS[result.error.code], result.error.params))
     }
@@ -380,7 +386,13 @@ export function SettingsScreen() {
     setIsDisconnecting(true)
     setError(null)
 
-    await stravaService.disconnect()
+    try {
+      await stravaService.disconnect()
+    } catch {
+      setError(t('common.saveFailed'))
+      setIsDisconnecting(false)
+      return
+    }
     queryClient.removeQueries({ queryKey: ['activities'] })
     queryClient.removeQueries({ queryKey: ['training-metrics'] })
     queryClient.removeQueries({ queryKey: ['goal-current-value'] })

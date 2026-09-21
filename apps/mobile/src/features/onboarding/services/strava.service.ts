@@ -17,6 +17,7 @@ import {
   clearStravaTokens,
 } from '@/services/strava/oauth/strava-token.persistence'
 import { HttpStravaTokenBroker } from '@/services/strava/oauth/strava-token-broker.http'
+import { deleteServerStravaConnection } from '@/services/strava/strava-connection.service'
 
 export type StravaConnectionResult =
   | {
@@ -119,11 +120,12 @@ export class LiveStravaService implements StravaService {
    * the tokens, and any half-finished authorization.
    */
   async disconnect() {
+    await deleteServerStravaConnection()
+    await clearStravaTokens()
+    await clearPendingStravaState()
     if (!(await useOnboardingStore.getState().setStrava(defaultStravaConnection))) {
       throw new Error('strava_disconnect_save_failed')
     }
-    await clearStravaTokens()
-    await clearPendingStravaState()
   }
 
   private createBroker(): HttpStravaTokenBroker | null {

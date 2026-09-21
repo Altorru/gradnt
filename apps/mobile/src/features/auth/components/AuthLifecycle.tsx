@@ -48,7 +48,10 @@ export function AuthLifecycle() {
         if (Platform.OS !== 'web') {
           await reconcile([], translation, language, expoScheduler).catch(() => undefined)
         }
-        await clearStravaTokens()
+        // The first GRADNT sign-in must keep a Strava grant obtained during
+        // onboarding so it can be verified and linked to the new account.
+        // Switching away from an existing account must still erase it.
+        if (previousId) await clearStravaTokens()
         await clearPendingStravaState()
         if (previousId) await unregisterPushDevices()
         if (previousId) await clearDeviceStravaConnection(previousId)

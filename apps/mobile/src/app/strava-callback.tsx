@@ -10,6 +10,7 @@ import { takeStravaCallbackUrl } from '@/services/strava/oauth/strava-callback-u
 
 import { stravaService } from '../features/onboarding/services/strava.service'
 import { useOnboardingStore } from '../features/onboarding/store/onboarding.store'
+import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
 
 /**
  * Landing route for the Strava redirect.
@@ -52,7 +53,13 @@ export default function StravaCallbackScreen() {
           setMessage(translateNow()('common.saveFailed'))
           return
         }
-        router.replace('/onboarding/review')
+        try {
+          await reconcileStoredStravaConnection()
+        } catch {
+          setMessage(translateNow()('common.saveFailed'))
+          return
+        }
+        router.replace(useOnboardingStore.getState().completed ? '/settings' : '/onboarding/review')
         return
       }
 
@@ -60,7 +67,7 @@ export default function StravaCallbackScreen() {
       // there is simply nothing left to do here. One check covers it now: the
       // service reads the same persisted store the Strava screen writes to.
       if (useOnboardingStore.getState().strava?.status === 'connected') {
-        router.replace('/onboarding/review')
+        router.replace(useOnboardingStore.getState().completed ? '/settings' : '/onboarding/review')
         return
       }
 

@@ -5,13 +5,9 @@
  * works for six hours and then fails — the refresh token was being captured and
  * stored, but nothing could ever spend it.
  *
- * Same shape as `strava-exchange`: a stateless secret-holder that owns the
- * client_secret and stores nothing.
- *
- * Strava ROTATES the refresh token on every call, so the caller must persist
- * what comes back: the one it sent is already spent. That is why a lost
- * response is unrecoverable rather than retryable, and why the caller is
- * expected to write the new tokens before using them.
+ * Authenticated riders use the server connection as the canonical credential.
+ * A second device may hold an older rotated refresh token; it must receive the
+ * current server token instead of losing its Strava connection.
  */
 
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token'
@@ -58,6 +54,32 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'not_configured' }, 500)
   }
 
+  const user = await authenticatedUser(req)
+  const client = user ? serviceClient() : null
+  const { data: connection, error: lookupError } =
+    user && client
+      ? await client
+          .from('strava_connections')
+          .select('access_token, refresh_token, expires_at, revoked_at')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      : { data: null, error: null }
+  if (lookupError) return json({ error: 'connection_lookup_failed' }, 500)
+  if (connection?.revoked_at) return json({ error: 'connection_revoked' }, 401)
+  if (connection && Date.parse(connection.expires_at) > Date.now() + 5 * 60_000) {
+    return json(
+      {
+        tokens: {
+          accessToken: connection.access_token,
+          refreshToken: connection.refresh_token,
+          expiresAt: connection.expires_at,
+        },
+      },
+      200,
+    )
+  }
+  const effectiveRefreshToken = connection?.refresh_token ?? refreshToken
+
   let tokenResponse: Response
   try {
     tokenResponse = await fetch(STRAVA_TOKEN_URL, {
@@ -66,7 +88,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         client_id: clientId,
         client_secret: clientSecret,
-        refresh_token: refreshToken,
+        refresh_token: effectiveRefreshToken,
         grant_type: 'refresh_token',
       }),
     })
@@ -76,10 +98,27 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   if (!tokenResponse.ok) {
-    // A 400 or 401 here means the refresh token itself is dead — revoked, or
-    // already spent by a refresh whose response was lost. There is no recovery
-    // short of the rider authorizing again, so this is answered distinctly from
-    // a transient failure and the client clears its session.
+    // Another device or the webhook may have rotated the credential while
+    // this request was in flight. Recover from the newest server row first.
+    if (connection && user && client) {
+      const { data: newer } = await client
+        .from('strava_connections')
+        .select('access_token, refresh_token, expires_at')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (newer && newer.refresh_token !== effectiveRefreshToken) {
+        return json(
+          {
+            tokens: {
+              accessToken: newer.access_token,
+              refreshToken: newer.refresh_token,
+              expiresAt: newer.expires_at,
+            },
+          },
+          200,
+        )
+      }
+    }
     console.error('Strava rejected the refresh', tokenResponse.status)
     return json({ error: 'refresh_rejected' }, 401)
   }
@@ -96,18 +135,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'strava_unexpected_response' }, 502)
   }
 
-  const user = await authenticatedUser(req)
-  if (user) {
-    const client = serviceClient()
-    await client
+  const nextRefreshToken =
+    typeof token.refresh_token === 'string' ? token.refresh_token : effectiveRefreshToken
+  if (user && client && connection) {
+    const { data: saved, error } = await client
       .from('strava_connections')
       .update({
         access_token: token.access_token,
-        refresh_token: typeof token.refresh_token === 'string' ? token.refresh_token : refreshToken,
+        refresh_token: nextRefreshToken,
         expires_at: new Date(token.expires_at * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
+      .eq('refresh_token', effectiveRefreshToken)
+      .select('user_id')
+    if (error || !saved?.length) return json({ error: 'connection_save_failed' }, 500)
   }
 
   return json(
@@ -121,7 +163,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         // Strava rotates this on every refresh. Falling back to the one sent
         // keeps the session alive if a response ever omits it, rather than
         // writing an undefined and locking the rider out.
-        refreshToken: typeof token.refresh_token === 'string' ? token.refresh_token : refreshToken,
+        refreshToken: nextRefreshToken,
         expiresAt: new Date(token.expires_at * 1000).toISOString(),
       },
     },

@@ -244,10 +244,14 @@ describe('how a repeat reaches the OS', () => {
   async function triggerOn(os: 'ios' | 'android') {
     platform.OS = os
     vi.mocked(Notifications.scheduleNotificationAsync).mockClear()
-
-    await expoScheduler.schedule(weekly)
-
-    return vi.mocked(Notifications.scheduleNotificationAsync).mock.calls[0]?.[0].trigger
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-19T12:00:00.000Z'))
+    try {
+      await expoScheduler.schedule(weekly)
+      return vi.mocked(Notifications.scheduleNotificationAsync).mock.calls[0]?.[0].trigger
+    } finally {
+      vi.useRealTimers()
+    }
   }
 
   it('repeats on iOS, where a calendar trigger really does', async () => {

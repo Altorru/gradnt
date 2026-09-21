@@ -21,6 +21,8 @@ import {
 } from '@/features/auth/services/google-oauth.service'
 import { useTranslation } from '@/i18n'
 import { getSupabaseClient } from '@/services/supabase/client'
+import { reconcileStoredStravaConnection } from '@/services/strava/strava-connection.service'
+import { waitForAuthTransition } from '@/services/auth/auth-transition'
 
 import { OnboardingProgress } from '../components/OnboardingProgress'
 import { saveOnboardingSnapshot, type OnboardingSnapshot } from '../services/onboarding.persistence'
@@ -78,9 +80,11 @@ export function OnboardingAccountScreen() {
     // The AuthLifecycle deliberately clears in-memory state when identities
     // change. Take the completed draft from this device and write it under the
     // newly authenticated account, so that transition cannot drop onboarding.
+    await waitForAuthTransition()
     await saveOnboardingSnapshot(draft)
     await useOnboardingStore.getState().hydrate()
     if (useOnboardingStore.getState().persistenceError) throw new Error('onboarding_save_failed')
+    await reconcileStoredStravaConnection().catch(() => undefined)
     router.replace('/home')
   }
 
