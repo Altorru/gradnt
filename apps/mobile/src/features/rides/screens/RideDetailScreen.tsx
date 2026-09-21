@@ -264,6 +264,7 @@ export function RideDetailScreen() {
                 <GradntCard gap="$3">
                   <GradntHeading level={3}>{t('rides.analysis.title')}</GradntHeading>
                   <GradntText muted>{t('rides.analysis.subtitle')}</GradntText>
+                  <GradntBadge>{t('rides.analysis.deterministicEngine')}</GradntBadge>
                   <XStack flexWrap="wrap" gap="$2">
                     <GradntMetric
                       label={t('rides.analysis.intensity')}

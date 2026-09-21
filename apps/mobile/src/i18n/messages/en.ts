@@ -92,6 +92,7 @@ export const en = {
     analysis: {
       title: 'What this ride tells you',
       subtitle: 'A clear reading of the numbers, with your feelings when you share them.',
+      deterministicEngine: 'GRADNT reading · verified facts and deterministic rules',
       confidencePower: 'Power-based analysis',
       confidenceDuration: 'Duration-based analysis',
       intensity: 'Intensity',

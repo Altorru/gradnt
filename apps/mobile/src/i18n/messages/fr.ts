@@ -96,6 +96,7 @@ export const fr = {
       title: 'Ce que cette sortie t’apprend',
       subtitle:
         'Une lecture claire des chiffres, enrichie par tes sensations si tu les renseignes.',
+      deterministicEngine: 'Lecture GRADNT · faits vérifiés et règles déterministes',
       confidencePower: 'Analyse basée sur la puissance',
       confidenceDuration: 'Analyse basée sur la durée',
       intensity: 'Intensité',
