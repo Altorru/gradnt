@@ -886,6 +886,9 @@ export const fr = {
       tempo: 'Tempo',
     },
 
+    notConfiguredTitle: 'Les parcours arrivent bientôt',
+    notConfiguredBody:
+      'En attendant, construis ta prochaine sortie dans Plan. GRADNT affichera ici uniquement des parcours réellement calculés.',
     notConfigured:
       'Le calcul d’itinéraire n’est pas configuré : GRADNT n’affiche rien plutôt que des parcours inventés.',
     findingPosition: 'Recherche de ta position…',

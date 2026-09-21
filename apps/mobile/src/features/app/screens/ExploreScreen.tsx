@@ -122,9 +122,13 @@ export function ExploreScreen() {
 
           <YStack paddingHorizontal="$3" gap="$2">
             {!routingConfigured ? (
-              <GradntCard padding="$3">
+              <GradntCard padding="$4" gap="$2">
+                <GradntText weight="semibold">{t('explore.notConfiguredTitle')}</GradntText>
                 <GradntText muted fontSize={12} lineHeight={18}>
                   {t('explore.notConfigured')}
+                </GradntText>
+                <GradntText muted fontSize={12} lineHeight={18}>
+                  {t('explore.notConfiguredBody')}
                 </GradntText>
               </GradntCard>
             ) : null}

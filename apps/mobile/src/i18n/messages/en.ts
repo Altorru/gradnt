@@ -825,6 +825,9 @@ export const en = {
       tempo: 'Tempo',
     },
 
+    notConfiguredTitle: 'Routes are coming next',
+    notConfiguredBody:
+      'For now, build your next ride in Plan. GRADNT only shows routes that the engine has actually calculated.',
     notConfigured:
       'Route planning is not configured: GRADNT shows nothing rather than invented routes.',
     findingPosition: 'Finding your position…',
