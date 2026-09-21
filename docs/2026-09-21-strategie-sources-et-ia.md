@@ -138,6 +138,27 @@ Le message doit indiquer le moteur utilisé : `Lecture GRADNT` ou `Coach IA`.
 - [ ] Préparer le pilote de 10–15 débutants et 5 cyclistes avancés.
 - [ ] Préparer la fiche Play Store et mesurer activation, rétention et conversion.
 
+## Audit UX/UI runtime du 21 septembre 2026
+
+Constats reproduits sur l’émulateur Android et confirmés par la lecture des
+écrans :
+
+- [x] La Home plaçait la carte de sensations avant la réponse principale du
+      Coach et répétait la prochaine séance dans une seconde section.
+- [x] La Home affiche désormais l’objectif, le Coach, la semaine, la prochaine
+      séance puis le suivi post-sortie, sans carte de prochaine action dupliquée.
+- [ ] Réduire la hauteur de la carte objectif sur petit écran et rendre la
+      prochaine action visible sans scroll initial.
+- [ ] Simplifier l’onboarding en regroupant les étapes secondaires et clarifier
+      ce qui est obligatoire avant la création du compte.
+- [ ] Retirer ou masquer le Garage tant que l’ajout de vélo n’est pas fonctionnel.
+- [ ] Ajouter un état vide crédible pour Explorer au lieu de laisser croire à
+      une génération de parcours toujours disponible.
+- [ ] Harmoniser les libellés « Progrès », « Progression », « État » et
+      « Coach » pour éviter quatre mots qui décrivent la même idée.
+- [ ] Vérifier chaque écran en français et en anglais avec texte long, clavier,
+      rotation interdite et taille de police augmentée.
+
 ### Produit
 
 - remplacer la distinction technique « analyse IA disponible / indisponible »

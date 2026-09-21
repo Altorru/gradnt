@@ -183,10 +183,6 @@ export function HomeScreen() {
             changeRising={goal?.type === 'ftp' && ftpDelta !== null && ftpDelta > 0}
           />
 
-          {afterRideActivity ? (
-            <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
-          ) : null}
-
           <GradntCard gap="$3">
             <GradntHeading level={3}>{t('home.week.title')}</GradntHeading>
             <XStack justifyContent="space-between">
@@ -221,16 +217,13 @@ export function HomeScreen() {
             ) : null}
           </GradntCard>
 
-          <YStack gap="$4">
-            <GradntSectionHeader
-              title={t('home.nextStep')}
-              action={t('common.see')}
-              onPress={() => openTab('/plan')}
-            />
-            {/* Nothing rather than a demo session. The card used to fall back
-                to its own sample values, so a rider with an empty plan was
-                shown a plausible session that was nobody's. */}
-            {nextWorkout ? (
+          {nextWorkout ? (
+            <GradntCard gap="$3">
+              <GradntSectionHeader
+                title={t('home.nextStep')}
+                action={t('common.see')}
+                onPress={() => openTab('/plan')}
+              />
               <GradntWorkoutCard
                 day={formatDate(new Date(nextWorkout.date), 'EEEE d MMM', { locale: dateLocale })}
                 title={workoutTitle(t, nextWorkout.type)}
@@ -239,12 +232,12 @@ export function HomeScreen() {
                 actionLabel={t('plan.workout.see')}
                 onPress={() => router.push(`/plan/${nextWorkout.id}` as Href)}
               />
-            ) : (
-              <GradntText muted fontSize={13}>
-                {t('plan.nonePlanned')}
-              </GradntText>
-            )}
-          </YStack>
+            </GradntCard>
+          ) : null}
+
+          {afterRideActivity ? (
+            <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
+          ) : null}
 
           {/* An account with manual or FIT rides has real progress without Strava. */}
           {connected || activities.length > 0 ? (
