@@ -204,7 +204,19 @@ export class MockGradntRepository implements GradntRepository {
    * zeroes with nothing to explain them.
    */
   async getActivities(): Promise<Activity[]> {
-    const [owned, result] = await Promise.all([listOwnedActivities(), fetchRecentActivities()])
+    const [owned, result] = await Promise.all([
+      listOwnedActivities().catch((error: unknown) => {
+        // A pre-account/local session has no private activity table yet; its
+        // Strava stream remains usable. Real database failures still surface.
+        if (
+          error instanceof Error &&
+          (error.message === 'authentication_required' || error.message === 'supabase_unavailable')
+        )
+          return []
+        throw error
+      }),
+      fetchRecentActivities(),
+    ])
 
     if (result.status === 'ready') {
       return mergeActivities(owned, result.activities)
