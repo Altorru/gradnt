@@ -97,8 +97,15 @@ export const fr = {
       subtitle:
         'Une lecture claire des chiffres, enrichie par tes sensations si tu les renseignes.',
       deterministicEngine: 'Lecture GRADNT · faits vérifiés et règles déterministes',
-      confidencePower: 'Analyse basée sur la puissance',
-      confidenceDuration: 'Analyse basée sur la durée',
+      source: 'Source : {{value}}',
+      sources: {
+        strava: 'Strava',
+        manual: 'saisie manuelle',
+        file: 'fichier FIT original',
+        garmin: 'Garmin Connect',
+      },
+      confidencePower: 'Confiance élevée · analyse basée sur la puissance',
+      confidenceDuration: 'Confiance standard · analyse basée sur la durée',
       intensity: 'Intensité',
       load: 'Charge de la sortie',
       compared: 'Comparaison avec tes sorties récentes',

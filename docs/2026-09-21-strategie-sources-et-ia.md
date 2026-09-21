@@ -166,9 +166,9 @@ Constats reproduits sur l’émulateur Android et confirmés par la lecture des
 
 ### Produit
 
-- remplacer la distinction technique « analyse IA disponible / indisponible »
-  par une explication de provenance utile ;
-- afficher sur chaque insight sa source et son niveau de confiance ;
+- [x] remplacer la distinction technique « analyse IA disponible / indisponible »
+      par une explication de provenance utile ;
+- [x] afficher sur chaque insight sa source et son niveau de confiance ;
 - faire de la Home le point d’entrée objectif → état → prochaine action ;
 - conserver Strava dans la boucle de progression déterministe ;
 - ajouter un parcours FIT visible après connexion Strava.

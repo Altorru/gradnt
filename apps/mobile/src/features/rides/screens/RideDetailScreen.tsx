@@ -265,6 +265,11 @@ export function RideDetailScreen() {
                   <GradntHeading level={3}>{t('rides.analysis.title')}</GradntHeading>
                   <GradntText muted>{t('rides.analysis.subtitle')}</GradntText>
                   <GradntBadge>{t('rides.analysis.deterministicEngine')}</GradntBadge>
+                  <GradntText muted fontSize={12}>
+                    {t('rides.analysis.source', {
+                      value: t(`rides.analysis.sources.${activity.source}`),
+                    })}
+                  </GradntText>
                   <XStack flexWrap="wrap" gap="$2">
                     <GradntMetric
                       label={t('rides.analysis.intensity')}
