@@ -117,6 +117,7 @@ function requestBody(input: RideAnalysisRequest) {
     locale: input.locale,
     activity: {
       id: input.activity.id,
+      source: input.activity.source,
       startAt: input.activity.startAt,
       sportType: input.activity.sportType,
       durationMinutes: Math.round(input.activity.durationSeconds / 60),
@@ -190,6 +191,9 @@ export async function loadSavedRideAnalysis(activityId: string): Promise<AiRideA
 }
 
 export async function generateRideAnalysis(input: RideAnalysisRequest): Promise<AiRideAnalysis> {
+  if (input.activity.source === 'strava') {
+    throw new RideAnalysisRequestError('strava_ai_not_permitted')
+  }
   const client = clientOrThrow()
   const session = await activeSession(client)
   const { data, error } = await client.functions.invoke('ride-analysis', {

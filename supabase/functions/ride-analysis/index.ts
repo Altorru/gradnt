@@ -15,6 +15,7 @@ const requestSchema = z.object({
       .min(1)
       .max(128)
       .regex(/^[a-zA-Z0-9_-]+$/),
+    source: z.enum(['strava', 'manual', 'file', 'garmin']),
     startAt: z.string().datetime(),
     sportType: z.enum(['road', 'gravel', 'mtb', 'indoor_cycling']),
     durationMinutes: z.number().nonnegative(),
@@ -162,6 +163,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const parsed = requestSchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) return json({ error: 'invalid_analysis_input' }, 400)
+  // Strava's API policy prohibits using Strava data, derived metrics, or model
+  // output to operate an AI feature. Strava rides remain deterministic-only.
+  if (parsed.data.activity.source === 'strava') {
+    return json({ error: 'strava_ai_not_permitted' }, 403)
+  }
   const apiKey = Deno.env.get('GEMINI_API_KEY')
   if (!apiKey) return json({ error: 'ai_not_configured' }, 503)
 

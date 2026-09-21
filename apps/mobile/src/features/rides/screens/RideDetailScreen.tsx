@@ -83,6 +83,7 @@ export function RideDetailScreen() {
     : null
   const savedAnalysisQuery = useSavedRideAnalysisQuery(activityId)
   const generateAnalysisMutation = useGenerateRideAnalysisMutation(activityId)
+  const canUseAi = activity?.source !== 'strava'
   const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
   const upcomingWorkouts = workouts
     .filter(
@@ -97,10 +98,11 @@ export function RideDetailScreen() {
       (ride) =>
         ride.id !== activityId && Date.parse(ride.startAt) < Date.parse(activity?.startAt ?? ''),
     )
+    .filter((ride) => ride.source !== 'strava')
     .sort((a, b) => Date.parse(b.startAt) - Date.parse(a.startAt))
     .slice(0, 6)
   const requestAnalysis = () => {
-    if (!activity || !analysis) return
+    if (!activity || !analysis || !canUseAi) return
     generateAnalysisMutation.mutate(
       {
         locale: language,
@@ -120,6 +122,7 @@ export function RideDetailScreen() {
     const error = generateAnalysisMutation.error
     if (!(error instanceof RideAnalysisRequestError)) return 'rides.analysis.errors.request'
     if (error.code === 'authentication_required') return 'rides.analysis.errors.authentication'
+    if (error.code === 'strava_ai_not_permitted') return 'rides.analysis.stravaAiUnavailable'
     if (error.code === 'ai_not_configured') return 'rides.analysis.errors.configuration'
     if (error.code === 'ai_provider_timeout') return 'rides.analysis.errors.timeout'
     if (error.code === 'ai_provider_failed_401' || error.code === 'ai_provider_failed_403')
@@ -289,7 +292,9 @@ export function RideDetailScreen() {
                     )}{' '}
                     {t('rides.analysis.explanation')}
                   </GradntText>
-                  {savedAnalysisQuery.data ? (
+                  {!canUseAi ? (
+                    <GradntText muted>{t('rides.analysis.stravaAiUnavailable')}</GradntText>
+                  ) : savedAnalysisQuery.data ? (
                     <GradntButton onPress={() => setAnalysisOpen(true)}>
                       {t('rides.analysis.viewAi')}
                     </GradntButton>
@@ -464,13 +469,15 @@ export function RideDetailScreen() {
                 <GradntButton tone="secondary" onPress={() => setAnalysisOpen(false)}>
                   {t('common.closePanel')}
                 </GradntButton>
-                <GradntButton
-                  tone="ghost"
-                  disabled={generateAnalysisMutation.isPending}
-                  onPress={requestAnalysis}
-                >
-                  {t('rides.analysis.refreshAi')}
-                </GradntButton>
+                {canUseAi ? (
+                  <GradntButton
+                    tone="ghost"
+                    disabled={generateAnalysisMutation.isPending}
+                    onPress={requestAnalysis}
+                  >
+                    {t('rides.analysis.refreshAi')}
+                  </GradntButton>
+                ) : null}
               </YStack>
             </ScrollView>
           </YStack>
