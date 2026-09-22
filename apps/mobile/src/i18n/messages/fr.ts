@@ -422,6 +422,8 @@ export const fr = {
         'Signale-la et GRADNT décale ta prochaine séance d’un jour. Tu valides avant toute modification.',
       action: 'Je ne peux pas ce jour-là',
       saved: '{{count}} indisponibilité enregistrée',
+      show: 'Modifier ma semaine',
+      hide: 'Fermer les modifications',
     },
     title: 'Ton plan',
     description:
@@ -440,6 +442,7 @@ export const fr = {
     prepareNewPlan: 'Renouveler mon calendrier',
     confirmNewPlan: 'Confirmer le nouveau calendrier',
     reload: 'Actualiser le calendrier',
+    nextSession: 'PROCHAINE SÉANCE',
     thisWeek: 'Cette semaine',
     /** The later weeks, named by the day they begin. */
     weekOf: 'Semaine du {{date}}',

@@ -19,7 +19,6 @@ import {
   useSaveAvailabilityExceptionMutation,
   usePlanUpdateReasonQuery,
   useStartNewPlanMutation,
-  useSkipWorkoutMutation,
   useTrainingPlanQuery,
 } from '@/hooks/use-gradnt-data'
 import { useDateLocale, useNumberFormat, useTranslation, type Translate } from '@/i18n'
@@ -58,7 +57,6 @@ export function PlanScreen() {
   const formatNumber = useNumberFormat()
   const router = useRouter()
   const planQuery = useTrainingPlanQuery()
-  const skipWorkout = useSkipWorkoutMutation()
   const moveWorkout = useMoveWorkoutMutation()
   const archives = useArchivedPlansQuery()
   const [showHistory, setShowHistory] = useState(false)
@@ -67,6 +65,7 @@ export function PlanScreen() {
   const exceptionsQuery = useAvailabilityExceptionsQuery()
   const saveException = useSaveAvailabilityExceptionMutation()
   const [confirmingNewPlan, setConfirmingNewPlan] = useState(false)
+  const [showWeekChanges, setShowWeekChanges] = useState(false)
   const workouts = planQuery.data?.weeks.flatMap((week) => week.workouts) ?? []
   const weeks = groupWorkoutsByWeek(workouts)
   const thisWeek = getCurrentWeekWorkouts(workouts)
@@ -85,11 +84,7 @@ export function PlanScreen() {
     (total, workout) => total + workout.durationMinutes,
     0,
   )
-  const isMutating =
-    skipWorkout.isPending ||
-    moveWorkout.isPending ||
-    startNewPlan.isPending ||
-    saveException.isPending
+  const isMutating = moveWorkout.isPending || startNewPlan.isPending || saveException.isPending
   const nextPlannedWorkout = plannedWorkouts[0]
 
   return (
@@ -148,7 +143,7 @@ export function PlanScreen() {
               ) : null}
             </GradntCard>
           ) : null}
-          {skipWorkout.isError || moveWorkout.isError || startNewPlan.isError ? (
+          {moveWorkout.isError || startNewPlan.isError ? (
             <GradntCard gap="$3">
               <GradntText color="$danger" accessibilityLiveRegion="polite">
                 {t('common.saveFailed')}
@@ -156,7 +151,6 @@ export function PlanScreen() {
               <GradntButton
                 tone="secondary"
                 onPress={() => {
-                  skipWorkout.reset()
                   moveWorkout.reset()
                   startNewPlan.reset()
                   void planQuery.refetch()
@@ -167,16 +161,25 @@ export function PlanScreen() {
               </GradntButton>
             </GradntCard>
           ) : null}
-          <GradntButton
-            tone="ghost"
-            disabled={isMutating || planQuery.isFetching}
-            onPress={() => {
-              void planQuery.refetch()
-              void updateReason.refetch()
-            }}
-          >
-            {t('plan.reload')}
-          </GradntButton>
+          {nextPlannedWorkout ? (
+            <GradntCard accent gap="$3">
+              <YStack gap="$1">
+                <GradntText muted fontSize={12} weight="semibold" letterSpacing={0.7}>
+                  {t('plan.nextSession')}
+                </GradntText>
+                <GradntHeading level={3}>{workoutTitle(t, nextPlannedWorkout.type)}</GradntHeading>
+                <GradntText muted>
+                  {formatDate(new Date(nextPlannedWorkout.date), 'EEEE d MMM', {
+                    locale: dateLocale,
+                  })}{' '}
+                  · {formatWorkoutDuration(nextPlannedWorkout.durationMinutes)}
+                </GradntText>
+              </YStack>
+              <GradntButton onPress={() => router.push(`/plan/${nextPlannedWorkout.id}` as Href)}>
+                {t('plan.workout.see')}
+              </GradntButton>
+            </GradntCard>
+          ) : null}
 
           <GradntCard accent gap="$4">
             <XStack alignItems="center" gap="$3">
@@ -221,31 +224,38 @@ export function PlanScreen() {
           </GradntCard>
 
           {nextPlannedWorkout ? (
-            <GradntCard gap="$3">
-              <GradntHeading level={3}>{t('plan.exception.title')}</GradntHeading>
-              <GradntText muted>{t('plan.exception.description')}</GradntText>
-              <GradntButton
-                tone="secondary"
-                disabled={isMutating}
-                onPress={() => {
-                  const date = new Date(nextPlannedWorkout.date)
-                  saveException.mutate({
-                    date: date.toISOString(),
-                    available: false,
-                    note: 'availability_exception',
-                  })
-                  date.setDate(date.getDate() + 1)
-                  moveWorkout.mutate({ workoutId: nextPlannedWorkout.id, date })
-                }}
-              >
-                {t('plan.exception.action')}
+            <YStack gap="$3">
+              <GradntButton tone="ghost" onPress={() => setShowWeekChanges((current) => !current)}>
+                {t(showWeekChanges ? 'plan.exception.hide' : 'plan.exception.show')}
               </GradntButton>
-              {exceptionsQuery.data?.exceptions.length ? (
-                <GradntText muted fontSize={12}>
-                  {t('plan.exception.saved', { count: exceptionsQuery.data.exceptions.length })}
-                </GradntText>
+              {showWeekChanges ? (
+                <GradntCard gap="$3">
+                  <GradntHeading level={3}>{t('plan.exception.title')}</GradntHeading>
+                  <GradntText muted>{t('plan.exception.description')}</GradntText>
+                  <GradntButton
+                    tone="secondary"
+                    disabled={isMutating}
+                    onPress={() => {
+                      const date = new Date(nextPlannedWorkout.date)
+                      saveException.mutate({
+                        date: date.toISOString(),
+                        available: false,
+                        note: 'availability_exception',
+                      })
+                      date.setDate(date.getDate() + 1)
+                      moveWorkout.mutate({ workoutId: nextPlannedWorkout.id, date })
+                    }}
+                  >
+                    {t('plan.exception.action')}
+                  </GradntButton>
+                  {exceptionsQuery.data?.exceptions.length ? (
+                    <GradntText muted fontSize={12}>
+                      {t('plan.exception.saved', { count: exceptionsQuery.data.exceptions.length })}
+                    </GradntText>
+                  ) : null}
+                </GradntCard>
               ) : null}
-            </GradntCard>
+            </YStack>
           ) : null}
 
           {!planQuery.isPending && !planQuery.isError && workouts.length === 0 ? (
@@ -287,37 +297,6 @@ export function PlanScreen() {
                     </GradntBadge>
                     <ChevronRight size={18} color="$textSecondary" />
                   </XStack>
-
-                  {isUpcomingWorkout(workout) ? (
-                    <XStack gap="$2">
-                      <YStack flex={1}>
-                        <GradntButton
-                          tone="ghost"
-                          minHeight={44}
-                          disabled={isMutating}
-                          onPress={() => {
-                            skipWorkout.mutate(workout.id)
-                          }}
-                        >
-                          {t('plan.skip')}
-                        </GradntButton>
-                      </YStack>
-                      <YStack flex={1}>
-                        <GradntButton
-                          tone="secondary"
-                          minHeight={44}
-                          disabled={isMutating}
-                          onPress={() => {
-                            const nextDate = new Date(workout.date)
-                            nextDate.setDate(nextDate.getDate() + 1)
-                            moveWorkout.mutate({ workoutId: workout.id, date: nextDate })
-                          }}
-                        >
-                          {t('plan.moveOneDay')}
-                        </GradntButton>
-                      </YStack>
-                    </XStack>
-                  ) : null}
                 </GradntCard>
               ))}
             </YStack>
