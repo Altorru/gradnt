@@ -8,6 +8,8 @@ import {
   type TrainingPlan,
   type WorkoutType,
 } from './schemas'
+import type { CyclistState } from './cyclist-state'
+import { getPlanPrescription } from './plan-prescription'
 
 /** The first plan covers four weeks; its creation date is persisted. */
 export const PLAN_WEEKS = 4
@@ -20,14 +22,8 @@ export type FirstPlanInput = {
   availability: WeeklyAvailabilityForm
   startDate: Date
   planId?: string
+  cyclistState?: CyclistState | null
 }
-
-const weeklyVolumeMinutes = {
-  lt3: 120,
-  '3to6': 240,
-  '6to10': 420,
-  gt10: 600,
-} as const
 
 const weekdayIndex: Record<WeeklyAvailabilityForm[number]['day'], number> = {
   sunday: 0,
@@ -66,8 +62,16 @@ function getNextDate(startDate: Date, targetDay: number): Date {
   return date
 }
 
-function getIntensityTemplate(index: number, availableCount: number) {
-  if (availableCount === 1 || index === 0) {
+function getIntensityTemplate(
+  index: number,
+  availableCount: number,
+  firstWorkoutType: WorkoutType,
+) {
+  if (index === 0) {
+    return { type: firstWorkoutType }
+  }
+
+  if (availableCount === 1) {
     return workoutTemplates[0]
   }
 
@@ -93,7 +97,8 @@ function weekWorkouts(
   const weekStart = new Date(input.startDate)
   weekStart.setDate(weekStart.getDate() + week * 7)
 
-  const maxMinutes = Math.round(weeklyVolumeMinutes[input.profile.weeklyVolume] * 1.1)
+  const prescription = getPlanPrescription(input.profile.weeklyVolume, input.cyclistState ?? null)
+  const maxMinutes = Math.round(prescription.weeklyMinutes * 1.1)
   let scheduledMinutes = 0
 
   return availableSlots.reduce<PlannedWorkout[]>((workouts, slot, index) => {
@@ -108,7 +113,11 @@ function weekWorkouts(
       return workouts
     }
 
-    const template = getIntensityTemplate(index, availableSlots.length)
+    const template = getIntensityTemplate(
+      index,
+      availableSlots.length,
+      prescription.firstWorkoutType,
+    )
     const date = getNextDate(weekStart, weekdayIndex[slot.day])
 
     const workout = plannedWorkoutSchema.parse({
