@@ -3,7 +3,7 @@ import { XStack, YStack } from 'tamagui'
 
 import { GradntMiniBars } from './charts'
 import { GradntButton, GradntCard, GradntText } from './primitives'
-import { colors } from '../tokens'
+import { useThemeColor } from '../hooks/useThemeColor'
 
 type GradntWorkoutCardProps = {
   day: string
@@ -32,6 +32,7 @@ export function GradntWorkoutCard({
   actionLabel,
   onPress,
 }: GradntWorkoutCardProps) {
+  const themeColor = useThemeColor()
   return (
     <GradntCard premium padding="$4" gap="$4" borderRadius={20} borderColor="$borderStrong">
       <XStack alignItems="flex-end" justifyContent="space-between" gap="$3">
@@ -78,7 +79,7 @@ export function GradntWorkoutCard({
       <GradntButton
         minHeight={46}
         borderRadius={15}
-        iconAfter={<ChevronRight size={17} color={colors.graphite950} />}
+        iconAfter={<ChevronRight size={17} color={themeColor('onAccent') as never} />}
         onPress={onPress}
       >
         {actionLabel}

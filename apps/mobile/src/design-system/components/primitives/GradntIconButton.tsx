@@ -23,6 +23,7 @@ export function GradntIconButton({ children, ...props }: GradntIconButtonProps) 
       }}
       pressStyle={{
         scale: 0.94,
+        y: 1,
         backgroundColor: '$backgroundPress',
       }}
       focusStyle={{

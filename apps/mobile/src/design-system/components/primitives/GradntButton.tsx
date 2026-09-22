@@ -41,6 +41,7 @@ export function GradntButton({
         isPrimary ? '$accent' : isSecondary ? '$borderStrong' : isGhost ? '$border' : '$danger'
       }
       color={isPrimary ? '$onAccent' : isGhost || isSecondary ? '$color' : '$color'}
+      boxShadow={isPrimary ? '0 8px 18px rgba(118,185,0,0.24)' : undefined}
       // The primary tone answers with opacity and scale rather than a second
       // green: a hover tint is a second brand colour wearing a state's name.
       hoverStyle={
@@ -66,21 +67,25 @@ export function GradntButton({
         isPrimary
           ? {
               scale: 0.975,
-              opacity: 0.82,
+              y: 1,
+              opacity: 0.86,
             }
           : isSecondary
             ? {
                 scale: 0.975,
+                y: 1,
                 backgroundColor: '$backgroundPress',
                 borderColor: '$borderStrong',
               }
             : isGhost
               ? {
                   scale: 0.975,
+                  y: 1,
                   backgroundColor: '$backgroundSubtle',
                 }
               : {
                   scale: 0.975,
+                  y: 1,
                   opacity: 0.84,
                 }
       }

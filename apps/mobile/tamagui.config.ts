@@ -1,4 +1,5 @@
 import { defaultConfig } from '@tamagui/config/v5'
+import { createAnimations } from '@tamagui/animations-reanimated'
 import { createFont, createTamagui, createTokens, isWeb } from 'tamagui'
 
 import { colors, radius, sizes, spacing } from './src/design-system/tokens'
@@ -23,6 +24,26 @@ const tokens = createTokens({
   },
 
   zIndex: defaultConfig.tokens.zIndex,
+})
+
+/**
+ * A short, settled response makes a press feel physical without turning the
+ * product into a game. The driver runs on the UI thread, so feedback remains
+ * smooth while a ride or plan query is resolving.
+ */
+const animations = createAnimations({
+  quick: {
+    type: 'spring',
+    damping: 22,
+    mass: 0.9,
+    stiffness: 320,
+  },
+  gentle: {
+    type: 'spring',
+    damping: 18,
+    mass: 1,
+    stiffness: 180,
+  },
 })
 
 const geistBody = createFont({
@@ -96,6 +117,7 @@ const tamaguiConfig = createTamagui({
   },
 
   tokens,
+  animations,
 
   fonts: {
     body: geistBody,

@@ -24,14 +24,16 @@ export function GradntCard({
       overflow="hidden"
       backgroundColor="$backgroundElevated"
       backgroundImage={backgroundImage}
-      borderColor="$border"
+      borderColor={accent ? '$accent' : '$border'}
       borderWidth={1}
       borderRadius="$5"
       padding="$5"
       gap="$3"
       boxShadow={
         premium || accent
-          ? '0 8px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.018)'
+          ? accent
+            ? '0 10px 28px rgba(118,185,0,0.12), inset 0 1px 0 rgba(255,255,255,0.018)'
+            : '0 8px 28px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.018)'
           : '0 4px 16px rgba(0,0,0,0.10)'
       }
       {...props}
