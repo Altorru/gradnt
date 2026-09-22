@@ -58,11 +58,11 @@ export function ProfileScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              2 / 7
+              2 / 5
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={2} total={7} />
+          <OnboardingProgress step={2} total={5} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.profile.title')}</GradntHeading>

@@ -88,11 +88,11 @@ export function GoalScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              3 / 7
+              3 / 5
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={3} total={7} />
+          <OnboardingProgress step={3} total={5} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.goal.title')}</GradntHeading>

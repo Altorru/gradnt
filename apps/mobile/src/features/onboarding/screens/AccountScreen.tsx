@@ -146,7 +146,7 @@ export function OnboardingAccountScreen() {
           <GradntIconButton accessibilityLabel={t('common.back')} onPress={() => router.back()}>
             <ArrowLeft size={18} color="$textPrimary" />
           </GradntIconButton>
-          <OnboardingProgress step={7} total={7} />
+          <OnboardingProgress step={5} total={5} />
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.account.title')}</GradntHeading>
             <GradntText muted>{t('onboarding.account.subtitle')}</GradntText>

@@ -71,7 +71,7 @@ export function AvailabilityScreen() {
 
   const submit = handleSubmit(async (values) => {
     if (!(await setAvailability(values.slots))) return
-    router.push('/onboarding/strava')
+    router.push('/onboarding/account')
   })
 
   const visibleSlots = slots ?? defaultWeeklyAvailability
@@ -92,11 +92,11 @@ export function AvailabilityScreen() {
             </GradntIconButton>
 
             <GradntText muted fontSize={12} weight="medium">
-              4 / 7
+              4 / 5
             </GradntText>
           </XStack>
 
-          <OnboardingProgress step={4} total={7} />
+          <OnboardingProgress step={4} total={5} />
 
           <YStack gap="$2">
             <GradntHeading>{t('onboarding.availability.title')}</GradntHeading>
