@@ -1,6 +1,6 @@
 import { RecentRides } from '@/features/rides/components/RecentRides'
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
-import { ArrowUpRight, CalendarDays } from '@tamagui/lucide-icons-2'
+import { CalendarDays } from '@tamagui/lucide-icons-2'
 import { format as formatDate } from 'date-fns'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
@@ -10,7 +10,7 @@ import {
   GradntCard,
   GradntButton,
   GradntChartCard,
-  GradntProgressRing,
+  GradntGoalCard,
   GradntStravaConnectBlock,
   GradntText,
 } from '@/design-system'
@@ -40,7 +40,7 @@ import { reconcileStoredStravaConnection } from '@/services/strava/strava-connec
 
 import { AppBrandHeader, AppScreenIntro } from '../components/AppHeader'
 import { AppScrollView, AppShell } from '../components/AppShell'
-import { goalUnitSymbol } from '../domain/goal-labels'
+import { goalEyebrow, goalTargetLabel, goalTypeLabel } from '../domain/goal-labels'
 import { shouldShowStravaConnect } from '../domain/strava-visibility'
 
 /**
@@ -49,14 +49,6 @@ import { shouldShowStravaConnect } from '../domain/strava-visibility'
  * They were copied here, which is a word waiting to drift from the step where
  * the rider chose it.
  */
-const GOAL_KEYS: Record<string, MessageKey> = {
-  ftp: 'onboarding.goalLabels.ftp',
-  distance: 'onboarding.goalLabels.distance',
-  event: 'onboarding.goalLabels.event',
-  climbing: 'onboarding.goalLabels.climbing',
-  fitness: 'onboarding.goalLabels.fitness',
-}
-
 const VOLUME_KEYS: Record<string, MessageKey> = {
   lt3: 'onboarding.volumes.lt3',
   '3to6': 'onboarding.volumes.threeToSix',
@@ -113,13 +105,6 @@ export function ProgressScreen() {
   const goalProgress = goal ? getGoalProgressPercentage(goal, currentValue) : 0
   const volumeHours = metricsQuery.data ? getRecentTrainingVolumeHours(metricsQuery.data) : 0
   const rideCount = getWeeklyRideCount(activities)
-  const goalLabel = goal ? t(GOAL_KEYS[goal.type] ?? 'progress.mainGoal') : t('progress.mainGoal')
-  const goalTarget = goal?.targetValue
-  const goalUnit = goal ? goalUnitSymbol(goal.targetUnit) : ''
-  const goalSummary =
-    currentValue !== null && goalTarget !== null && goalTarget !== undefined
-      ? `${currentValue} ${goalUnit} → ${goalTarget} ${goalUnit}`
-      : t('progress.targetToSet')
   const hasError =
     athleteQuery.isError ||
     goalQuery.isError ||
@@ -218,27 +203,22 @@ export function ProgressScreen() {
             {t('rides.add.action')}
           </GradntButton>
 
-          <GradntCard accent gap="$3">
-            <XStack alignItems="center" gap="$3">
-              <GradntProgressRing value={goalProgress} size={72} />
-              <YStack flex={1} gap="$1">
-                <GradntText muted fontSize={12}>
-                  {goalLabel}
-                </GradntText>
-                <GradntText weight="bold" fontSize={22}>
-                  {goalQuery.isPending || currentValueQuery.isPending ? '—' : goalSummary}
-                </GradntText>
-                <XStack alignItems="center" gap="$1">
-                  <ArrowUpRight size={15} color="$accentInk" />
-                  <GradntText color="$accentInk" weight="semibold" fontSize={13}>
-                    {currentValueQuery.data?.provenance === 'observed'
-                      ? t('progress.fromYourRides')
-                      : t('progress.toSetAfterFirstRides')}
-                  </GradntText>
-                </XStack>
-              </YStack>
-            </XStack>
-          </GradntCard>
+          <GradntGoalCard
+            eyebrow={goalEyebrow(t)}
+            goalLabel={goal ? goalTypeLabel(t, goal.type) : t('progress.mainGoal')}
+            targetLabel={goalTargetLabel(t, goal ?? null)}
+            currentValue={goalQuery.isPending || currentValueQuery.isPending ? null : currentValue}
+            progressPercentage={goalProgress}
+            statusLabel={
+              currentValue === null ? t('home.status.startingPoint') : t('home.status.onTrack')
+            }
+            changeLabel={
+              currentValueQuery.data?.provenance === 'observed'
+                ? t('progress.fromYourRides')
+                : t('progress.toSetAfterFirstRides')
+            }
+            changeRising={false}
+          />
 
           <YStack gap="$3">
             <GradntChartCard
