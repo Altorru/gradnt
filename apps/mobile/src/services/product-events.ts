@@ -2,7 +2,14 @@ import { z } from 'zod'
 
 import { getSupabaseClient } from './supabase/client'
 
-const eventNameSchema = z.enum(['ride_feedback_saved', 'adaptation_accepted', 'app_opened'])
+const eventNameSchema = z.enum([
+  'ride_feedback_opened',
+  'ride_feedback_deferred',
+  'ride_feedback_saved',
+  'ride_detail_opened',
+  'adaptation_accepted',
+  'app_opened',
+])
 
 const propertySchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
 

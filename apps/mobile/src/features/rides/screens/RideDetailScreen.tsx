@@ -2,7 +2,7 @@ import { ArrowLeft } from '@tamagui/lucide-icons-2'
 import { format } from 'date-fns'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Modal, ScrollView } from 'react-native'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { XStack, YStack } from 'tamagui'
 
 import {
@@ -142,6 +142,10 @@ export function RideDetailScreen() {
     if (error.code === 'invalid_analysis_input') return 'rides.analysis.errors.data'
     return 'rides.analysis.errors.provider'
   })()
+  const openedActivityId = ready ? (activity?.id ?? null) : null
+  useEffect(() => {
+    if (openedActivityId !== null) void recordProductEvent('ride_detail_opened')
+  }, [openedActivityId])
   return (
     <GradntScreen>
       <GradntScrollView>

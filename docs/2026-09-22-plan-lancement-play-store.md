@@ -23,7 +23,7 @@ sorties.
       action et une adaptation proposée que le cycliste valide lui-même.
 - [x] L’accueil donne cette boucle priorité après une sortie récente, avant les
       métriques secondaires et le partage.
-- [ ] Mesurer le tunnel sans enregistrer de notes ni de données de santé :
+- [x] Mesurer le tunnel sans enregistrer de notes ni de données de santé :
       ouverture du formulaire, report, sauvegarde, ouverture du détail et
       adaptation acceptée.
 - [ ] Recetter le scénario complet sur un compte Strava de test : création,

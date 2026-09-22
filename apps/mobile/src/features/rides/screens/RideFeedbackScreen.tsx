@@ -21,6 +21,7 @@ import { OnboardingSaveFeedback } from '@/features/onboarding/components/Onboard
 import { useTranslation } from '@/i18n'
 import { useActivitiesQuery } from '@/hooks/use-gradnt-data'
 import { useOnboardingStore } from '@/features/onboarding/store/onboarding.store'
+import { recordProductEvent } from '@/services/product-events'
 import {
   effortBand,
   emptyFeedback,
@@ -142,6 +143,7 @@ function FeedbackForm({
       return
     }
     if ((useOnboardingStore.getState().cloud?.userId ?? null) !== snapshot.scope) return
+    void recordProductEvent('ride_feedback_deferred')
     router.replace({ pathname: '/rides/[activityId]', params: { activityId: snapshot.activityId } })
   }
   const disabled = isSubmitting || reloading || staleDraft || submitted
@@ -309,6 +311,10 @@ export function RideFeedbackScreen() {
     feedbackQuery.isPending ||
     draftQuery.isPending ||
     draftQuery.isFetching
+  const openedActivityId = ready ? (activity?.id ?? null) : null
+  useEffect(() => {
+    if (openedActivityId !== null) void recordProductEvent('ride_feedback_opened')
+  }, [openedActivityId])
   return (
     <GradntScreen>
       <GradntScrollView
