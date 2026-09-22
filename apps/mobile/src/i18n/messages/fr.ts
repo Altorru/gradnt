@@ -620,6 +620,16 @@ export const fr = {
     afterFirstRides: 'Après tes premières sorties',
     observedProgress: 'Progression observée',
     nextStep: 'Prochaine étape',
+    firstStep: {
+      title: 'Commence par importer une sortie',
+      description:
+        'Dès que GRADNT connaît une sortie, il peut situer ton point de départ et préparer la suite.',
+      connectTitle: 'Connecte Strava',
+      connectDescription:
+        'Tes sorties restent privées. GRADNT les transforme en prochaine étape claire.',
+      syncing: 'Tes sorties arrivent. Cette page se préparera dès la synchronisation terminée.',
+      addRide: 'Ajouter une sortie manuellement',
+    },
     share: {
       eyebrow: 'À PARTAGER',
       title: 'Ma prochaine décision',

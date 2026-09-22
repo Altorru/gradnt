@@ -573,6 +573,15 @@ export const en = {
     afterFirstRides: 'After your first rides',
     observedProgress: 'Progress observed',
     nextStep: 'Next step',
+    firstStep: {
+      title: 'Start by importing a ride',
+      description:
+        'Once GRADNT knows one ride, it can place your starting point and prepare what comes next.',
+      connectTitle: 'Connect Strava',
+      connectDescription: 'Your rides stay private. GRADNT turns them into one clear next step.',
+      syncing: 'Your rides are coming in. This page will be ready when sync finishes.',
+      addRide: 'Add a ride manually',
+    },
     share: {
       eyebrow: 'SHAREABLE',
       title: 'My next decision',
