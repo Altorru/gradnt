@@ -184,9 +184,6 @@ export function ProgressScreen() {
       <AppScrollView>
         <YStack gap="$7">
           <AppScreenIntro title={t('progress.title')} description={t('progress.description')} />
-          <GradntButton tone="secondary" onPress={() => router.push('/rides/new')}>
-            {t('rides.add.action')}
-          </GradntButton>
           {showStravaConnect ? (
             <GradntStravaConnectBlock
               onConnect={() => void connectStrava()}
@@ -207,14 +204,28 @@ export function ProgressScreen() {
             </GradntText>
           ) : null}
 
-          <GradntCard accent gap="$4">
-            <XStack alignItems="center" gap="$4">
-              <GradntProgressRing value={goalProgress} size={92} />
-              <YStack flex={1} gap="$2">
+          <RecentRides
+            activities={activities}
+            refreshing={activitiesQuery.isFetching}
+            refresh={() => {
+              void activitiesQuery.refetch()
+              void metricsQuery.refetch()
+              void currentValueQuery.refetch()
+            }}
+          />
+
+          <GradntButton tone="secondary" onPress={() => router.push('/rides/new')}>
+            {t('rides.add.action')}
+          </GradntButton>
+
+          <GradntCard accent gap="$3">
+            <XStack alignItems="center" gap="$3">
+              <GradntProgressRing value={goalProgress} size={72} />
+              <YStack flex={1} gap="$1">
                 <GradntText muted fontSize={12}>
                   {goalLabel}
                 </GradntText>
-                <GradntText weight="bold" fontSize={28}>
+                <GradntText weight="bold" fontSize={22}>
                   {goalQuery.isPending || currentValueQuery.isPending ? '—' : goalSummary}
                 </GradntText>
                 <XStack alignItems="center" gap="$1">
@@ -228,16 +239,6 @@ export function ProgressScreen() {
               </YStack>
             </XStack>
           </GradntCard>
-
-          <RecentRides
-            activities={activities}
-            refreshing={activitiesQuery.isFetching}
-            refresh={() => {
-              void activitiesQuery.refetch()
-              void metricsQuery.refetch()
-              void currentValueQuery.refetch()
-            }}
-          />
 
           <YStack gap="$3">
             <GradntChartCard
