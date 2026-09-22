@@ -139,8 +139,12 @@ export const fr = {
       aiTitle: 'Coach GRADNT',
       generate: 'Analyser ma sortie',
       viewAi: 'Voir l’analyse IA',
+      understand: 'Comprendre cette lecture',
+      hideMethod: 'Masquer la méthode',
       stravaAiUnavailable:
         'Le Coach IA n’utilise pas les données provenant de Strava. Tu peux quand même consulter ici les faits et l’analyse déterministe de ta sortie.',
+      aiNeedsProvenance:
+        'Le Coach IA a besoin de vérifier la provenance de cette sortie avant de l’analyser.',
       aiLoading: 'Analyse en cours…',
       aiUnavailable:
         'L’analyse n’a pas abouti. Vérifie ta connexion puis réessaie : tes données ne sont pas perdues.',

@@ -135,8 +135,12 @@ export const en = {
       aiTitle: 'GRADNT Coach',
       generate: 'Analyse my ride',
       viewAi: 'View AI analysis',
+      understand: 'Understand this reading',
+      hideMethod: 'Hide the method',
       stravaAiUnavailable:
         'The AI Coach does not use data from Strava. You can still review the verified facts and deterministic analysis of this ride here.',
+      aiNeedsProvenance:
+        'The AI Coach needs to verify this ride’s provenance before it can analyse it.',
       aiLoading: 'Analysis in progress…',
       aiUnavailable:
         'The analysis did not complete. Check your connection and try again: your data is safe.',

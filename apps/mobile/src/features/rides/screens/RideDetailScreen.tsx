@@ -53,6 +53,7 @@ export function RideDetailScreen() {
   const planQuery = useTrainingPlanQuery()
   const feedbackQuery = useRideFeedbackQuery(activityId)
   const [advanced, setAdvanced] = useState(false)
+  const [analysisDetailsOpen, setAnalysisDetailsOpen] = useState(false)
   const [analysisOpen, setAnalysisOpen] = useState(false)
   const ready = useOnboardingStore(
     (state) => state.hydrated && state.completed && !state.persistenceError,
@@ -265,12 +266,9 @@ export function RideDetailScreen() {
                 <GradntCard gap="$3">
                   <GradntHeading level={3}>{t('rides.analysis.title')}</GradntHeading>
                   <GradntText muted>{t('rides.analysis.subtitle')}</GradntText>
-                  <GradntBadge>{t('rides.analysis.deterministicEngine')}</GradntBadge>
-                  <GradntText muted fontSize={12}>
-                    {t('rides.analysis.source', {
-                      value: t(`rides.analysis.sources.${activity.source}`),
-                    })}
-                  </GradntText>
+                  <GradntText>{analysisTrendKey ? t(analysisTrendKey) : null}</GradntText>
+                  <GradntText weight="semibold">{t('rides.analysis.nextAction')}</GradntText>
+                  <GradntText>{analysisNextActionKey ? t(analysisNextActionKey) : null}</GradntText>
                   <XStack flexWrap="wrap" gap="$2">
                     <GradntMetric
                       label={t('rides.analysis.intensity')}
@@ -281,35 +279,14 @@ export function RideDetailScreen() {
                       value={t('rides.analysis.loadPoints', { value: analysis.loadScore })}
                     />
                   </XStack>
-                  <GradntText>{analysisTrendKey ? t(analysisTrendKey) : null}</GradntText>
-                  <XStack flexWrap="wrap" gap="$2">
-                    <GradntBadge>
-                      {t('rides.analysis.minutes', { value: analysis.facts.durationMinutes })}
-                    </GradntBadge>
-                    <GradntBadge>
-                      {t('rides.analysis.distance', { value: analysis.facts.distanceKm })}
-                    </GradntBadge>
-                    <GradntBadge>
-                      {t('rides.analysis.elevation', { value: analysis.facts.elevationMeters })}
-                    </GradntBadge>
-                    {analysis.facts.powerWatts !== null ? (
-                      <GradntBadge>
-                        {t('rides.analysis.power', { value: analysis.facts.powerWatts })}
-                      </GradntBadge>
-                    ) : null}
-                  </XStack>
-                  <GradntText weight="semibold">{t('rides.analysis.nextAction')}</GradntText>
-                  <GradntText>{analysisNextActionKey ? t(analysisNextActionKey) : null}</GradntText>
-                  <GradntText muted fontSize={12}>
-                    {t(
-                      analysis.confidence === 'power'
-                        ? 'rides.analysis.confidencePower'
-                        : 'rides.analysis.confidenceDuration',
-                    )}{' '}
-                    {t('rides.analysis.explanation')}
-                  </GradntText>
                   {!canUseAi ? (
-                    <GradntText muted>{t('rides.analysis.stravaAiUnavailable')}</GradntText>
+                    <GradntText muted>
+                      {t(
+                        activity.source === 'strava'
+                          ? 'rides.analysis.stravaAiUnavailable'
+                          : 'rides.analysis.aiNeedsProvenance',
+                      )}
+                    </GradntText>
                   ) : savedAnalysisQuery.data ? (
                     <GradntButton onPress={() => setAnalysisOpen(true)}>
                       {t('rides.analysis.viewAi')}
@@ -326,6 +303,50 @@ export function RideDetailScreen() {
                       )}
                     </GradntButton>
                   )}
+                  <GradntButton
+                    tone="ghost"
+                    onPress={() => setAnalysisDetailsOpen((current) => !current)}
+                  >
+                    {t(
+                      analysisDetailsOpen
+                        ? 'rides.analysis.hideMethod'
+                        : 'rides.analysis.understand',
+                    )}
+                  </GradntButton>
+                  {analysisDetailsOpen ? (
+                    <YStack gap="$3">
+                      <GradntBadge>{t('rides.analysis.deterministicEngine')}</GradntBadge>
+                      <GradntText muted fontSize={12}>
+                        {t('rides.analysis.source', {
+                          value: t(`rides.analysis.sources.${activity.source}`),
+                        })}
+                      </GradntText>
+                      <XStack flexWrap="wrap" gap="$2">
+                        <GradntBadge>
+                          {t('rides.analysis.minutes', { value: analysis.facts.durationMinutes })}
+                        </GradntBadge>
+                        <GradntBadge>
+                          {t('rides.analysis.distance', { value: analysis.facts.distanceKm })}
+                        </GradntBadge>
+                        <GradntBadge>
+                          {t('rides.analysis.elevation', { value: analysis.facts.elevationMeters })}
+                        </GradntBadge>
+                        {analysis.facts.powerWatts !== null ? (
+                          <GradntBadge>
+                            {t('rides.analysis.power', { value: analysis.facts.powerWatts })}
+                          </GradntBadge>
+                        ) : null}
+                      </XStack>
+                      <GradntText muted fontSize={12}>
+                        {t(
+                          analysis.confidence === 'power'
+                            ? 'rides.analysis.confidencePower'
+                            : 'rides.analysis.confidenceDuration',
+                        )}{' '}
+                        {t('rides.analysis.explanation')}
+                      </GradntText>
+                    </YStack>
+                  ) : null}
                   {generateAnalysisMutation.isError ? (
                     <YStack gap="$2">
                       <GradntText color="$warning">{t(analysisErrorKey)}</GradntText>
