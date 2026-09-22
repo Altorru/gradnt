@@ -51,7 +51,7 @@ export const en = {
       sports: { road: 'Road', gravel: 'Gravel', mtb: 'MTB', indoor_cycling: 'Indoor' },
     },
     prompt: {
-      title: 'And how did you feel?',
+      title: 'Your ride is here. How did it feel?',
       answered: 'Your feelings help prepare what’s next',
       rideDate: 'Ride on {{date}}',
       basedOnFeelings: 'Guidance from your answers. Your plan stays under your control.',

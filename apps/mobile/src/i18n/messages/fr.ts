@@ -54,7 +54,7 @@ export const fr = {
       sports: { road: 'Route', gravel: 'Gravel', mtb: 'VTT', indoor_cycling: 'Home trainer' },
     },
     prompt: {
-      title: 'Et tes sensations ?',
+      title: 'Ta sortie est là. Et ton ressenti ?',
       answered: 'Tes sensations préparent la suite',
       rideDate: 'Sortie du {{date}}',
       basedOnFeelings: 'Conseil issu de tes réponses. Ton plan reste sous ton contrôle.',

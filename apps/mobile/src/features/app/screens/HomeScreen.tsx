@@ -197,6 +197,14 @@ export function HomeScreen() {
             changeRising={goal?.type === 'ftp' && ftpDelta !== null && ftpDelta > 0}
           />
 
+          {/* A recent ride changes the question from “what should I do?” to
+              “what did that ride change?”. Put the short feedback loop before
+              the generic Coach card so its value is visible without scrolling
+              through secondary information. */}
+          {afterRideActivity ? (
+            <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
+          ) : null}
+
           <GradntCard accent gap="$3">
             <GradntText weight="semibold">{t('home.coach.title')}</GradntText>
             <GradntText>
@@ -304,10 +312,6 @@ export function HomeScreen() {
               }),
             })}
           />
-
-          {afterRideActivity ? (
-            <AfterRidePrompt key={afterRideActivity.id} activity={afterRideActivity} />
-          ) : null}
 
           {showStravaConnect ? (
             <GradntStravaConnectBlock
