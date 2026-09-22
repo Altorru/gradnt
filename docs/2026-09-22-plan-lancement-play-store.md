@@ -10,6 +10,34 @@ les zones. Un cycliste expérimenté doit pouvoir ouvrir les faits et la méthod
 derrière le conseil. La progression et les décisions passent avant la liste de
 sorties.
 
+## 0. Moteur adaptatif — prérequis avant la bêta
+
+Le plan ne peut pas être vendu comme adaptatif tant qu'il ne part pas de la
+pratique observée et qu'il ne réagit pas à chaque nouvelle sortie. L'IA ne
+remplace pas ce moteur : elle explique des décisions fondées sur des faits et
+ne modifie jamais le calendrier sans validation explicite du cycliste.
+
+- [ ] Construire un `CyclistState` déterministe depuis les activités
+      normalisées : volume sur 7/28/84 jours, fréquence, tendance, intensité,
+      récupération et régularité.
+- [ ] Générer le premier bloc à partir de cet état, de l'objectif principal et
+      des disponibilités, au lieu du seul volume déclaré à l'onboarding.
+- [ ] Rapprocher une sortie réelle de la séance prévue, puis enregistrer ce qui
+      a été réalisé, raté ou ajouté hors plan.
+- [ ] Réévaluer la semaine après chaque sortie et chaque changement de
+      disponibilité : conserver, alléger, déplacer ou reconstruire le bloc.
+- [ ] Toujours montrer les faits, la raison et le diff du calendrier avant que
+      le cycliste accepte une modification significative.
+- [ ] Ajouter une conversation Coach qui répond à partir de `CyclistState`, du
+      plan et des décisions validées ; elle explique et prépare une proposition
+      structurée, elle ne fabrique pas de métriques ni de changement silencieux.
+- [ ] Tester les scénarios : débutant sans historique, reprise après pause,
+      hausse de charge, sortie imprévue, séance manquée et fatigue élevée.
+
+**Critère de sortie :** après une sortie, GRADNT sait dire ce qu'elle a changé
+dans la semaine, pourquoi, et quelle action le cycliste peut accepter ou
+refuser. C'est le différenciateur produit avant toute acquisition payante.
+
 ## 1. Boucle post-sortie — signature produit
 
 - [x] Une création d’activité Strava est reçue par le webhook Supabase de façon
