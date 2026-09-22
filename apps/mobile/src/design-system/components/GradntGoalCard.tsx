@@ -46,9 +46,9 @@ export function GradntGoalCard({
   return (
     <GradntCard
       premium
-      minHeight={244}
-      padding="$4"
-      gap="$2"
+      minHeight={304}
+      padding="$5"
+      gap="$3"
       overflow="hidden"
       borderColor="$borderStrong"
       borderRadius={22}
@@ -67,11 +67,11 @@ export function GradntGoalCard({
           </GradntHeading>
 
           <XStack alignItems="center" gap="$2">
-            <GradntText weight="bold" fontSize={32} lineHeight={34} letterSpacing={-1.4}>
+            <GradntText weight="bold" fontSize={36} lineHeight={38} letterSpacing={-1.7}>
               {currentValue ?? '—'}
             </GradntText>
 
-            <GradntText muted weight="semibold" fontSize={20} lineHeight={26} letterSpacing={-0.6}>
+            <GradntText muted weight="semibold" fontSize={23} lineHeight={30} letterSpacing={-0.6}>
               {targetLabel}
             </GradntText>
           </XStack>
@@ -82,7 +82,7 @@ export function GradntGoalCard({
 
       {/* Zone réservée à l'artwork.
           Aucun rectangle, aucune bordure. */}
-      <YStack zIndex={1} height={44} pointerEvents="none" />
+      <YStack zIndex={1} height={92} pointerEvents="none" />
 
       {/* FOOTER */}
       <YStack zIndex={2} gap="$3" marginTop="auto">
