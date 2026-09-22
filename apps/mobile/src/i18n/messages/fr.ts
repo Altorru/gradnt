@@ -939,8 +939,10 @@ export const fr = {
     widenDistance: 'Élargir la distance',
 
     location: {
+      startTitle: 'Choisis ton point de départ',
       openSettings: 'Ouvrir les réglages',
       refresh: 'Actualiser ma position',
+      useCurrent: 'Utiliser ma position',
       errors: {
         unsupported: 'La position est disponible dans la development build native.',
         disabled: 'La localisation est désactivée sur ton téléphone.',

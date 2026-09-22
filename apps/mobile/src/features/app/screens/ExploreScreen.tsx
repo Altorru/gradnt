@@ -134,12 +134,31 @@ export function ExploreScreen() {
             ) : null}
 
             {routingConfigured && !routeStart.hasStart ? (
-              <GradntCard padding="$3">
+              <GradntCard padding="$3" gap="$3">
+                <GradntText weight="semibold">{t('explore.location.startTitle')}</GradntText>
                 <GradntText muted fontSize={12} lineHeight={18}>
                   {routeStart.error
                     ? t(LOCATION_ERROR_KEYS[routeStart.error])
                     : t('explore.findingPosition')}
                 </GradntText>
+                <GradntButton
+                  tone={routeStart.status === 'blocked' ? 'secondary' : 'primary'}
+                  disabled={routeStart.isRequesting}
+                  onPress={() => {
+                    if (routeStart.status === 'blocked') {
+                      void routeStart.openSettings()
+                      return
+                    }
+
+                    void routeStart.followCurrentLocation()
+                  }}
+                >
+                  {t(
+                    routeStart.status === 'blocked'
+                      ? 'explore.location.openSettings'
+                      : 'explore.location.useCurrent',
+                  )}
+                </GradntButton>
               </GradntCard>
             ) : null}
 

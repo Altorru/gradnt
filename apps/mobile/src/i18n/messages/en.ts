@@ -876,8 +876,10 @@ export const en = {
     widenDistance: 'Widen the distance',
 
     location: {
+      startTitle: 'Choose your start point',
       openSettings: 'Open settings',
       refresh: 'Update my position',
+      useCurrent: 'Use my location',
       errors: {
         unsupported: 'Location is available in the native development build.',
         disabled: 'Location is switched off on your phone.',
