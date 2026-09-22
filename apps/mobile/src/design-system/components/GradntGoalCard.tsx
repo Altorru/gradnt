@@ -46,7 +46,7 @@ export function GradntGoalCard({
   return (
     <GradntCard
       premium
-      minHeight={244}
+      minHeight={216}
       padding="$4"
       gap="$2"
       overflow="hidden"
@@ -82,7 +82,7 @@ export function GradntGoalCard({
 
       {/* Zone réservée à l'artwork.
           Aucun rectangle, aucune bordure. */}
-      <YStack zIndex={1} height={44} pointerEvents="none" />
+      <YStack zIndex={1} height={20} pointerEvents="none" />
 
       {/* FOOTER */}
       <YStack zIndex={2} gap="$3" marginTop="auto">

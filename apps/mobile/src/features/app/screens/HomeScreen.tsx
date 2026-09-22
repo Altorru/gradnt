@@ -197,49 +197,6 @@ export function HomeScreen() {
             changeRising={goal?.type === 'ftp' && ftpDelta !== null && ftpDelta > 0}
           />
 
-          {/* State follows the goal: observed facts explain where the rider is now. */}
-          {/* An account with manual or FIT rides has real progress without Strava. */}
-          {connected || activities.length > 0 ? (
-            <YStack gap="$4">
-              <GradntSectionHeader
-                title={t('home.yourState')}
-                action={t('common.seeMore')}
-                onPress={() => openTab('/progress')}
-              />
-              <YStack gap="$3">
-                <XStack gap="$3">
-                  <GradntStatTile
-                    label={t('home.tiles.volume')}
-                    value={volumeDelta ? String(volumeDelta.current) : '—'}
-                    unit="h"
-                    delta={volumeDelta?.delta ?? null}
-                  />
-                  <GradntStatTile
-                    label={t('home.tiles.rides')}
-                    value={rideDelta ? String(rideDelta.current) : '—'}
-                    delta={rideDelta?.delta ?? null}
-                  />
-                </XStack>
-                <XStack gap="$3">
-                  <GradntStatTile
-                    label={t('home.tiles.distance')}
-                    value={distanceDelta ? String(distanceDelta.current) : '—'}
-                    unit="km"
-                    delta={distanceDelta?.delta ?? null}
-                  />
-                  {latestFtp !== null ? (
-                    <GradntStatTile
-                      label="FTP"
-                      value={String(latestFtp.value)}
-                      unit="W"
-                      delta={ftpDelta}
-                    />
-                  ) : null}
-                </XStack>
-              </YStack>
-            </YStack>
-          ) : null}
-
           <GradntCard accent gap="$3">
             <GradntText weight="semibold">{t('home.coach.title')}</GradntText>
             <GradntText>
@@ -291,6 +248,50 @@ export function HomeScreen() {
             </XStack>
             <GradntProgressBar value={weekCompletion} />
           </GradntCard>
+
+          {/* Supporting figures stay reachable, without delaying the answer to
+              “what should I do next?” above. Manual and FIT rides remain just
+              as valid here as rides synchronized from Strava. */}
+          {connected || activities.length > 0 ? (
+            <YStack gap="$4">
+              <GradntSectionHeader
+                title={t('home.yourState')}
+                action={t('common.seeMore')}
+                onPress={() => openTab('/progress')}
+              />
+              <YStack gap="$3">
+                <XStack gap="$3">
+                  <GradntStatTile
+                    label={t('home.tiles.volume')}
+                    value={volumeDelta ? String(volumeDelta.current) : '—'}
+                    unit="h"
+                    delta={volumeDelta?.delta ?? null}
+                  />
+                  <GradntStatTile
+                    label={t('home.tiles.rides')}
+                    value={rideDelta ? String(rideDelta.current) : '—'}
+                    delta={rideDelta?.delta ?? null}
+                  />
+                </XStack>
+                <XStack gap="$3">
+                  <GradntStatTile
+                    label={t('home.tiles.distance')}
+                    value={distanceDelta ? String(distanceDelta.current) : '—'}
+                    unit="km"
+                    delta={distanceDelta?.delta ?? null}
+                  />
+                  {latestFtp !== null ? (
+                    <GradntStatTile
+                      label="FTP"
+                      value={String(latestFtp.value)}
+                      unit="W"
+                      delta={ftpDelta}
+                    />
+                  ) : null}
+                </XStack>
+              </YStack>
+            </YStack>
+          ) : null}
 
           <GradntShareCard
             eyebrow={t('home.share.eyebrow')}
