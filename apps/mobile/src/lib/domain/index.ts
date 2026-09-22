@@ -1,5 +1,6 @@
 export * from './first-plan'
 export * from './coach-decision'
+export * from './cyclist-state'
 export * from './metrics'
 export * from './ride-analysis'
 export * from './schemas'
