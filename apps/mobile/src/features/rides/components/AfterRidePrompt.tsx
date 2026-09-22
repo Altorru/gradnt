@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { useRouter } from 'expo-router'
-import { ChevronRight, Sparkles } from '@tamagui/lucide-icons-2'
+import { ChevronRight, MessageCircle } from '@tamagui/lucide-icons-2'
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated'
 import { XStack } from 'tamagui'
 
@@ -25,10 +25,10 @@ export function AfterRidePrompt({ activity }: { activity: Activity }) {
   if (!ready || query.isPending) return null
   const feedback = query.data?.feedback
   return (
-    <Animated.View entering={reducedMotion ? undefined : FadeInDown.duration(320).springify()}>
+    <Animated.View entering={reducedMotion ? undefined : FadeInDown.duration(220)}>
       <GradntCard accent gap="$3">
         <XStack alignItems="center" gap="$2">
-          <Sparkles size={18} color={accentInk as never} />
+          <MessageCircle size={18} color={accentInk as never} />
           <GradntText weight="semibold">
             {t(feedback ? 'rides.prompt.answered' : 'rides.prompt.title')}
           </GradntText>

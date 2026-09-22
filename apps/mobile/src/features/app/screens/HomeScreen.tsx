@@ -3,6 +3,7 @@ import { getAfterRideActivity } from '@/features/rides/domain/after-ride'
 import { OnboardingSaveFeedback } from '@/features/onboarding/components/OnboardingSaveFeedback'
 import { format as formatDate } from 'date-fns'
 import { useRouter, type Href } from 'expo-router'
+import { ChevronRight, Compass } from '@tamagui/lucide-icons-2'
 import { useEffect, useState } from 'react'
 import {
   GradntCard,
@@ -17,6 +18,7 @@ import {
   GradntStravaConnectBlock,
   GradntText,
   GradntWorkoutCard,
+  useThemeColor,
 } from '@/design-system'
 import {
   useActivitiesQuery,
@@ -58,6 +60,7 @@ import { shouldShowStravaConnect } from '../domain/strava-visibility'
 
 export function HomeScreen() {
   const { t, plural } = useTranslation()
+  const themeColor = useThemeColor()
   const dateLocale = useDateLocale()
   const router = useRouter()
   const setStrava = useOnboardingStore((state) => state.setStrava)
@@ -206,7 +209,10 @@ export function HomeScreen() {
           ) : null}
 
           <GradntCard accent gap="$3">
-            <GradntText weight="semibold">{t('home.coach.title')}</GradntText>
+            <XStack alignItems="center" gap="$2">
+              <Compass size={18} color={themeColor('accentInk') as never} />
+              <GradntText weight="semibold">{t('home.coach.title')}</GradntText>
+            </XStack>
             <GradntText>
               {t(`home.coach.${coachDecision.kind}`, {
                 hours: coachDecision.recentHours,
@@ -218,6 +224,7 @@ export function HomeScreen() {
             {coachDecision.nextWorkoutId ? (
               <GradntButton
                 tone="secondary"
+                iconAfter={<ChevronRight size={17} color={themeColor('accentInk') as never} />}
                 onPress={() => router.push(`/plan/${coachDecision.nextWorkoutId}` as Href)}
               >
                 {t('home.coach.openPlan')}
